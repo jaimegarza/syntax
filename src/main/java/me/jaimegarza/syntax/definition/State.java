@@ -1,5 +1,6 @@
 package me.jaimegarza.syntax.definition;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class State {
   int message;
   private int mark = 0;
   private List<Dot> cut;
+  private int row[];
 
   public State(int id, int from, Symbol symbol) {
     this();
@@ -160,6 +162,22 @@ public class State {
       markers.addAll(cut);
       cut = null;
     }
+  }
+
+  public int[] getRow() {
+    return row;
+  }
+
+  public void setRow(int[] row) {
+    this.row = Arrays.copyOf(row, row.length);
+  }
+
+  public int getId() {
+    return id;
+  }
+
+  public void setId(int id) {
+    this.id = id;
   }
 
   @Override
