@@ -264,181 +264,136 @@ public class TableGenerator extends AbstractPhase {
     return errorMessages.size() - 1;
   }
 
-  private void computeAndEmit(int parserLine[], int estado) {
+  private void packState(int parserLine[], int estado) {
     /*
      * int t1, t2, col, defa, i, j, cTokens, cSimbolos; PACTION pAcciones, pAct,
      * pCual, pNext, pErrToken; PIDENT id, pErrSymbol; static char msg[1024];
      */
 
-    int col;
-    int t2;
-
     if (environment.isPacked() == false) {
-      int t1 = runtimeData.getTerminals().size() + runtimeData.getNonTerminals().size() - 2;
-      switch (environment.getLanguage()) {
-        case pascal:
-          environment.output.print("        (");
-          for (col = t2 = 0; t2 <= t1; ++t2) {
-            // If this column does not fit, cut with \n
-            if ((col + 1) * 5 + 9 > environment.getMargin()) {
-              environment.output.printf("\n         ");
-              col = 0;
-            }
-            col++;
-            environment.output.printf("%4d", parserLine[t2]);
-            if (t2 < t1) {
-              environment.output.printf(",");
-            }
-          }
-          if (estado == finalState) {
-            environment.output.printf("));\n");
-          } else {
-            environment.output.printf("),\n");
-          }
-          break;
-        case C:
-          environment.output.printf("    {");
-          for (col = t2 = 0; t2 <= t1; ++t2) {
-            // If this column does not fit, cut with \n
-            if ((col + 1) * 5 + 5 > environment.getMargin()) {
-              environment.output.printf("\n     ");
-              col = 0;
-            }
-            col++;
-            environment.output.printf("%4d", parserLine[t2]);
-            if (t2 < t1) {
-              environment.output.printf(",");
-            }
-          }
-          if (estado == finalState) {
-            environment.output.printf("}\n};\n");
-          } else {
-            environment.output.printf("},\n");
-          }
-          break;
-      }
-    } else {
-      int defa = computeDefaultAction(parserLine, runtimeData.getTerminals().size());
-      List<Action> actions = packActions(parserLine, defa);
-      int existingState = findActions(estado, actions);
-      if (existingState >= 0) {
-        actions = I[existingState].getActions();
-        I[estado].setPosition(I[existingState].getPosition());
-        environment.report.printf("\nActions (same as state %d)\n------------------------------\n", existingState);
-      } else {
-        I[estado].setPosition(actionNumber);
-        environment.report.printf("\nActions\n--------\n");
-        actionNumber += actions.size();
-      }
-      I[estado].setDefaultValue(defa);
-      I[estado].setActionSize(actions.size());
-      I[estado].setActions(actions);
-      int cTokens = 0;
-      Action pErrToken = null;
-      for (Action pAct : actions) {
-        environment.report.printf("\tWith %s ", pAct.getSymbol().getName());
-        if (pAct.getStateNumber() < 0) {
-          environment.report.printf("Reduce by rule %d\n", -pAct.getStateNumber());
-        } else if (pAct.getStateNumber() == ACCEPT) {
-          environment.report.printf("Accept\n");
-        } else {
-          environment.report.printf("Shift to state %d\n", pAct.getStateNumber());
-          pErrToken = pAct;
-          cTokens++;
-        }
-      }
-      // compute and emit GOTO's
-      int cSimbolos = 0;
+      return;
+    }
 
-      int terminals = runtimeData.getTerminals().size();
-      NonTerminal pErrSymbol = null;
-      for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
-        if (parserLine[terminals + i] != 0) {
-          NonTerminal symbol = null;
-          for (NonTerminal id : runtimeData.getNonTerminals()) {// = pNTtable;
-                                                                // id;
-                                                                // id=id.next) {
-            if (id.getId() == i + terminals) {
-              symbol = id;
-              break;
-            }
-          }
-          if (symbol == null) {
-            continue;
-          }
-          environment.report.printf("\tWith %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
-          cSimbolos++;
-          pErrSymbol = symbol;
-          addGoto(symbol, estado, parserLine[i + terminals]);
-        }
-      }
-      // imprime default
-      environment.report.printf("\tDefault: ");
-      if (defa < 0) {
-        environment.report.printf("Reduce by rule %d\n", -defa);
+    int defa = computeDefaultAction(parserLine, runtimeData.getTerminals().size());
+    List<Action> actions = packActions(parserLine, defa);
+    int existingState = findActions(estado, actions);
+    if (existingState >= 0) {
+      actions = I[existingState].getActions();
+      I[estado].setPosition(I[existingState].getPosition());
+      environment.report.printf("\nActions (same as state %d)\n------------------------------\n", existingState);
+    } else {
+      I[estado].setPosition(actionNumber);
+      environment.report.printf("\nActions\n--------\n");
+      actionNumber += actions.size();
+    }
+    I[estado].setDefaultValue(defa);
+    I[estado].setActionSize(actions.size());
+    I[estado].setActions(actions);
+    int cTokens = 0;
+    Action pErrToken = null;
+    for (Action pAct : actions) {
+      environment.report.printf("\tWith %s ", pAct.getSymbol().getName());
+      if (pAct.getStateNumber() < 0) {
+        environment.report.printf("Reduce by rule %d\n", -pAct.getStateNumber());
+      } else if (pAct.getStateNumber() == ACCEPT) {
+        environment.report.printf("Accept\n");
       } else {
-        environment.report.printf("Error\n");
+        environment.report.printf("Shift to state %d\n", pAct.getStateNumber());
+        pErrToken = pAct;
+        cTokens++;
       }
-      environment.report.printf("\nErrors\n-------\n");
-      if (cTokens == 1) {
-        String message = "";
-        message = pErrToken.getSymbol().getFullName() + " expected";
-        environment.report.println("\t" + message);
-        I[estado].setMessage(addErrorMessage(message));
-      } else if (cSimbolos == 1) {
-        String message = "Expecting " + pErrSymbol.getFullName();
-        environment.report.println("\t" + message);
-        I[estado].setMessage(addErrorMessage(message));
-      } else if (cTokens != 0 && (cTokens < cSimbolos || cSimbolos == 0)) {
-        StringBuilder messageBuffer = new StringBuilder();
-        int i = 0;
-        for (Action action : actions) {
-          if (action.getStateNumber() > 0 && action.getStateNumber() != ACCEPT) {
-            if (i > 0) {
-              if (i == cTokens - 1) {
-                messageBuffer.append(" or ");
-              } else {
-                messageBuffer.append(", ");
-              }
-            }
-            messageBuffer.append(action.getSymbol().getFullName());
-            i++;
-          }
-        }
-        messageBuffer.append(" expected");
-        environment.report.println("\t" + messageBuffer.toString());
-        I[estado].setMessage(addErrorMessage(messageBuffer.toString()));
-      } else if (cSimbolos != 0) {
-        StringBuilder messageBuffer = new StringBuilder("Expecting ");
-        int j = 0;
-        for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
-          if (parserLine[terminals + i] != 0) {
-            for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
-              if (nonTerminal.getId() == i + terminals) {
-                if (j > 0) {
-                  if (j == cSimbolos - 1) {
-                    messageBuffer.append(" or ");
-                  } else {
-                    messageBuffer.append(", ");
-                  }
-                }
-                messageBuffer.append(nonTerminal.getFullName());
-                break;
-              }
-            }
-            j++;
-            /*
-             * putting this break for now because in the example I was trying
-             * just putting the first one seems OK
-             */
+    }
+    // compute and emit GOTO's
+    int cSimbolos = 0;
+
+    int terminals = runtimeData.getTerminals().size();
+    NonTerminal pErrSymbol = null;
+    for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
+      if (parserLine[terminals + i] != 0) {
+        NonTerminal symbol = null;
+        for (NonTerminal id : runtimeData.getNonTerminals()) {// = pNTtable;
+                                                              // id;
+                                                              // id=id.next) {
+          if (id.getId() == i + terminals) {
+            symbol = id;
             break;
           }
         }
-        environment.report.println("\t" + messageBuffer.toString());
-        I[estado].setMessage(addErrorMessage(messageBuffer.toString()));
-      } else {
-        I[estado].setMessage(-1);
+        if (symbol == null) {
+          continue;
+        }
+        environment.report.printf("\tWith %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
+        cSimbolos++;
+        pErrSymbol = symbol;
+        addGoto(symbol, estado, parserLine[i + terminals]);
       }
+    }
+    // imprime default
+    environment.report.printf("\tDefault: ");
+    if (defa < 0) {
+      environment.report.printf("Reduce by rule %d\n", -defa);
+    } else {
+      environment.report.printf("Error\n");
+    }
+    environment.report.printf("\nErrors\n-------\n");
+    if (cTokens == 1) {
+      String message = "";
+      message = pErrToken.getSymbol().getFullName() + " expected";
+      environment.report.println("\t" + message);
+      I[estado].setMessage(addErrorMessage(message));
+    } else if (cSimbolos == 1) {
+      String message = "Expecting " + pErrSymbol.getFullName();
+      environment.report.println("\t" + message);
+      I[estado].setMessage(addErrorMessage(message));
+    } else if (cTokens != 0 && (cTokens < cSimbolos || cSimbolos == 0)) {
+      StringBuilder messageBuffer = new StringBuilder();
+      int i = 0;
+      for (Action action : actions) {
+        if (action.getStateNumber() > 0 && action.getStateNumber() != ACCEPT) {
+          if (i > 0) {
+            if (i == cTokens - 1) {
+              messageBuffer.append(" or ");
+            } else {
+              messageBuffer.append(", ");
+            }
+          }
+          messageBuffer.append(action.getSymbol().getFullName());
+          i++;
+        }
+      }
+      messageBuffer.append(" expected");
+      environment.report.println("\t" + messageBuffer.toString());
+      I[estado].setMessage(addErrorMessage(messageBuffer.toString()));
+    } else if (cSimbolos != 0) {
+      StringBuilder messageBuffer = new StringBuilder("Expecting ");
+      int j = 0;
+      for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
+        if (parserLine[terminals + i] != 0) {
+          for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
+            if (nonTerminal.getId() == i + terminals) {
+              if (j > 0) {
+                if (j == cSimbolos - 1) {
+                  messageBuffer.append(" or ");
+                } else {
+                  messageBuffer.append(", ");
+                }
+              }
+              messageBuffer.append(nonTerminal.getFullName());
+              break;
+            }
+          }
+          j++;
+          /*
+           * putting this break for now because in the example I was trying just
+           * putting the first one seems OK
+           */
+          break;
+        }
+      }
+      environment.report.println("\t" + messageBuffer.toString());
+      I[estado].setMessage(addErrorMessage(messageBuffer.toString()));
+    } else {
+      I[estado].setMessage(-1);
     }
   }
 
@@ -512,6 +467,60 @@ public class TableGenerator extends AbstractPhase {
       }
     }
   }
+  
+  private int AgregaGoto(NonTerminal id, int origen, int destino) {
+    GoTo goTo = new GoTo(origen, destino);
+    id.addGoTo(goTo);
+    numberOfGotos++;
+    return 1;
+  }
+
+  private int QuitaGoto(NonTerminal id, int iDefa) {
+    for (int i = 0; i < id.getGotos().size(); i++) {
+      if (id.getGotos().get(i).getDestination() == iDefa) {
+        id.getGotos().remove(i);
+        numberOfGotos--;
+      }
+    }
+    return id.getGotos().size();
+  }
+
+  private int GotoDefault(NonTerminal id) {
+    int iDefa = 0, iDefaCount = 0;
+    int count;
+
+    for (GoTo pGoto : id.getGotos()) {
+      if (pGoto.getDestination() != iDefa) {
+        count = 0;
+        for (GoTo pAux : id.getGotos()) {
+          if (pAux.getDestination() == pGoto.getDestination()) {
+            count++;
+          }
+        }
+        if (count > iDefaCount) {
+          iDefaCount = count;
+          iDefa = pGoto.getDestination();
+        }
+      }
+    }
+
+    return iDefa;
+  }
+  private void CompactaGotos() {
+    int iDefa;
+    int nElems, iPosicion;
+
+    iPosicion = 0;
+    for (NonTerminal id : runtimeData.getNonTerminals()) {
+      iDefa = GotoDefault(id);
+      if (iDefa != 0) {
+        nElems = QuitaGoto(id, iDefa);
+        id.setToken(iPosicion);
+        AgregaGoto(id, -1, iDefa);
+        iPosicion += nElems + 1;
+      }
+    }
+  }
 
   public void execute() {
     int parserLine[] = new int[runtimeData.getTerminals().size() + runtimeData.getNonTerminals().size()];
@@ -562,8 +571,8 @@ public class TableGenerator extends AbstractPhase {
           if (marker.getItem() != null && parserLine[marker.getItem().getSymbolId()] == 0) {
             List<Dot> auxiliaryMarkers = new LinkedList<Dot>();
             for (Dot lookaheadMarker = marker; lookaheadMarker != null; lookaheadMarker = lookaheadMarker.next()) {
-              if (lookaheadMarker.getItem() != null
-                  && lookaheadMarker.getItem().getSymbol().equals(marker.getItem().getSymbol())) {
+              if (lookaheadMarker.getItem() != null &&
+                  lookaheadMarker.getItem().getSymbol().equals(marker.getItem().getSymbol())) {
                 Dot auxiliary = new Dot(I[stateIndex], lookaheadMarker.getRule(), lookaheadMarker.nextRuleEntry());
                 if (environment.getAlgorithm() == Algorithm.LALR) {
                   auxiliary.addAllLookaheads(lookaheadMarker.getLookahead());
@@ -597,8 +606,12 @@ public class TableGenerator extends AbstractPhase {
               }
             }
             if (environment.isDebug()) {
-              System.out.println("On state " + stateIndex + " with " + marker.getItem().getSymbol() + " go to "
-                  + gotoState);
+              System.out.println("On state " +
+                                 stateIndex +
+                                   " with " +
+                                   marker.getItem().getSymbol() +
+                                   " go to " +
+                                   gotoState);
             }
             parserLine[marker.getItem().getSymbolId()] = gotoState;
           }
@@ -607,7 +620,8 @@ public class TableGenerator extends AbstractPhase {
         if (doPrint) {
           computeReduce(parserLine, stateIndex);
           I[stateIndex].setMessage(-1);
-          computeAndEmit(parserLine, stateIndex);
+          I[stateIndex].setRow(parserLine);
+          packState(parserLine, stateIndex);
         }
         I[stateIndex].setReview(false);
         stateIndex++;
@@ -619,7 +633,11 @@ public class TableGenerator extends AbstractPhase {
       }
     }
 
+    CompactaGotos();
+    
+    I = Arrays.copyOf(I, finalState + 1);
     runtimeData.setStates(I);
+    runtimeData.setNumberOfActions(actionNumber);
     runtimeData.setNumberOfGoTos(numberOfGotos);
     runtimeData.setErrorMessages(errorMessages);
   }

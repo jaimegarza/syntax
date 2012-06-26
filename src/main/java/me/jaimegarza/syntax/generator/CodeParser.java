@@ -49,7 +49,9 @@ public class CodeParser extends AbstractPhase {
   private static final int TOK_RX_PLUS = 276;
   private static final int TOK_RX_HUH = 277;
   private static final int TOK_RX_ANY = 278;
+  @SuppressWarnings("unused")
   private static final int TOK_RX_CHARS = 279;
+  @SuppressWarnings("unused")
   private static final int TOK_LEXCODE = 280;
   private static final int TOK_CHARS = 281;
 
@@ -64,30 +66,38 @@ public class CodeParser extends AbstractPhase {
       new ReservedWord("start", TOK_START), new ReservedWord("type", TOK_TYPE), new ReservedWord("union", TOK_UNION),
       new ReservedWord("name", TOK_NAME), new ReservedWord("error", TOK_ERRDEF), new ReservedWord("lexer", TOK_LEXER) };
 
-  private static final ParserAction StxActionTable[] = { new ParserAction(257, 6), new ParserAction(259, 8), new ParserAction(260, 10),
-      new ParserAction(262, 14), new ParserAction(263, 15), new ParserAction(264, 16), new ParserAction(265, 17), new ParserAction(266, 18),
-      new ParserAction(269, 9), new ParserAction(271, 13), new ParserAction(59, 5), new ParserAction(123, 12), new ParserAction(280, 7),
-      new ParserAction(0, 9999), new ParserAction(256, 21), new ParserAction(258, 22), new ParserAction(258, 23), new ParserAction(261, 24),
-      new ParserAction(258, 26), new ParserAction(261, 29), new ParserAction(61, 31), new ParserAction(256, 32), new ParserAction(258, 34),
-      new ParserAction(258, 36), new ParserAction(258, 37), new ParserAction(44, 38), new ParserAction(58, 39), new ParserAction(258, 42),
-      new ParserAction(258, 43), new ParserAction(256, 47), new ParserAction(258, 46), new ParserAction(58, 48), new ParserAction(258, 49),
-      new ParserAction(44, 50), new ParserAction(58, 51), new ParserAction(258, 52), new ParserAction(258, 53), new ParserAction(258, 42),
-      new ParserAction(44, 54), new ParserAction(267, 57), new ParserAction(58, 59), new ParserAction(258, 64), new ParserAction(268, 65),
-      new ParserAction(61, 66), new ParserAction(258, 67), new ParserAction(258, 68), new ParserAction(58, 69), new ParserAction(58, 72),
-      new ParserAction(59, 74), new ParserAction(124, 75), new ParserAction(258, 77), new ParserAction(258, 78), new ParserAction(47, 82),
-      new ParserAction(61, 31), new ParserAction(258, 83), new ParserAction(59, 84), new ParserAction(124, 75), new ParserAction(258, 86),
-      new ParserAction(273, 90), new ParserAction(278, 92), new ParserAction(281, 91), new ParserAction(258, 93), new ParserAction(272, 96),
-      new ParserAction(273, 90), new ParserAction(278, 92), new ParserAction(47, 82), new ParserAction(281, 91), new ParserAction(275, 97),
-      new ParserAction(276, 98), new ParserAction(277, 99), new ParserAction(272, 96), new ParserAction(273, 90), new ParserAction(274, 102),
-      new ParserAction(278, 92), new ParserAction(281, 91) };
+  private static final ParserAction StxActionTable[] = { new ParserAction(257, 6), new ParserAction(259, 8),
+      new ParserAction(260, 10), new ParserAction(262, 14), new ParserAction(263, 15), new ParserAction(264, 16),
+      new ParserAction(265, 17), new ParserAction(266, 18), new ParserAction(269, 9), new ParserAction(271, 13),
+      new ParserAction(59, 5), new ParserAction(123, 12), new ParserAction(280, 7), new ParserAction(0, 9999),
+      new ParserAction(256, 21), new ParserAction(258, 22), new ParserAction(258, 23), new ParserAction(261, 24),
+      new ParserAction(258, 26), new ParserAction(261, 29), new ParserAction(61, 31), new ParserAction(256, 32),
+      new ParserAction(258, 34), new ParserAction(258, 36), new ParserAction(258, 37), new ParserAction(44, 38),
+      new ParserAction(58, 39), new ParserAction(258, 42), new ParserAction(258, 43), new ParserAction(256, 47),
+      new ParserAction(258, 46), new ParserAction(58, 48), new ParserAction(258, 49), new ParserAction(44, 50),
+      new ParserAction(58, 51), new ParserAction(258, 52), new ParserAction(258, 53), new ParserAction(258, 42),
+      new ParserAction(44, 54), new ParserAction(267, 57), new ParserAction(58, 59), new ParserAction(258, 64),
+      new ParserAction(268, 65), new ParserAction(61, 66), new ParserAction(258, 67), new ParserAction(258, 68),
+      new ParserAction(58, 69), new ParserAction(58, 72), new ParserAction(59, 74), new ParserAction(124, 75),
+      new ParserAction(258, 77), new ParserAction(258, 78), new ParserAction(47, 82), new ParserAction(61, 31),
+      new ParserAction(258, 83), new ParserAction(59, 84), new ParserAction(124, 75), new ParserAction(258, 86),
+      new ParserAction(273, 90), new ParserAction(278, 92), new ParserAction(281, 91), new ParserAction(258, 93),
+      new ParserAction(272, 96), new ParserAction(273, 90), new ParserAction(278, 92), new ParserAction(47, 82),
+      new ParserAction(281, 91), new ParserAction(275, 97), new ParserAction(276, 98), new ParserAction(277, 99),
+      new ParserAction(272, 96), new ParserAction(273, 90), new ParserAction(274, 102), new ParserAction(278, 92),
+      new ParserAction(281, 91) };
 
-  private static final ParserGoTo StxGotoTable[] = { new ParserGoTo(-1, 56), new ParserGoTo(40, 55), new ParserGoTo(54, 70), new ParserGoTo(-1, 41),
-      new ParserGoTo(-1, 71), new ParserGoTo(-1, 79), new ParserGoTo(-1, 89), new ParserGoTo(87, 95), new ParserGoTo(96, 101), new ParserGoTo(100, 95),
-      new ParserGoTo(-1, 88), new ParserGoTo(90, 100), new ParserGoTo(-1, 87), new ParserGoTo(2, 20), new ParserGoTo(-1, 4), new ParserGoTo(44, 58),
-      new ParserGoTo(-1, 45), new ParserGoTo(62, 76), new ParserGoTo(-1, 63), new ParserGoTo(75, 85), new ParserGoTo(-1, 61), new ParserGoTo(-1, 1),
-      new ParserGoTo(-1, 2), new ParserGoTo(-1, 19), new ParserGoTo(32, 44), new ParserGoTo(-1, 33), new ParserGoTo(-1, 3), new ParserGoTo(-1, 35),
-      new ParserGoTo(-1, 25), new ParserGoTo(-1, 11), new ParserGoTo(-1, 27), new ParserGoTo(71, 80), new ParserGoTo(-1, 30), new ParserGoTo(-1, 28),
-      new ParserGoTo(-1, 40), new ParserGoTo(87, 94), new ParserGoTo(-1, 81), new ParserGoTo(59, 73), new ParserGoTo(-1, 60), new ParserGoTo(-1, 62) };
+  private static final ParserGoTo StxGotoTable[] = { new ParserGoTo(-1, 56), new ParserGoTo(40, 55),
+      new ParserGoTo(54, 70), new ParserGoTo(-1, 41), new ParserGoTo(-1, 71), new ParserGoTo(-1, 79),
+      new ParserGoTo(-1, 89), new ParserGoTo(87, 95), new ParserGoTo(96, 101), new ParserGoTo(100, 95),
+      new ParserGoTo(-1, 88), new ParserGoTo(90, 100), new ParserGoTo(-1, 87), new ParserGoTo(2, 20),
+      new ParserGoTo(-1, 4), new ParserGoTo(44, 58), new ParserGoTo(-1, 45), new ParserGoTo(62, 76),
+      new ParserGoTo(-1, 63), new ParserGoTo(75, 85), new ParserGoTo(-1, 61), new ParserGoTo(-1, 1),
+      new ParserGoTo(-1, 2), new ParserGoTo(-1, 19), new ParserGoTo(32, 44), new ParserGoTo(-1, 33),
+      new ParserGoTo(-1, 3), new ParserGoTo(-1, 35), new ParserGoTo(-1, 25), new ParserGoTo(-1, 11),
+      new ParserGoTo(-1, 27), new ParserGoTo(71, 80), new ParserGoTo(-1, 30), new ParserGoTo(-1, 28),
+      new ParserGoTo(-1, 40), new ParserGoTo(87, 94), new ParserGoTo(-1, 81), new ParserGoTo(59, 73),
+      new ParserGoTo(-1, 60), new ParserGoTo(-1, 62) };
 
   private static final Parser StxParsingTable[] = { new Parser(0, -3, 13, 0), new Parser(13, 0, 1, -1),
       new Parser(0, -1, 13, 0), new Parser(14, 0, 1, 1), new Parser(15, -8, 0, -1), new Parser(15, -9, 0, -1),
@@ -140,6 +150,7 @@ public class CodeParser extends AbstractPhase {
 
   private static final int StxRecoverTable[] = { 59 };
 
+  @SuppressWarnings("unused")
   private static final int StxNonTerminals[] = { 0, 1, 4, 5, 6, 7, 11, 13, 15, 17, 19, 21, 22, 23, 24, 26, 27, 28, 29,
       30, 31, 33, 34, 35, 37, 39, -1 };
 
@@ -171,7 +182,7 @@ public class CodeParser extends AbstractPhase {
   private int tokenNumber;
   private String currentNonTerminalName;
   private boolean mustClose;
-  private boolean bActFinales;
+  private boolean finalActions;
   private boolean isErrorToken;
   private Associativity ruleAssociativity;
   private int rulePrecedence;
@@ -254,8 +265,8 @@ public class CodeParser extends AbstractPhase {
    */
   int StxReduce(int sym, int rule) throws IOException {
     if (environment.isDebug()) {
-      System.out.printf("Reduce on rule %d with symbol %s(%d)\n", rule, (sym >= 256 ? tokenNames[sym - 256] : "\""
-          + Character.toString((char) sym) + "\""), sym);
+      System.out.printf("Reduce on rule %d with symbol %s(%d)\n", rule,
+          (sym >= 256 ? tokenNames[sym - 256] : "\"" + Character.toString((char) sym) + "\""), sym);
     }
     if (!StxCode(rule)) {
       return 0;
@@ -284,14 +295,14 @@ public class CodeParser extends AbstractPhase {
           if (!RuleEndAction())
             return false;
 
-          bActFinales = false;
+          finalActions = false;
         }
         break;
       case 6:
         {
           if (!RuleEndAction())
             return false;
-          bActFinales = true;
+          finalActions = true;
         }
         break;
       case 10:
@@ -1261,9 +1272,21 @@ public class CodeParser extends AbstractPhase {
       /* header */
       switch (environment.getLanguage()) {
         case C:
-          environment.output.printf("\n" + "/* Code Generator */\n" + "\n" + "#ifndef TSTACK\n"
-              + "#define TSTACK int\n" + "#endif\n" + "\n" + "TSTACK StxStack[150];\n" + "\n" + "int pStxStack;\n"
-              + "\n" + "#define STXCODE_DEFINED\n" + "\n" + "int StxCode(int rule)\n" + "{\n");
+          environment.output.printf("\n"
+                                    + "/* Code Generator */\n"
+                                      + "\n"
+                                      + "#ifndef TSTACK\n"
+                                      + "#define TSTACK int\n"
+                                      + "#endif\n"
+                                      + "\n"
+                                      + "TSTACK StxStack[150];\n"
+                                      + "\n"
+                                      + "int pStxStack;\n"
+                                      + "\n"
+                                      + "#define STXCODE_DEFINED\n"
+                                      + "\n"
+                                      + "int StxCode(int rule)\n"
+                                      + "{\n");
           Tabea(environment.output, environment.getIndent() - 1);
           environment.output.printf("switch(rule){\n");
           environment.output.println();
@@ -1287,9 +1310,16 @@ public class CodeParser extends AbstractPhase {
           break;
 
         case pascal:
-          environment.output.printf("\n" + "{ Code generator }\n" + "\n" + "Var\n" + "  {$define STXCODE_DEFINED}\n"
-              + "  StxStack : Array [0..512] of TStack;\n" + "  pStxStack: Integer;\n" + "\n"
-              + "function StxCode(rule:integer):boolean;\n" + "begin\n");
+          environment.output.printf("\n"
+                                    + "{ Code generator }\n"
+                                      + "\n"
+                                      + "Var\n"
+                                      + "  {$define STXCODE_DEFINED}\n"
+                                      + "  StxStack : Array [0..512] of TStack;\n"
+                                      + "  pStxStack: Integer;\n"
+                                      + "\n"
+                                      + "function StxCode(rule:integer):boolean;\n"
+                                      + "begin\n");
           Tabea(environment.output, environment.getIndent() - 1);
           environment.output.printf("Case rule Of\n");
           break;
@@ -1306,6 +1336,7 @@ public class CodeParser extends AbstractPhase {
         }
         break;
       case java:
+        Tabea(environment.output, environment.getIndent() + 1);
         Tabea(environment.output, environment.getIndent() + 1);
         environment.output.printf("case %d: ", regla + 1);
         Tabea(environment.output, environment.getIndent() + 1);
@@ -1356,8 +1387,9 @@ public class CodeParser extends AbstractPhase {
             break;
           else
             encuentra = ')';
-          if (currentCharacter == '/' && environment.getLanguage() != Language.C
-              && environment.getLanguage() == Language.java)
+          if (currentCharacter == '/' &&
+              environment.getLanguage() != Language.C &&
+                environment.getLanguage() == Language.java)
             break;
           else
             encuentra = '/';
@@ -1555,8 +1587,13 @@ public class CodeParser extends AbstractPhase {
       /* encabezado */
       switch (environment.getLanguage()) {
         case C:
-          environment.output.printf("\n" + "/* Lexical Recognizer */\n" + "\n" + "char StxChar;" + "\n"
-              + "int StxLexer()\n" + "{\n");
+          environment.output.printf("\n"
+                                    + "/* Lexical Recognizer */\n"
+                                      + "\n"
+                                      + "char StxChar;"
+                                      + "\n"
+                                      + "int StxLexer()\n"
+                                      + "{\n");
           break;
 
         case java:
@@ -1572,8 +1609,13 @@ public class CodeParser extends AbstractPhase {
           break;
 
         case pascal:
-          environment.output.printf("\n" + "{ Lexical Analyzer }\n" + "\n" + "VAR StxChar:char;\n" + "\n"
-              + "function StxLexer():int;\n" + "begin\n");
+          environment.output.printf("\n"
+                                    + "{ Lexical Analyzer }\n"
+                                      + "\n"
+                                      + "VAR StxChar:char;\n"
+                                      + "\n"
+                                      + "function StxLexer():int;\n"
+                                      + "begin\n");
           break;
       }
     }
@@ -1664,8 +1706,9 @@ public class CodeParser extends AbstractPhase {
             break;
           else
             encuentra = ')';
-          if (currentCharacter == '/' && environment.getLanguage() != Language.C
-              && environment.getLanguage() == Language.java)
+          if (currentCharacter == '/' &&
+              environment.getLanguage() != Language.C &&
+                environment.getLanguage() == Language.java)
             break;
           else
             encuentra = '/';
@@ -1899,8 +1942,11 @@ public class CodeParser extends AbstractPhase {
         // break;
 
       case pascal:
-        environment.output.printf("Type\n" + "  {$define TSTACK_DEFINED}\n" + "  PTStack = ^TStack;\n"
-            + "  TStack = Record\n" + "    case integer of");
+        environment.output.printf("Type\n"
+                                  + "  {$define TSTACK_DEFINED}\n"
+                                    + "  PTStack = ^TStack;\n"
+                                    + "  TStack = Record\n"
+                                    + "    case integer of");
         nivel = 0;
         caracts = false;
         while (currentCharacter != '%' && currentCharacter != '\\') {
@@ -2057,11 +2103,11 @@ public class CodeParser extends AbstractPhase {
     switch (environment.getLanguage()) {
       case C:
         environment.output.printf("\n#define RECOVERS %d\n\n"
-            + "/* Contains tokens in compact mode, and column in matrix */", nRecupera);
+                                  + "/* Contains tokens in compact mode, and column in matrix */", nRecupera);
         if (nRecupera != 0)
           environment.output.printf("\nint StxRecoverTable[RECOVERS] = {\n");
         else
-          environment.output.printf("\nint StxRecoverTable[1] = {0};\n");
+          environment.output.printf("\nint StxRecoverTable[1] = {0};\n\n");
         break;
       case java:
         environment.output.printf("\n");
@@ -2074,15 +2120,15 @@ public class CodeParser extends AbstractPhase {
         if (nRecupera != 0)
           environment.output.printf("int recoverTable[] = {\n");
         else
-          environment.output.printf("int recoverTable[] = {0};\n");
+          environment.output.printf("int recoverTable[] = {0};\n\n");
         break;
       case pascal:
         environment.output.printf("\nConst\n  RECOVERS = %d;\n"
-            + "{ Contains tokens in compact mode, and column in matrix }", nRecupera - 1);
+                                  + "{ Contains tokens in compact mode, and column in matrix }", nRecupera - 1);
         if (nRecupera != 0)
           environment.output.printf("\n  StxRecoverTable : array [0..RECOVERS] of INTEGER = (\n");
         else
-          environment.output.printf("\n  StxRecoverTable : array [0..0] of INTEGER = (0);\n");
+          environment.output.printf("\n  StxRecoverTable : array [0..0] of INTEGER = (0);\n\n");
         break;
     }
   }
@@ -2114,31 +2160,50 @@ public class CodeParser extends AbstractPhase {
       if (id.getType() != null)
         environment.report.printf("%s", id.getType().getName());
       environment.report.printf("\n");
-      if (id instanceof ErrorToken)
+      if (id instanceof ErrorToken) {
+        int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
         switch (environment.getLanguage()) {
           case C:
             if (++nCuales < nRecupera)
-              environment.output.printf("\t%d,\n", environment.isPacked() ? id.getToken() : terminals);
+              environment.output.printf("\t%d /* %s */,\n", recoveryToken, id.getName());
             else
-              environment.output.printf("\t%d\n};\n\n", environment.isPacked() ? id.getToken() : terminals);
+              environment.output.printf("\t%d /* %s */\n};\n\n", recoveryToken, id.getName());
             break;
           case java:
             Tabea(environment.output, environment.getIndent());
             if (++nCuales < nRecupera)
-              environment.output.printf("%d,\n", environment.isPacked() ? id.getToken() : terminals);
+              environment.output.printf("%d, // %s\n", recoveryToken, id.getName());
             else {
-              environment.output.printf("%d\n", environment.isPacked() ? id.getToken() : terminals);
+              environment.output.printf("%d // %s\n", recoveryToken, id.getName());
               Tabea(environment.output, environment.getIndent() - 1);
               environment.output.printf("};\n\n");
             }
             break;
           case pascal:
             if (++nCuales < nRecupera)
-              environment.output.printf("\t%d,\n", environment.isPacked() ? id.getToken() : terminals);
+              environment.output.printf("\t%d, (* %s *)\n", recoveryToken, id.getName());
             else
-              environment.output.printf("\t%d);\n\n", environment.isPacked() ? id.getToken() : terminals);
+              environment.output.printf("\t%d (* %s *) );\n\n", recoveryToken, id.getName());
             break;
         }
+      }
+    }
+
+    switch (environment.getLanguage()) {
+      case C:
+        environment.output.printf("\n#define TOKENS %d\n", terminals);
+        environment.output.printf("\nint StxTokens[TOKENS] = {\n");
+        break;
+      case java:
+        Tabea(environment.output, environment.getIndent() - 1);
+        environment.output.printf("private static int TOKENS=%d;\n", terminals);
+        Tabea(environment.output, environment.getIndent() - 1);
+        environment.output.printf("private static int tokens[] = {\n");
+        break;
+      case pascal:
+        environment.output.printf("\nConst\n  TOKENS = %d;\n", terminals - 1);
+        environment.output.printf("\n  StxTokens : array [0..TOKENS] of Integer = (\n");
+        break;
     }
 
     int i = 1;
@@ -2146,25 +2211,25 @@ public class CodeParser extends AbstractPhase {
       switch (environment.getLanguage()) {
         case C:
           if (i == terminals)
-            environment.output.printf("\t%d\n};\n\n", id.getToken());
+            environment.output.printf("\t%d /* %s (%s)*/\n};\n\n", id.getToken(), id.getName(), id.getFullName());
           else
-            environment.output.printf("\t%d,\n", id.getToken());
+            environment.output.printf("\t%d, /* %s (%s) */\n", id.getToken(), id.getName(), id.getFullName());
           break;
         case java:
           Tabea(environment.output, environment.getIndent());
           if (i == terminals) {
-            environment.output.printf("%d\n", id.getToken());
+            environment.output.printf("%d // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
             Tabea(environment.output, environment.getIndent() - 1);
             environment.output.printf("};\n\n");
 
           } else
-            environment.output.printf("%d,\n", id.getToken());
+            environment.output.printf("%d, // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
           break;
         case pascal:
           if (i == terminals)
-            environment.output.printf("    %d\n  );\n", id.getToken());
+            environment.output.printf("    %d\n (* %s (%s) *) );\n", id.getToken(), id.getName(), id.getFullName());
           else
-            environment.output.printf("    %d,\n", id.getToken());
+            environment.output.printf("    %d,\n (* %s (%s) *)", id.getToken(), id.getName(), id.getFullName());
           break;
       }
       i++;
@@ -2280,6 +2345,8 @@ public class CodeParser extends AbstractPhase {
       finalizeSymbols();
       finalizeRules();
       defineTokens();
+      runtimeData.setNumberOfErrors(StxErrors);
+      runtimeData.setFinalActions(finalActions);
     } catch (IOException e) {
       throw new ParsingException("IOError ocurred when parsing: " + e.getMessage(), e);
     }

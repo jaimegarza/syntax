@@ -1,5 +1,5 @@
 Syntax is distibuted under the Revised, or 3-clause BSD license
-===================================================================
+===============================================================================
 Copyright (c) 1985, 2012, Jaime Garza
 All rights reserved.
 
@@ -24,17 +24,20 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-===================================================================
+===============================================================================
 
-Syntax is a compiler compiler written as a tool for my students in college.
+Syntax is a compiler compiler written as a tool for my students in college for 
+the compiler construction course.
 
-I thought that having a yacc like syntax would help the introduction of LR parsers.  Over time I have added:
+I thought that having a yacc like syntax would help the introduction of 
+LR parsers.  Over time I have added:
 
 - Code to be generated into a lexical analizer (non-regex)
 - Error messages
 - Output in java
 - Output in C
 - Output for Delphi Pascal
+- Translated to JAVA from its 1985 C codebase.
 
 - Compile with LALR (yacc) or SLR, more compact, a little more restrictive
 - Eject the output table in a compressed mode (yacc) or a matrix, for readability.
@@ -43,7 +46,7 @@ I thought that having a yacc like syntax would help the introduction of LR parse
 I am planning a version 4 at some point where I would add
 
 - A regex token recognizer (perhaps with my own DFA)
-- Multi-platform.  Right now it is VisualStudio
+- EBNF 
 - javascript (I want to drive CodeMirror2 coloring editor to recognize my syntax.)
 - Scala
 

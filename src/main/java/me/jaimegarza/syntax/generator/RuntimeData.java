@@ -17,10 +17,15 @@ public class RuntimeData {
   private List<Rule> rules = new LinkedList<Rule>();
   private List<NonTerminal> nonTerminals = new LinkedList<NonTerminal>();
   private List<Terminal> terminals = new LinkedList<Terminal>();
-  List<Type> types = new LinkedList<Type>();
+  private List<Type> types = new LinkedList<Type>();
   private State[] I;
   private int numberOfGoTos;
+  private int numberOfActions;
+  private int numberOfErrors;
+  private int numberOfRecoveries;
   private List<String> errorMessages;
+  private boolean finalActions;
+  
   public int nLine = 0;
   public char c;
   private boolean stackTypeDefined;
@@ -148,6 +153,38 @@ public class RuntimeData {
 
   public void setStackTypeDefined(boolean stackTypeDefined) {
     this.stackTypeDefined = stackTypeDefined;
+  }
+
+  public int getNumberOfActions() {
+    return numberOfActions;
+  }
+
+  public void setNumberOfActions(int numberOfActions) {
+    this.numberOfActions = numberOfActions;
+  }
+
+  public int getNumberOfErrors() {
+    return numberOfErrors;
+  }
+
+  public void setNumberOfErrors(int numberOfErrors) {
+    this.numberOfErrors = numberOfErrors;
+  }
+
+  public int getNumberOfRecoveries() {
+    return numberOfRecoveries;
+  }
+
+  public void setNumberOfRecoveries(int numberOfRecoveries) {
+    this.numberOfRecoveries = numberOfRecoveries;
+  }
+
+  public boolean hasFinalActions() {
+    return finalActions;
+  }
+
+  public void setFinalActions(boolean finalActions) {
+    this.finalActions = finalActions;
   }
 
 }
