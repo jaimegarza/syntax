@@ -1,0 +1,1336 @@
+## Token                                    Name                                     Value Err  Refs  Prec Assc  Type
+________________________________________________________________________________________________________________________
+ 1 0                                        $                                            0 No      0     0       
+ 2 1                                        TOK_AND                                    256 No      0     1 LEF   
+ 3 2                                        TOK_OR                                     257 No      0     2 LEF   
+ 4 3                                        TOK_NOT                                    258 No      0     3 RIG   
+ 5 4                                        TOK_LE                                     259 No      0     4 LEF   
+ 6 5                                        TOK_LT                                     260 No      0     4 LEF   
+ 7 6                                        TOK_GE                                     261 No      0     4 LEF   
+ 8 7                                        TOK_GT                                     262 No      0     4 LEF   
+ 9 8                                        TOK_NE                                     263 No      0     4 LEF   
+10 9                                        TOK_EQ                                     264 No      0     4 LEF   
+11 10                                       +                                           43 No      0     5 LEF   
+12 11                                       -                                           45 No      1     5 LEF   
+13 12                                       *                                           42 No      0     6 LEF   
+14 13                                       /                                           47 No      0     6 LEF   
+15 14                                       TOK_UMINUS                               32768 No      0     7 RIG   
+16 15                                       (                                           40 No      0     7 LEF   
+17 16                                       )                                           41 No      0     7 LEF   
+18 17                                       TOK_NUMBER                               32769 No      0     7 LEF   number
+
+## Non Terminals                            Name                                     Refs  Type
+__________________________________________________________________________________________________
+18 0                                        Expression                               27    number
+19 0                                        Sys$Root                                 0     
+
+Prec Rule  Grammar
+_____________________________________________________
+[ 0]    0. Sys$Root -> Expression 
+[ 1]    1. Expression -> Expression TOK_AND Expression 
+[ 2]    2. Expression -> Expression TOK_OR Expression 
+[ 3]    3. Expression -> TOK_NOT Expression 
+[ 4]    4. Expression -> Expression TOK_LE Expression 
+[ 4]    5. Expression -> Expression TOK_LT Expression 
+[ 4]    6. Expression -> Expression TOK_GE Expression 
+[ 4]    7. Expression -> Expression TOK_GT Expression 
+[ 4]    8. Expression -> Expression TOK_NE Expression 
+[ 4]    9. Expression -> Expression TOK_EQ Expression 
+[ 5]   10. Expression -> Expression + Expression 
+[ 5]   11. Expression -> Expression - Expression 
+[ 6]   12. Expression -> Expression * Expression 
+[ 6]   13. Expression -> Expression / Expression 
+[ 7]   14. Expression -> - Expression 
+[ 7]   15. Expression -> ( Expression ) 
+[ 7]   16. Expression -> TOK_NUMBER 
+
+First of Expression
+     3. TOK_NOT
+    11. -
+    15. (
+    17. TOK_NUMBER
+
+First of Sys$Root
+     3. TOK_NOT
+    11. -
+    15. (
+    17. TOK_NUMBER
+
+Follow of Expression
+     0. $
+     1. TOK_AND
+     2. TOK_OR
+     4. TOK_LE
+     5. TOK_LT
+     6. TOK_GE
+     7. TOK_GT
+     8. TOK_NE
+     9. TOK_EQ
+    10. +
+    11. -
+    12. *
+    13. /
+    16. )
+
+Follow of Sys$Root
+     0. $
+
+State #  0 - Root
+  0 Sys$Root -> . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 5
+	With Expression Goto 1
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State #  1 Goto from state 0 with symbol Expression
+  0 Sys$Root -> Expression .
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+REDUCE BY -0
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State #  2 Goto from state 0 with symbol TOK_NOT
+  3 Expression -> TOK_NOT . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 19
+	With Expression Goto 18
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State #  3 Goto from state 0 with symbol -
+ 14 Expression -> - . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 21
+	With Expression Goto 20
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State #  4 Goto from state 0 with symbol (
+ 15 Expression -> ( . Expression ) 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 23
+	With Expression Goto 22
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State #  5 Goto from state 0 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions
+--------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State #  6 Goto from state 1 with symbol TOK_AND
+  1 Expression -> Expression TOK_AND . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 25
+	With Expression Goto 24
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State #  7 Goto from state 1 with symbol TOK_OR
+  2 Expression -> Expression TOK_OR . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 27
+	With Expression Goto 26
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State #  8 Goto from state 1 with symbol TOK_LE
+  4 Expression -> Expression TOK_LE . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 29
+	With Expression Goto 28
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State #  9 Goto from state 1 with symbol TOK_LT
+  5 Expression -> Expression TOK_LT . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 31
+	With Expression Goto 30
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 10 Goto from state 1 with symbol TOK_GE
+  6 Expression -> Expression TOK_GE . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 33
+	With Expression Goto 32
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 11 Goto from state 1 with symbol TOK_GT
+  7 Expression -> Expression TOK_GT . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 35
+	With Expression Goto 34
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 12 Goto from state 1 with symbol TOK_NE
+  8 Expression -> Expression TOK_NE . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 37
+	With Expression Goto 36
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 13 Goto from state 1 with symbol TOK_EQ
+  9 Expression -> Expression TOK_EQ . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 39
+	With Expression Goto 38
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 14 Goto from state 1 with symbol +
+ 10 Expression -> Expression + . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 41
+	With Expression Goto 40
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 15 Goto from state 1 with symbol -
+ 11 Expression -> Expression - . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 43
+	With Expression Goto 42
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 16 Goto from state 1 with symbol *
+ 12 Expression -> Expression * . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 45
+	With Expression Goto 44
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 17 Goto from state 1 with symbol /
+ 13 Expression -> Expression / . Expression 
+  1 Expression -> . Expression TOK_AND Expression 
+  2 Expression -> . Expression TOK_OR Expression 
+  3 Expression -> . TOK_NOT Expression 
+  4 Expression -> . Expression TOK_LE Expression 
+  5 Expression -> . Expression TOK_LT Expression 
+  6 Expression -> . Expression TOK_GE Expression 
+  7 Expression -> . Expression TOK_GT Expression 
+  8 Expression -> . Expression TOK_NE Expression 
+  9 Expression -> . Expression TOK_EQ Expression 
+ 10 Expression -> . Expression + Expression 
+ 11 Expression -> . Expression - Expression 
+ 12 Expression -> . Expression * Expression 
+ 13 Expression -> . Expression / Expression 
+ 14 Expression -> . - Expression 
+ 15 Expression -> . ( Expression ) 
+ 16 Expression -> . TOK_NUMBER 
+
+Actions
+--------
+	With TOK_NOT Shift to state 2
+	With - Shift to state 3
+	With ( Shift to state 4
+	With TOK_NUMBER Shift to state 47
+	With Expression Goto 46
+	Default: Error
+
+Errors
+-------
+	Expecting Expression
+
+State # 18 Goto from state 2 with symbol Expression
+  3 Expression -> TOK_NOT Expression .
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+REDUCE BY -3
+Conflict with TOK_AND resolved by Reduce
+Conflict with TOK_OR resolved by Reduce
+Conflict with TOK_LE resolved by Shift
+Conflict with TOK_LT resolved by Shift
+Conflict with TOK_GE resolved by Shift
+Conflict with TOK_GT resolved by Shift
+Conflict with TOK_NE resolved by Shift
+Conflict with TOK_EQ resolved by Shift
+Conflict with + resolved by Shift
+Conflict with - resolved by Shift
+Conflict with * resolved by Shift
+Conflict with / resolved by Shift
+
+Actions
+--------
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Reduce by rule 3
+
+Errors
+-------
+	'<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 19 Goto from state 2 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 20 Goto from state 3 with symbol Expression
+ 14 Expression -> - Expression .
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+REDUCE BY -14
+Conflict with TOK_AND resolved by Reduce
+Conflict with TOK_OR resolved by Reduce
+Conflict with TOK_LE resolved by Reduce
+Conflict with TOK_LT resolved by Reduce
+Conflict with TOK_GE resolved by Reduce
+Conflict with TOK_GT resolved by Reduce
+Conflict with TOK_NE resolved by Reduce
+Conflict with TOK_EQ resolved by Reduce
+Conflict with + resolved by Reduce
+Conflict with - resolved by Reduce
+Conflict with * resolved by Reduce
+Conflict with / resolved by Reduce
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 14
+
+Errors
+-------
+
+State # 21 Goto from state 3 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 22 Goto from state 4 with symbol Expression
+ 15 Expression -> ( Expression . ) 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	With ) Shift to state 48
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, *, / or ) expected
+
+State # 23 Goto from state 4 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 24 Goto from state 6 with symbol Expression
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 25 Goto from state 6 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 26 Goto from state 7 with symbol Expression
+  2 Expression -> Expression . TOK_OR Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 27 Goto from state 7 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 28 Goto from state 8 with symbol Expression
+  4 Expression -> Expression . TOK_LE Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 29 Goto from state 8 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 30 Goto from state 9 with symbol Expression
+  5 Expression -> Expression . TOK_LT Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 31 Goto from state 9 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 32 Goto from state 10 with symbol Expression
+  6 Expression -> Expression . TOK_GE Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 33 Goto from state 10 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 34 Goto from state 11 with symbol Expression
+  7 Expression -> Expression . TOK_GT Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 35 Goto from state 11 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 36 Goto from state 12 with symbol Expression
+  8 Expression -> Expression . TOK_NE Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 37 Goto from state 12 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 38 Goto from state 13 with symbol Expression
+  9 Expression -> Expression . TOK_EQ Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 39 Goto from state 13 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 40 Goto from state 14 with symbol Expression
+ 10 Expression -> Expression . + Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 41 Goto from state 14 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 42 Goto from state 15 with symbol Expression
+ 11 Expression -> Expression . - Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 12 Expression -> Expression . * Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 43 Goto from state 15 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 44 Goto from state 16 with symbol Expression
+ 12 Expression -> Expression . * Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 13 Expression -> Expression . / Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 45 Goto from state 16 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 46 Goto from state 17 with symbol Expression
+ 13 Expression -> Expression . / Expression 
+  1 Expression -> Expression . TOK_AND Expression 
+  2 Expression -> Expression . TOK_OR Expression 
+  4 Expression -> Expression . TOK_LE Expression 
+  5 Expression -> Expression . TOK_LT Expression 
+  6 Expression -> Expression . TOK_GE Expression 
+  7 Expression -> Expression . TOK_GT Expression 
+  8 Expression -> Expression . TOK_NE Expression 
+  9 Expression -> Expression . TOK_EQ Expression 
+ 10 Expression -> Expression . + Expression 
+ 11 Expression -> Expression . - Expression 
+ 12 Expression -> Expression . * Expression 
+
+Actions
+--------
+	With TOK_AND Shift to state 6
+	With TOK_OR Shift to state 7
+	With TOK_LE Shift to state 8
+	With TOK_LT Shift to state 9
+	With TOK_GE Shift to state 10
+	With TOK_GT Shift to state 11
+	With TOK_NE Shift to state 12
+	With TOK_EQ Shift to state 13
+	With + Shift to state 14
+	With - Shift to state 15
+	With * Shift to state 16
+	With / Shift to state 17
+	Default: Error
+
+Errors
+-------
+	AND, OR, '<=', '<', '>=', '>', '<>', '==', +, -, * or / expected
+
+State # 47 Goto from state 17 with symbol TOK_NUMBER
+ 16 Expression -> TOK_NUMBER .
+REDUCE BY -16
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 16
+
+Errors
+-------
+
+State # 48 Goto from state 22 with symbol )
+ 15 Expression -> ( Expression ) .
+REDUCE BY -15
+
+Actions (same as state 5)
+------------------------------
+	Default: Reduce by rule 15
+
+Errors
+-------
