@@ -38,6 +38,29 @@ import me.jaimegarza.syntax.generator.TableGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * Main entry point to syntax
+ *
+ * Syntax is a compiler compiler written as a tool for my students in college for 
+ * the compiler construction course.
+ * 
+ * I thought that having a yacc like syntax would help the introduction of 
+ * LR parsers.  Over time I have added:
+ * 
+ * - Code to be generated into a lexical analizer (non-regex)
+ * - Error messages
+ * - Output in java
+ * - Output in C
+ * - Output for Delphi Pascal
+ * - Translated to JAVA from its 1985 C codebase.
+ * 
+ * - Compile with LALR (yacc) or SLR, more compact, a little more restrictive
+ * - Eject the output table in a compressed mode (yacc) or a matrix, for readability.
+ * - Unlike yacc, the output is properly formated and readable.
+ * 
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class Syntax {
 
   private Environment environment;
@@ -45,10 +68,23 @@ public class Syntax {
 
   public final Log LOG = LogFactory.getLog(this.getClass());
 
+  /**
+   * Initialize syntax with the environment.
+   * 
+   * @param environment
+   */
   public Syntax(Environment environment) {
     this.environment = environment;
   }
 
+  /**
+   * Execute the phases as follows:
+   * 
+   * 1. Parse the file and create the rule structure
+   * 2. Analyze and compute first and (for SLR) follow symbols
+   * 3. Generate the states pertinent to the rules
+   * 4. Output the components of the resulting code.
+   */
   private void execute() {
     CodeParser parser = new CodeParser(environment, runtimeData);
     StructuralAnalyzer analyzer = new StructuralAnalyzer(environment, runtimeData);
@@ -68,6 +104,10 @@ public class Syntax {
     }
   }
 
+  /**
+   * Entry point 
+   * @param args command line arguments
+   */
   public static void main(String args[]) {
     Environment environment = new Environment("Syntax", args);
     if (environment.isDebug()) {
