@@ -53,8 +53,10 @@ public class LookAhead {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    
+    if (this == obj) {
+      return true;
+    }
+
     try {
       LookAhead la = (LookAhead) obj;
       return carry == la.carry && symbolIds.equals(la.symbolIds);

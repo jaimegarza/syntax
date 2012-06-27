@@ -28,7 +28,6 @@
 */
 package me.jaimegarza.syntax.generator.parser;
 
-
 public class ParserGoTo {
   public int origin;
   public int destination;

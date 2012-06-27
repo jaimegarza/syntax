@@ -56,10 +56,9 @@ public class State {
     this.symbol = symbol;
     this.message = -1;
   }
-  
+
   public State() {
   }
-
 
   public boolean isReview() {
     return review;
@@ -84,7 +83,7 @@ public class State {
   public void setSymbol(Symbol symbol) {
     this.symbol = symbol;
   }
-  
+
   public int getSymbolId() {
     return symbol == null ? -1 : symbol.getId();
   }
@@ -92,7 +91,7 @@ public class State {
   public List<Dot> getMarkers() {
     return markers;
   }
-  
+
   public List<Dot> getOriginalMarkers() {
     if (mark == markers.size()) {
       return markers;
@@ -108,15 +107,15 @@ public class State {
     }
     return marker;
   }
-  
+
   public void addMarker(Dot dot) {
     if (!markers.contains(dot)) {
       markers.add(dot);
     }
   }
-  
+
   public void addAllMarkers(List<Dot> dots) {
-    for (Dot dot: dots) {
+    for (Dot dot : dots) {
       addMarker(dot);
     }
   }
@@ -160,7 +159,7 @@ public class State {
   public void setActionSize(int actionSize) {
     this.actionSize = actionSize;
   }
-  
+
   public int getHowMany() {
     return howMany;
   }
@@ -172,7 +171,7 @@ public class State {
   public void mark() {
     mark = markers.size();
   }
-  
+
   public void cutToMark() {
     if (mark == markers.size()) {
       cut = null;
@@ -181,7 +180,7 @@ public class State {
       markers = markers.subList(0, mark);
     }
   }
-  
+
   public void restore() {
     if (cut != null) {
       List<Dot> currentMarkers = markers;
@@ -210,22 +209,25 @@ public class State {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    
+    if (this == obj) {
+      return true;
+    }
+
     try {
-      State s =(State) obj;
+      State s = (State) obj;
       // skipping review on purpose, since review is really volatile
-      // skipping defaultValue, actions since they may be transitional (i.e. about to be calculated and this is why I am comparing in the first place)
-      return from == s.from &&
-          symbol.equals(s.symbol) &&
-          markers.equals(s.markers) && // maybe not
-          position == s.position;
-          
+      // skipping defaultValue, actions since they may be transitional (i.e.
+      // about to be calculated and this is why I am comparing in the first
+      // place)
+      return from == s.from && symbol.equals(s.symbol) && markers.equals(s.markers) && // maybe
+                                                                                       // not
+               position == s.position;
+
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {
       return false;
-    }  
+    }
   }
 
   @Override

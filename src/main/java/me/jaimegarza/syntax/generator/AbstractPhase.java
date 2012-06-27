@@ -40,8 +40,9 @@ public abstract class AbstractPhase {
     Class<?> elementType = oldArray.getClass().getComponentType();
     Object newArray = java.lang.reflect.Array.newInstance(elementType, newSize);
     int preserveLength = Math.min(oldSize, newSize);
-    if (preserveLength > 0)
+    if (preserveLength > 0) {
       System.arraycopy(oldArray, 0, newArray, 0, preserveLength);
+    }
     return newArray;
   }
 
@@ -49,7 +50,7 @@ public abstract class AbstractPhase {
   protected RuntimeData runtimeData;
 
   protected boolean isEmpty(int k) {
-  
+
     for (Rule rule : runtimeData.getRules()) {
       if (rule.getLeftHand().getId() == k && rule.getItems().size() == 0) {
         return true;
@@ -60,8 +61,8 @@ public abstract class AbstractPhase {
 
   protected void Tabea(PrintStream out, int n) {
     int i;
-  
-    for (i = 0; i < n; i++)
+
+    for (i = 0; i < n; i++) {
       switch (environment.getLanguage()) {
         case C:
           out.print("    ");
@@ -71,6 +72,7 @@ public abstract class AbstractPhase {
           out.print("  ");
           break;
       }
+    }
   }
 
   private boolean identifier(String s) {
@@ -89,26 +91,34 @@ public abstract class AbstractPhase {
     if (s == null || s.length() == 0) {
       return s;
     }
-  
-    if (num == 0)
+
+    if (num == 0) {
       return "EOS";
-  
-    if (identifier(s))
+    }
+
+    if (identifier(s)) {
       return s;
-  
+    }
+
     if (s.charAt(0) == '\\') {
-      if (!s.equals("\\a"))
+      if (!s.equals("\\a")) {
         return "BELL";
-      if (!s.equals("\\b"))
+      }
+      if (!s.equals("\\b")) {
         return "BACKSPACE";
-      if (!s.equals("\\n"))
+      }
+      if (!s.equals("\\n")) {
         return "EOL";
-      if (!s.equals("\\t"))
+      }
+      if (!s.equals("\\t")) {
         return "TAB";
-      if (!s.equals("\\f"))
+      }
+      if (!s.equals("\\f")) {
         return "FORM_FEED";
-      if (!s.equals("\\r"))
+      }
+      if (!s.equals("\\r")) {
         return "CR";
+      }
       if (s.startsWith("\\x")) {
         String t = "HEXAD_0x" + Integer.toHexString(num);
         return t;
@@ -120,10 +130,11 @@ public abstract class AbstractPhase {
     }
     String patched = "";
     for (int i = 0; i < s.length(); i++) {
-      if (Character.isJavaIdentifierPart(s.charAt(i)))
+      if (Character.isJavaIdentifierPart(s.charAt(i))) {
         patched += s.charAt(i);
-      else
+      } else {
         patched += '_';
+      }
     }
     return patched;
   }

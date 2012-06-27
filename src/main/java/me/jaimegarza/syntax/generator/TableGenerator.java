@@ -495,7 +495,7 @@ public class TableGenerator extends AbstractPhase {
       }
     }
   }
-  
+
   private int AgregaGoto(NonTerminal id, int origen, int destino) {
     GoTo goTo = new GoTo(origen, destino);
     id.addGoTo(goTo);
@@ -534,6 +534,7 @@ public class TableGenerator extends AbstractPhase {
 
     return iDefa;
   }
+
   private void CompactaGotos() {
     int iDefa;
     int nElems, iPosicion;
@@ -662,7 +663,7 @@ public class TableGenerator extends AbstractPhase {
     }
 
     CompactaGotos();
-    
+
     I = Arrays.copyOf(I, finalState + 1);
     runtimeData.setStates(I);
     runtimeData.setNumberOfActions(actionNumber);
