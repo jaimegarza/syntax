@@ -196,7 +196,7 @@ public class CodeParser extends AbstractPhase {
   private boolean bActionDone = false;
   private char currentCharacter;
   private int currentRuleIndex;
-  private List<RuleItem> pRule = null;
+  private List<RuleItem> currentRuleItems = null;
   private String currentStringValue;
   private Type currentType;
 
@@ -218,7 +218,7 @@ public class CodeParser extends AbstractPhase {
   private int ruleActionCount;
   private int actLine;
   private boolean isFirstToken = true;
-  private int nRecupera;
+  private int numberOfRecoveries;
 
   public CodeParser(Environment environment, RuntimeData runtimeData) {
     super();
@@ -317,14 +317,14 @@ public class CodeParser extends AbstractPhase {
     switch (rule) {
 
       case 1:
-        TokenEndAction();
+        tokenEndAction();
         break;
       case 3:
-        TokenEndAction();
+        tokenEndAction();
         break;
       case 5:
         {
-          if (!RuleEndAction()) {
+          if (!ruleEndAction()) {
             return false;
           }
 
@@ -333,7 +333,7 @@ public class CodeParser extends AbstractPhase {
         break;
       case 6:
         {
-          if (!RuleEndAction()) {
+          if (!ruleEndAction()) {
             return false;
           }
           finalActions = true;
@@ -362,7 +362,7 @@ public class CodeParser extends AbstractPhase {
         }
         break;
       case 14:
-        if (!DeclUnion()) {
+        if (!declareUnion()) {
           return false;
         }
         break;
@@ -370,7 +370,7 @@ public class CodeParser extends AbstractPhase {
         currentType = null;
         break;
       case 16:
-        if (!DeclAction()) {
+        if (!declareAction()) {
           return false;
         }
         break;
@@ -408,17 +408,17 @@ public class CodeParser extends AbstractPhase {
         }
         break;
       case 23:
-        return DeclareOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
+        return declareOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
       case 24:
-        return DeclareOneNonTerminal(StxStack[pStxStack - 3].id, StxStack[pStxStack].id);
+        return declareOneNonTerminal(StxStack[pStxStack - 3].id, StxStack[pStxStack].id);
       case 25:
-        return DeclareOneNonTerminal(StxStack[pStxStack - 1].id, StxStack[pStxStack].id);
+        return declareOneNonTerminal(StxStack[pStxStack - 1].id, StxStack[pStxStack].id);
       case 26:
-        return NameOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
+        return nameOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
       case 27:
-        return NameOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
+        return nameOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
       case 28:
-        return NameOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
+        return nameOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
       case 33:
         {
           if (StxStack[pStxStack - 2].value != -1) {
@@ -514,7 +514,7 @@ public class CodeParser extends AbstractPhase {
         // AnyNode();
         break;
       case 52:
-        TokenAction();
+        tokenAction();
         break;
       case 53:
         currentType = new Type(StxStack[pStxStack].id);
@@ -524,16 +524,16 @@ public class CodeParser extends AbstractPhase {
         currentType = null;
         break;
       case 55:
-        return DeclareRules(StxStack[pStxStack - 3].id);
+        return declareRules(StxStack[pStxStack - 3].id);
       case 56:
-        return DeclareRules(StxStack[pStxStack - 3].id);
+        return declareRules(StxStack[pStxStack - 3].id);
       case 57:
-        NewRule();
+        newRule();
         bActionDone = false;
         break;
       case 58:
         {
-          NewRule();
+          newRule();
           currentRuleIndex = runtimeData.getRules().size() - 1;
           bActionDone = false;
         }
@@ -554,14 +554,14 @@ public class CodeParser extends AbstractPhase {
             isFirstToken = false;
           }
           if (bActionDone) {
-            Rule stx = NewEmptyRule();
+            Rule stx = newEmptyRule();
             String rootName = "Sys$Prod" + (runtimeData.getRules().size() - 1);
             NonTerminal rootSymbol = new NonTerminal(rootName);
             runtimeData.getNonTerminals().add(rootSymbol);
             stx.setLeftHand(rootSymbol);
             rootSymbol.setCount(rootSymbol.getCount() + 1);
             rootSymbol.setPrecedence(1); /* usado como no terminal */
-            RuleItem item = NewItem(rootSymbol);
+            RuleItem item = newItem(rootSymbol);
             stx.getItems().add(item);
             bActionDone = false;
           }
@@ -598,7 +598,7 @@ public class CodeParser extends AbstractPhase {
           } else {
             symbol = nonTerminal;
           }
-          NewItem(symbol);
+          newItem(symbol);
 
         }
         break;
@@ -622,8 +622,8 @@ public class CodeParser extends AbstractPhase {
         break;
       case 65:
         {
-          i = pRule != null ? pRule.size() : 0;
-          if (!RuleAction(runtimeData.getRules().size(), i, currentNonTerminalName)) {
+          i = currentRuleItems != null ? currentRuleItems.size() : 0;
+          if (!ruleAction(runtimeData.getRules().size(), i, currentNonTerminalName)) {
             return false;
           }
           bActionDone = true;
@@ -733,7 +733,7 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
-  private boolean DeclareOneNonTerminal(String idnt, String tkn) {
+  private boolean declareOneNonTerminal(String idnt, String tkn) {
     if (runtimeData.findTerminalByName(tkn) != null) {
       environment.error(-1, "Token \'%s\' cannot appear on a %%type clause.", tkn);
       return false;
@@ -751,7 +751,7 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private boolean NameOneNonTerminal(String ntr, String name) {
+  private boolean nameOneNonTerminal(String ntr, String name) {
     if (runtimeData.findTerminalByName(ntr) != null) {
       environment.error(-1, "Token \'%s\' cannot appear on a %%name clause.", ntr);
       return false;
@@ -766,7 +766,7 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private boolean DeclareRules(String name) {
+  private boolean declareRules(String name) {
     if (runtimeData.findTerminalByName(name) != null) {
       environment.error(-1, "The token \'%s\' cannot appear to the right of a rule.", name);
       return false;
@@ -788,7 +788,7 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private char GetCar() throws IOException {
+  private char getCharacter() throws IOException {
     if (inputChars.size() > 0) {
       return inputChars.pop();
     }
@@ -812,11 +812,11 @@ public class CodeParser extends AbstractPhase {
     return currentCharacter;
   }
 
-  private void UngetChar(char c) {
+  private void ungetCharacter(char c) {
     inputChars.push(c);
   }
 
-  private char DecodeOctal() throws IOException {
+  private char decodeOctal() throws IOException {
     int iCount = 3;
     char c2 = 0;
 
@@ -825,7 +825,7 @@ public class CodeParser extends AbstractPhase {
 
       if (currentCharacter >= '0' && currentCharacter <= '7') {
         c2 += currentCharacter - '0';
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
       } else if (currentCharacter == '\0') {
         return c2;
       } else {
@@ -838,9 +838,9 @@ public class CodeParser extends AbstractPhase {
     return c2;
   }
 
-  private char DecodeControlChar() throws IOException {
+  private char decodeControlChar() throws IOException {
     char c2;
-    currentCharacter = GetCar();
+    currentCharacter = getCharacter();
 
     if (currentCharacter == '\0') {
       return '\0';
@@ -848,22 +848,22 @@ public class CodeParser extends AbstractPhase {
 
     if (currentCharacter >= 'a' && currentCharacter <= 'z') {
       c2 = currentCharacter;
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return (char) (c2 - ('a' - 1));
     } else if (currentCharacter >= 'A' && currentCharacter <= 'Z') {
       c2 = currentCharacter;
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return (char) (c2 - ('A' - 1));
     } else {
       return 'c' - 'a';
     }
   }
 
-  private char DecodeHex() throws IOException {
+  private char decodeHex() throws IOException {
     int iCount = 2;
     char c2 = 0;
 
-    currentCharacter = GetCar();
+    currentCharacter = getCharacter();
 
     while (iCount != 0) {
       c2 *= 16;
@@ -886,7 +886,7 @@ public class CodeParser extends AbstractPhase {
     return c2;
   }
 
-  private char DecodeEscape() throws IOException {
+  private char decodeEscape() throws IOException {
     char c2;
     switch (currentCharacter) {
       case '0':
@@ -897,45 +897,45 @@ public class CodeParser extends AbstractPhase {
       case '5':
       case '6':
       case '7':
-        return DecodeOctal();
+        return decodeOctal();
       case 'a':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return 7;
       case 'b':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return '\b';
       case 'c':
-        currentCharacter = GetCar();
-        return DecodeControlChar();
+        currentCharacter = getCharacter();
+        return decodeControlChar();
       case 'e':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return '\\';
       case 'f':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return '\f';
       case 'n':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return '\n';
       case 'r':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return '\r';
       case 't':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return '\t';
       case 'v':
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return 11;
       case 'x':
-        currentCharacter = GetCar();
-        return DecodeHex();
+        currentCharacter = getCharacter();
+        return decodeHex();
       default:
         c2 = currentCharacter;
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         return c2;
     }
   }
 
-  private int GetRegexSym() throws IOException {
+  private int getRegexSymbol() throws IOException {
     char c2;
 
     if (isEqual) {
@@ -945,43 +945,43 @@ public class CodeParser extends AbstractPhase {
     }
 
     if (currentCharacter == '|') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_RX_PIPE;
     }
     if (currentCharacter == '(') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_RX_LPAR;
     }
     if (currentCharacter == ')') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_RX_RPAR;
     }
     if (currentCharacter == '*') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_RX_STAR;
     }
     if (currentCharacter == '+') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_RX_PLUS;
     }
     if (currentCharacter == '?') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_RX_HUH;
     }
     if (currentCharacter == '.') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_RX_ANY;
     }
     if (currentCharacter == '/') {
       isRegex = false;
       isEqual = true;
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return '/';
     }
 
     if (currentCharacter == '\\') {
-      currentCharacter = GetCar();
-      c2 = DecodeEscape();
+      currentCharacter = getCharacter();
+      c2 = decodeEscape();
       if (c2 == 0) {
         return '\0';
       }
@@ -997,10 +997,10 @@ public class CodeParser extends AbstractPhase {
     return TOK_CHARS;
   }
 
-  private int GetNormalSym() throws IOException {
+  private int getNormalSymbol() throws IOException {
     char c2;
     String s2;
-    boolean bFin;
+    boolean end;
 
     s2 = currentStringValue;
     currentStringValue = "";
@@ -1022,22 +1022,22 @@ public class CodeParser extends AbstractPhase {
 
     while (2 > 1) {
       while (Character.isWhitespace(currentCharacter)) {
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
       }
       if (currentCharacter == '/') {
-        if ((currentCharacter = GetCar()) == '*') {
-          currentCharacter = GetCar();
-          bFin = false;
-          while (!bFin) {
+        if ((currentCharacter = getCharacter()) == '*') {
+          currentCharacter = getCharacter();
+          end = false;
+          while (!end) {
             while (currentCharacter == '*') {
-              if ((currentCharacter = GetCar()) == '/') {
-                bFin = true;
+              if ((currentCharacter = getCharacter()) == '/') {
+                end = true;
               }
             }
-            currentCharacter = GetCar();
+            currentCharacter = getCharacter();
           }
         } else {
-          UngetChar(currentCharacter);
+          ungetCharacter(currentCharacter);
           currentCharacter = '/';
           break;
         }
@@ -1051,42 +1051,42 @@ public class CodeParser extends AbstractPhase {
     }
 
     if (currentCharacter == '%' || currentCharacter == '\\') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       switch (currentCharacter) {
         case '0':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           return TOK_TERM;
         case '<':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           return TOK_LEFT;
         case '2':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           return TOK_BINARY;
         case '>':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           return TOK_RIGHT;
         case '%':
         case '\\':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           markers++;
           return TOK_MARCA;
         case '=':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           return TOK_PREC;
         case '@':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           return TOK_NAME;
         case '{':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           isCurlyBrace = true;
           return '{';
         case '!':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           return TOK_ERRDEF;
       }
       while (Character.isLetterOrDigit(currentCharacter)) {
         currentStringValue += currentCharacter;
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
       }
       for (ReservedWord rw : RWord) {
         if (currentStringValue.equals(rw.getWord())) {
@@ -1102,28 +1102,28 @@ public class CodeParser extends AbstractPhase {
     }
 
     if (currentCharacter == ';') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return ';';
     }
 
     if (currentCharacter == ',') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return ',';
     }
 
     if (currentCharacter == ':') {
       currentNonTerminalName = s2;
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return ':';
     }
 
     if (currentCharacter == '|') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return '|';
     }
 
     if (currentCharacter == '=') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       isEqual = true;
       return '=';
     }
@@ -1134,25 +1134,25 @@ public class CodeParser extends AbstractPhase {
     }
 
     if (currentCharacter == '<') {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       currentStringValue = "";
       while (currentCharacter != '\0' && currentCharacter != '>' && currentCharacter != '\n') {
         currentStringValue += currentCharacter;
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
       }
       if (currentCharacter != '>') {
         isError = true;
         environment.error(-1, "Statement < .. > not ended.");
         return TOK_ERROR;
       }
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return TOK_TYPENAME;
     }
 
     if (currentCharacter == '/') {
       isRegex = true;
       isEqual = true;
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       return '/';
     }
 
@@ -1160,7 +1160,7 @@ public class CodeParser extends AbstractPhase {
       currentStringValue = "";
       while (Character.isDigit(currentCharacter)) {
         currentStringValue += currentCharacter;
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
       }
       tokenNumber = Integer.parseInt(currentStringValue);
       return TOK_NUM;
@@ -1170,7 +1170,7 @@ public class CodeParser extends AbstractPhase {
     if (currentCharacter == '\'' || currentCharacter == '"') {
       c2 = currentCharacter;
       mustClose = true;
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
     } else {
       c2 = ':';
     }
@@ -1178,7 +1178,7 @@ public class CodeParser extends AbstractPhase {
     currentStringValue = "";
     do { /* TOKEN */
       currentStringValue += currentCharacter;
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       if (currentCharacter == '\0') {
         break;
       }
@@ -1228,7 +1228,7 @@ public class CodeParser extends AbstractPhase {
     }
 
     if (mustClose) {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       if (currentStringValue.length() == 1) {
         tokenNumber = currentStringValue.charAt(0);
       }
@@ -1272,12 +1272,12 @@ public class CodeParser extends AbstractPhase {
     int rc;
 
     if (isRegex) {
-      rc = GetRegexSym();
+      rc = getRegexSymbol();
       if (environment.isVerbose()) {
         System.out.printf("RegexScanner: %d\n", rc);
       }
     } else {
-      rc = GetNormalSym();
+      rc = getNormalSymbol();
       StxValue = new StackElement(-1, tokenNumber, mustClose, currentStringValue, null);
       if (environment.isDebug()) {
         System.out.printf("* StdScanner: %s(%d) {%s}\n",
@@ -1303,16 +1303,16 @@ public class CodeParser extends AbstractPhase {
                */
   }
 
-  private boolean RuleAction(int regla, int elems, String id) throws IOException {
+  private boolean ruleAction(int regla, int elems, String id) throws IOException {
     int nBracks = 0;
-    boolean bFin = false;
+    boolean end = false;
     boolean bBreak;
     int num;
     int base;
-    char encuentra;
-    Type tipo;
+    char characterToFind;
+    Type type;
     String s2;
-    int signo;
+    int sign;
     int i;
     String stackExpression;
     ;
@@ -1336,24 +1336,24 @@ public class CodeParser extends AbstractPhase {
                                       + "\n"
                                       + "int StxCode(int rule)\n"
                                       + "{\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("switch(rule){\n");
           environment.output.println();
           break;
 
         case java:
           environment.output.printf("\n");
-          Tabea(environment.output, 1);
+          indent(environment.output, 1);
           environment.output.printf("// Code Generator\n");
-          Tabea(environment.output, 1);
+          indent(environment.output, 1);
           environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
-          Tabea(environment.output, 1);
+          indent(environment.output, 1);
           environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
-          Tabea(environment.output, 1);
+          indent(environment.output, 1);
           environment.output.printf("int stackTop;\n\n");
-          Tabea(environment.output, 1);
+          indent(environment.output, 1);
           environment.output.printf("int generateCode(int rule) {\n");
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("switch(rule){\n");
           environment.output.println();
           break;
@@ -1369,39 +1369,39 @@ public class CodeParser extends AbstractPhase {
                                       + "\n"
                                       + "function StxCode(rule:integer):boolean;\n"
                                       + "begin\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("Case rule Of\n");
           break;
       }
     }
     switch (environment.getLanguage()) {
       case C:
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("case %d:\n", regla + 1);
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         if (environment.isEmitLine()) {
           environment.output.printf("#line %d \"%s\"\n", lineNumber + 1, environment.getSourceFile().toString());
-          Tabea(environment.output, environment.getIndent() + 1);
+          indent(environment.output, environment.getIndent() + 1);
         }
         break;
       case java:
-        Tabea(environment.output, environment.getIndent() + 1);
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("case %d: ", regla + 1);
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         break;
       case pascal:
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("%d: Begin\n", regla + 1);
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         break;
     }
 
-    while (!bFin) {
+    while (!end) {
       switch (currentCharacter) {
         case ';': /* final action in C & comment in ASM */
           if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks == 0) {
-            bFin = true;
+            end = true;
           }
           break;
 
@@ -1410,7 +1410,7 @@ public class CodeParser extends AbstractPhase {
             nBracks++;
           } else if (environment.getLanguage() == Language.pascal) {
             environment.output.print(currentCharacter);
-            while ((currentCharacter = GetCar()) != '}') {
+            while ((currentCharacter = getCharacter()) != '}') {
               environment.output.print(currentCharacter);
             }
           }
@@ -1419,7 +1419,7 @@ public class CodeParser extends AbstractPhase {
         case '}': /* level -- in C */
           if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
             if (--nBracks <= 0) {
-              bFin = true;
+              end = true;
             }
           }
           break;
@@ -1427,8 +1427,8 @@ public class CodeParser extends AbstractPhase {
         case '%':
         case '\\': /* finact in PAS y ASM */
           if (environment.getLanguage() != Language.C && environment.getLanguage() != Language.java) {
-            bFin = true;
-            currentCharacter = GetCar();
+            end = true;
+            currentCharacter = getCharacter();
             continue;
           }
           break;
@@ -1438,23 +1438,23 @@ public class CodeParser extends AbstractPhase {
           if (currentCharacter == '(' && environment.getLanguage() != Language.pascal) {
             break;
           } else {
-            encuentra = ')';
+            characterToFind = ')';
           }
           if (currentCharacter == '/' &&
               environment.getLanguage() != Language.C &&
                 environment.getLanguage() == Language.java) {
             break;
           } else {
-            encuentra = '/';
+            characterToFind = '/';
           }
           environment.output.print(currentCharacter);
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           if (currentCharacter != '*') {
             continue;
           }
 
           environment.output.print(currentCharacter);
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           bBreak = false;
           while (!bBreak) {
             if (currentCharacter == '\0') {
@@ -1463,20 +1463,20 @@ public class CodeParser extends AbstractPhase {
             }
             while (currentCharacter == '*') {
               environment.output.print(currentCharacter);
-              if ((currentCharacter = GetCar()) == encuentra) {
+              if ((currentCharacter = getCharacter()) == characterToFind) {
                 bBreak = true;
               }
             }
             environment.output.print(currentCharacter);
-            currentCharacter = GetCar();
+            currentCharacter = getCharacter();
           }
           continue;
 
         case '\'': /* constant */
         case '"': /* string */
-          encuentra = currentCharacter;
+          characterToFind = currentCharacter;
           environment.output.print(currentCharacter);
-          while ((currentCharacter = GetCar()) != encuentra) {
+          while ((currentCharacter = getCharacter()) != characterToFind) {
             if (currentCharacter == '\0') {
               environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
               return false;
@@ -1487,7 +1487,7 @@ public class CodeParser extends AbstractPhase {
             }
             if (currentCharacter == '\\') {
               environment.output.print(currentCharacter);
-              currentCharacter = GetCar();
+              currentCharacter = getCharacter();
             }
             environment.output.print(currentCharacter);
           }
@@ -1495,8 +1495,8 @@ public class CodeParser extends AbstractPhase {
 
         case '\n':
           environment.output.print(currentCharacter);
-          currentCharacter = GetCar();
-          Tabea(environment.output, environment.getIndent() + 1);
+          currentCharacter = getCharacter();
+          indent(environment.output, environment.getIndent() + 1);
           continue;
 
         case 0:
@@ -1504,14 +1504,14 @@ public class CodeParser extends AbstractPhase {
           return false;
 
         case '$':
-          currentCharacter = GetCar();
-          tipo = null;
-          signo = 1;
+          currentCharacter = getCharacter();
+          type = null;
+          sign = 1;
           if (currentCharacter == '<') { /* type */
             s2 = currentStringValue;
-            GetNormalSym();
-            tipo = runtimeData.findType(currentStringValue);
-            if (tipo == null) {
+            getNormalSymbol();
+            type = runtimeData.findType(currentStringValue);
+            if (type == null) {
               environment.error(-1, "Cannot find type '%s'.", currentStringValue);
               return false;
             }
@@ -1531,23 +1531,23 @@ public class CodeParser extends AbstractPhase {
               environment.output.printf("%s+1]", stackExpression);
             }
             if (runtimeData.getTypes().size() != 0) {
-              if (tipo == null) {
+              if (type == null) {
                 NonTerminal idp = runtimeData.findNonTerminalByName(id);
                 if (idp != null) {
                   idp.setCount(idp.getCount() - 1);
-                  tipo = idp.getType();
+                  type = idp.getType();
                 }
               }
-              if (tipo != null) {
-                environment.output.printf(".%s", tipo.getName());
+              if (type != null) {
+                environment.output.printf(".%s", type.getName());
               }
             }
-            currentCharacter = GetCar();
+            currentCharacter = getCharacter();
             continue;
           }
           if (currentCharacter == '-') {
-            signo = -signo;
-            currentCharacter = GetCar();
+            sign = -sign;
+            currentCharacter = getCharacter();
           }
           if (Character.isDigit(currentCharacter)) {
             num = 0;
@@ -1558,9 +1558,9 @@ public class CodeParser extends AbstractPhase {
             }
             while (Character.isDigit(currentCharacter)) {
               num = num * base + currentCharacter - '0';
-              currentCharacter = GetCar();
+              currentCharacter = getCharacter();
             }
-            num = num * signo - elems;
+            num = num * sign - elems;
             if (num > 0) {
               environment.error(-1, "Incorrect value of \'$%d\'. Bigger than the number of elements.", num + elems);
               return false;
@@ -1571,59 +1571,59 @@ public class CodeParser extends AbstractPhase {
               environment.output.printf("%s%+d]", stackExpression, num);
             }
             if (runtimeData.getTypes().size() != 0) {
-              if (num + elems <= 0 && tipo == null) {
+              if (num + elems <= 0 && type == null) {
                 environment.error(-1, "Cannot determine the type for \'$%d\'.", num + elems);
                 return false;
               }
-              if (tipo == null) {
+              if (type == null) {
                 int j = 0;
                 RuleItem rule = null;
-                for (i = 1; i < num + elems && j < pRule.size(); j++, i++) {
-                  rule = pRule.get(j);
+                for (i = 1; i < num + elems && j < currentRuleItems.size(); j++, i++) {
+                  rule = currentRuleItems.get(j);
                 }
                 if (rule != null) {
                   Terminal terminal = runtimeData.findTerminalByName(rule.getSymbol().getName());
                   if (terminal != null) {
                     terminal.setCount(terminal.getCount() - 1);
-                    tipo = terminal.getType();
+                    type = terminal.getType();
                   } else {
                     NonTerminal nonTerminal = runtimeData.findNonTerminalByName(rule.getSymbol().getName());
                     if (nonTerminal != null) {
                       nonTerminal.setCount(nonTerminal.getCount() - 1);
-                      tipo = nonTerminal.getType();
+                      type = nonTerminal.getType();
                     }
                   }
                 }
               }
-              if (tipo != null) {
-                environment.output.printf(".%s", tipo.getName());
+              if (type != null) {
+                environment.output.printf(".%s", type.getName());
               }
             }
             continue;
           }
           environment.output.print('$');
-          if (signo < 0) {
+          if (sign < 0) {
             environment.output.print('-');
           }
           break;
       }
       environment.output.print(currentCharacter);
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
     }
     switch (environment.getLanguage()) {
       case C:
         environment.output.println();
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("break;\n");
         break;
       case java:
         environment.output.println();
-        Tabea(environment.output, environment.getIndent() + 2);
+        indent(environment.output, environment.getIndent() + 2);
         environment.output.printf("break;\n");
         break;
       case pascal:
         environment.output.println();
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("end; (* StxCode *)\n");
         break;
     }
@@ -1631,16 +1631,15 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private boolean TokenAction() throws IOException /*
-                                                    * copiar accion hasta el
-                                                    * proximo ';' o '}' que
-                                                    * cierra
-                                                    */
+  /**
+   * copy action until the next ';' or '}' that actually closes
+   */
+  private boolean tokenAction() throws IOException 
   {
     int nBracks = 0;
-    boolean bFin = false;
+    boolean end = false;
     boolean bBreak;
-    char encuentra;
+    char characterToFind;
     boolean bStart = true;
     boolean bSkip = false;
 
@@ -1659,13 +1658,13 @@ public class CodeParser extends AbstractPhase {
 
         case java:
           environment.output.printf("\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("// LexicalRecognizer\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("private char currentChar;\n\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("int parserElement(boolean initialize) {\n");
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("lexicalValue = new LexicalValue();\n\n");
           break;
 
@@ -1682,26 +1681,26 @@ public class CodeParser extends AbstractPhase {
     }
     switch (environment.getLanguage()) {
       case C:
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         if (environment.isEmitLine()) {
           environment.output.printf("#line %d \"%s\"\n", lineNumber + 1, environment.getSourceFile().toString());
-          Tabea(environment.output, environment.getIndent() + 1);
+          indent(environment.output, environment.getIndent() + 1);
         }
         break;
       case java:
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         break;
       case pascal:
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         break;
     }
 
-    while (!bFin) {
+    while (!end) {
       switch (currentCharacter) {
         case '$':
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           if (currentCharacter == '+') {
-            currentCharacter = GetCar();
+            currentCharacter = getCharacter();
             switch (environment.getLanguage()) {
               case C:
                 environment.output.printf("StxChar = StxNextChar()");
@@ -1715,11 +1714,11 @@ public class CodeParser extends AbstractPhase {
             }
             continue;
           } else if (currentCharacter == 'c') {
-            currentCharacter = GetCar();
+            currentCharacter = getCharacter();
             environment.output.printf((environment.getLanguage() == Language.java) ? "currentChar" : "StxChar");
             continue;
           } else if (currentCharacter == 'v') {
-            currentCharacter = GetCar();
+            currentCharacter = getCharacter();
             environment.output.printf((environment.getLanguage() == Language.java) ? "lexicalValue" : "StxValue");
             continue;
           }
@@ -1728,7 +1727,7 @@ public class CodeParser extends AbstractPhase {
 
         case ';': /* finact in C y comment in ASM */
           if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks <= 0) {
-            bFin = true;
+            end = true;
           }
           break;
 
@@ -1737,7 +1736,7 @@ public class CodeParser extends AbstractPhase {
             nBracks++;
           } else if (environment.getLanguage() == Language.pascal) {
             environment.output.print(currentCharacter);
-            while ((currentCharacter = GetCar()) != '}') {
+            while ((currentCharacter = getCharacter()) != '}') {
               environment.output.print(currentCharacter);
             }
           }
@@ -1746,11 +1745,11 @@ public class CodeParser extends AbstractPhase {
         case '}': /* level -- in C */
           if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
             if (--nBracks <= 0 && bSkip) {
-              bFin = true;
+              end = true;
             }
           }
-          if (bFin && bSkip) {
-            currentCharacter = GetCar();
+          if (end && bSkip) {
+            currentCharacter = getCharacter();
             continue;
           }
           break;
@@ -1758,8 +1757,8 @@ public class CodeParser extends AbstractPhase {
         case '%':
         case '\\': /* finact in PAS y ASM */
           if (environment.getLanguage() != Language.C && environment.getLanguage() != Language.java) {
-            bFin = true;
-            currentCharacter = GetCar();
+            end = true;
+            currentCharacter = getCharacter();
             continue;
           }
           break;
@@ -1769,23 +1768,23 @@ public class CodeParser extends AbstractPhase {
           if (currentCharacter == '(' && environment.getLanguage() != Language.pascal) {
             break;
           } else {
-            encuentra = ')';
+            characterToFind = ')';
           }
           if (currentCharacter == '/' &&
               environment.getLanguage() != Language.C &&
                 environment.getLanguage() == Language.java) {
             break;
           } else {
-            encuentra = '/';
+            characterToFind = '/';
           }
           environment.output.print(currentCharacter);
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           if (currentCharacter != '*') {
             continue;
           }
 
           environment.output.print(currentCharacter);
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
           bBreak = false;
           while (!bBreak) {
             if (currentCharacter == '\0') {
@@ -1794,20 +1793,20 @@ public class CodeParser extends AbstractPhase {
             }
             while (currentCharacter == '*') {
               environment.output.print(currentCharacter);
-              if ((currentCharacter = GetCar()) == encuentra) {
+              if ((currentCharacter = getCharacter()) == characterToFind) {
                 bBreak = true;
               }
             }
             environment.output.print(currentCharacter);
-            currentCharacter = GetCar();
+            currentCharacter = getCharacter();
           }
           continue;
 
         case '\'': /* constant */
         case '"': /* string */
-          encuentra = currentCharacter;
+          characterToFind = currentCharacter;
           environment.output.print(currentCharacter);
-          while ((currentCharacter = GetCar()) != encuentra) {
+          while ((currentCharacter = getCharacter()) != characterToFind) {
             if (currentCharacter == '\0') {
               environment.error(-1, "Statement ' .. ' or \" .. \" not ended");
               return false;
@@ -1818,7 +1817,7 @@ public class CodeParser extends AbstractPhase {
             }
             if (currentCharacter == '\\') {
               environment.output.print(currentCharacter);
-              currentCharacter = GetCar();
+              currentCharacter = getCharacter();
             }
             environment.output.print(currentCharacter);
           }
@@ -1826,8 +1825,8 @@ public class CodeParser extends AbstractPhase {
 
         case '\n':
           environment.output.print(currentCharacter);
-          currentCharacter = GetCar();
-          Tabea(environment.output, environment.getIndent() + 1);
+          currentCharacter = getCharacter();
+          indent(environment.output, environment.getIndent() + 1);
           continue;
 
         case 0:
@@ -1843,38 +1842,38 @@ public class CodeParser extends AbstractPhase {
       if (currentCharacter > ' ') {
         bStart = false;
       }
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
     }
     environment.output.println();
     tokenActionCount++;
     return true;
   }
 
-  private boolean RuleEndAction() {
+  private boolean ruleEndAction() {
     if (ruleActionCount != 0) {
       environment.output.println();
       switch (environment.getLanguage()) {
         case C:
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("}/* End of switch */\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("return 1; /* OK */\n");
           environment.output.printf("}/* End of StxCode */\n");
           break;
 
         case java:
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("}\n");
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("return 1; // OK\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("}\n");
           break;
 
         case pascal:
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("END;(* CASE *)\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("StxCode := true;\n");
           environment.output.printf("END;(* StxCode *)\n");
           break;
@@ -1884,25 +1883,25 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private boolean TokenEndAction() {
+  private boolean tokenEndAction() {
     if (tokenActionCount != 0) {
       environment.output.println();
       switch (environment.getLanguage()) {
         case C:
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("return 0; /* UNKNOWN */\n");
           environment.output.printf("}/* End of StxLexer */\n");
           break;
 
         case java:
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("return 0; // UNKNOWN\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("}\n");
           break;
 
         case pascal:
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("StxLexer := 0;\n");
           environment.output.printf("END;(* StxLexer *)\n");
           break;
@@ -1913,40 +1912,40 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private boolean DeclAction() throws IOException {
+  private boolean declareAction() throws IOException {
     while (Character.isWhitespace(currentCharacter)) {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
     }
     if (environment.getLanguage() == Language.C && environment.isEmitLine()) {
       environment.output.printf("\n#line %d \"%s\"\n", lineNumber, environment.getSourceFile().toString());
     }
     while (currentCharacter != '\0') {
       if (currentCharacter == '\\') {
-        if ((currentCharacter = GetCar()) == '}') {
-          currentCharacter = GetCar();
+        if ((currentCharacter = getCharacter()) == '}') {
+          currentCharacter = getCharacter();
           return true;
         } else {
           environment.output.print('\\');
         }
       }
       if (currentCharacter == '%') {
-        if ((currentCharacter = GetCar()) == '}') {
-          currentCharacter = GetCar();
+        if ((currentCharacter = getCharacter()) == '}') {
+          currentCharacter = getCharacter();
           return true;
         } else {
           environment.output.print('%');
         }
       }
       environment.output.print(currentCharacter);
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
     }
     environment.error(-1, "End of file before \'%%}\'.");
     return false;
   }
 
-  private boolean DeclUnion() throws IOException {
-    int nivel;
-    boolean caracts;
+  private boolean declareUnion() throws IOException {
+    int level;
+    boolean hasCharacters;
 
     if (environment.getLanguage() == Language.C && environment.isEmitLine()) {
       environment.include.printf("\n#line %d \"%s\"\n", lineNumber, environment.getSourceFile().toString());
@@ -1956,7 +1955,7 @@ public class CodeParser extends AbstractPhase {
     switch (environment.getLanguage()) {
       case C:
         environment.include.printf("typedef union");
-        nivel = 0;
+        level = 0;
         while (2 > 1) {
           if (currentCharacter == '\0') {
             environment.error(-1, "End of file processing \'%%union\'.");
@@ -1966,26 +1965,26 @@ public class CodeParser extends AbstractPhase {
           environment.include.print(currentCharacter);
           switch (currentCharacter) {
             case '{':
-              ++nivel;
+              ++level;
               break;
 
             case '}':
-              --nivel;
-              if (nivel == 0) {
+              --level;
+              if (level == 0) {
                 environment.include.printf(" tstack, *ptstack;\n\n");
                 environment.include.printf("#define TSTACK tstack\n" + "#define PTSTACK ptstack\n\n");
-                currentCharacter = GetCar();
+                currentCharacter = getCharacter();
                 return true;
               }
           }
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
         }
         // break;
 
       case java:
-        Tabea(environment.include, 1);
+        indent(environment.include, 1);
         environment.include.printf("private class LexicalValue");
-        nivel = 0;
+        level = 0;
         while (2 > 1) {
           if (currentCharacter == '\0') {
             environment.error(-1, "End of file processing \'%%union\'.");
@@ -1995,21 +1994,21 @@ public class CodeParser extends AbstractPhase {
           environment.include.print(currentCharacter);
           switch (currentCharacter) {
             case '{':
-              ++nivel;
+              ++level;
               break;
 
             case '}':
-              --nivel;
-              if (nivel == 0) {
+              --level;
+              if (level == 0) {
                 environment.include.printf("\n\n");
-                currentCharacter = GetCar();
+                currentCharacter = getCharacter();
                 return true;
               }
             case '\n':
-              Tabea(environment.include, 1);
+              indent(environment.include, 1);
               break;
           }
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
         }
         // break;
 
@@ -2019,25 +2018,25 @@ public class CodeParser extends AbstractPhase {
                                     + "  PTStack = ^TStack;\n"
                                     + "  TStack = Record\n"
                                     + "    case integer of");
-        nivel = 0;
-        caracts = false;
+        level = 0;
+        hasCharacters = false;
         while (currentCharacter != '%' && currentCharacter != '\\') {
           if (currentCharacter == '\n') {
-            if (caracts) {
+            if (hasCharacters) {
               environment.output.printf(");");
             }
-            caracts = false;
+            hasCharacters = false;
           } else {
-            if (caracts == false) {
-              environment.output.printf("      %d:(", nivel);
-              nivel++;
+            if (hasCharacters == false) {
+              environment.output.printf("      %d:(", level);
+              level++;
             }
-            caracts = true;
+            hasCharacters = true;
           }
           environment.output.print(currentCharacter);
-          currentCharacter = GetCar();
+          currentCharacter = getCharacter();
         }
-        currentCharacter = GetCar();
+        currentCharacter = getCharacter();
         environment.output.printf("  end;\n");
         break;
     }
@@ -2045,57 +2044,57 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private RuleItem NewItem(Symbol elem) {
-    RuleItem itm;
+  private RuleItem newItem(Symbol elem) {
+    RuleItem item;
 
-    itm = new RuleItem(elem);
-    if (pRule == null) {
-      pRule = new LinkedList<RuleItem>();
+    item = new RuleItem(elem);
+    if (currentRuleItems == null) {
+      currentRuleItems = new LinkedList<RuleItem>();
     }
-    pRule.add(itm);
-    return itm;
+    currentRuleItems.add(item);
+    return item;
   }
 
-  private Rule NewEmptyRule() {
-    Rule ln;
+  private Rule newEmptyRule() {
+    Rule rule;
 
-    ln = new Rule(0, actLine, 0, null);
-    runtimeData.getRules().add(ln);
-    return ln;
+    rule = new Rule(0, actLine, 0, null);
+    runtimeData.getRules().add(rule);
+    return rule;
   }
 
-  private Rule NewRule() {
-    Rule ln;
+  private Rule newRule() {
+    Rule rule;
 
-    ln = new Rule(0, actLine, rulePrecedence, null);
-    if (pRule != null) {
-      ln.getItems().addAll(pRule);
-      for (RuleItem item : pRule) {
-        item.setRule(ln);
+    rule = new Rule(0, actLine, rulePrecedence, null);
+    if (currentRuleItems != null) {
+      rule.getItems().addAll(currentRuleItems);
+      for (RuleItem item : currentRuleItems) {
+        item.setRule(rule);
       }
-      pRule = null;
+      currentRuleItems = null;
     }
-    runtimeData.getRules().add(ln);
+    runtimeData.getRules().add(rule);
     rulePrecedence = 0;
     ruleAssociativity = Associativity.NONE;
-    return ln;
+    return rule;
   }
 
-  private Rule NewRootRule(NonTerminal root) {
-    Rule ln;
+  private Rule newRootRule(NonTerminal root) {
+    Rule rule;
 
-    ln = new Rule(0, actLine, rulePrecedence, root);
-    if (pRule != null) {
-      ln.getItems().addAll(pRule);
-      for (RuleItem item : pRule) {
-        item.setRule(ln);
+    rule = new Rule(0, actLine, rulePrecedence, root);
+    if (currentRuleItems != null) {
+      rule.getItems().addAll(currentRuleItems);
+      for (RuleItem item : currentRuleItems) {
+        item.setRule(rule);
       }
-      pRule = null;
+      currentRuleItems = null;
     }
-    runtimeData.getRules().add(0, ln);
+    runtimeData.getRules().add(0, rule);
     rulePrecedence = 0;
     ruleAssociativity = Associativity.NONE;
-    return ln;
+    return rule;
   }
 
   private void reviewDeclarations() {
@@ -2163,21 +2162,21 @@ public class CodeParser extends AbstractPhase {
       runtimeData.getNonTerminals().add(root);
       runtimeData.setRoot(root);
     }
-    NewItem(runtimeData.getStart());
-    NewRootRule(runtimeData.getRoot());
+    newItem(runtimeData.getStart());
+    newRootRule(runtimeData.getRoot());
   }
 
   private void generateTopRecoveryTable() {
     for (Terminal id : runtimeData.getTerminals()) {
       if (id instanceof ErrorToken) {
-        nRecupera++;
+        numberOfRecoveries++;
       }
     }
     switch (environment.getLanguage()) {
       case C:
         environment.output.printf("\n#define RECOVERS %d\n\n"
-                                  + "/* Contains tokens in compact mode, and column in matrix */", nRecupera);
-        if (nRecupera != 0) {
+                                  + "/* Contains tokens in compact mode, and column in matrix */", numberOfRecoveries);
+        if (numberOfRecoveries != 0) {
           environment.output.printf("\nint StxRecoverTable[RECOVERS] = {\n");
         } else {
           environment.output.printf("\nint StxRecoverTable[1] = {0};\n\n");
@@ -2185,13 +2184,13 @@ public class CodeParser extends AbstractPhase {
         break;
       case java:
         environment.output.printf("\n");
-        Tabea(environment.output, environment.getIndent() - 1);
-        environment.output.printf("private static final int RECOVERS=%d;\n\n", nRecupera);
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
+        environment.output.printf("private static final int RECOVERS=%d;\n\n", numberOfRecoveries);
+        indent(environment.output, environment.getIndent() - 1);
 
         environment.output.printf("// Contains tokens in compact mode, and column in matrix\n");
-        Tabea(environment.output, environment.getIndent() - 1);
-        if (nRecupera != 0) {
+        indent(environment.output, environment.getIndent() - 1);
+        if (numberOfRecoveries != 0) {
           environment.output.printf("int recoverTable[] = {\n");
         } else {
           environment.output.printf("int recoverTable[] = {0};\n\n");
@@ -2199,8 +2198,8 @@ public class CodeParser extends AbstractPhase {
         break;
       case pascal:
         environment.output.printf("\nConst\n  RECOVERS = %d;\n"
-                                  + "{ Contains tokens in compact mode, and column in matrix }", nRecupera - 1);
-        if (nRecupera != 0) {
+                                  + "{ Contains tokens in compact mode, and column in matrix }", numberOfRecoveries - 1);
+        if (numberOfRecoveries != 0) {
           environment.output.printf("\n  StxRecoverTable : array [0..RECOVERS] of INTEGER = (\n");
         } else {
           environment.output.printf("\n  StxRecoverTable : array [0..0] of INTEGER = (0);\n\n");
@@ -2215,7 +2214,7 @@ public class CodeParser extends AbstractPhase {
     environment.report
         .printf("________________________________________________________________________________________________________________________\n");
 
-    int nCuales = 0;
+    int whichRecoveries = 0;
     int terminals = 0;
     for (Terminal id : runtimeData.getTerminals()) {
       // Look for the default token for a non assigned terminal symbol
@@ -2241,24 +2240,24 @@ public class CodeParser extends AbstractPhase {
         int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
         switch (environment.getLanguage()) {
           case C:
-            if (++nCuales < nRecupera) {
+            if (++whichRecoveries < numberOfRecoveries) {
               environment.output.printf("\t%d /* %s */,\n", recoveryToken, id.getName());
             } else {
               environment.output.printf("\t%d /* %s */\n};\n\n", recoveryToken, id.getName());
             }
             break;
           case java:
-            Tabea(environment.output, environment.getIndent());
-            if (++nCuales < nRecupera) {
+            indent(environment.output, environment.getIndent());
+            if (++whichRecoveries < numberOfRecoveries) {
               environment.output.printf("%d, // %s\n", recoveryToken, id.getName());
             } else {
               environment.output.printf("%d // %s\n", recoveryToken, id.getName());
-              Tabea(environment.output, environment.getIndent() - 1);
+              indent(environment.output, environment.getIndent() - 1);
               environment.output.printf("};\n\n");
             }
             break;
           case pascal:
-            if (++nCuales < nRecupera) {
+            if (++whichRecoveries < numberOfRecoveries) {
               environment.output.printf("\t%d, (* %s *)\n", recoveryToken, id.getName());
             } else {
               environment.output.printf("\t%d (* %s *) );\n\n", recoveryToken, id.getName());
@@ -2274,9 +2273,9 @@ public class CodeParser extends AbstractPhase {
         environment.output.printf("\nint StxTokens[TOKENS] = {\n");
         break;
       case java:
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private static int TOKENS=%d;\n", terminals);
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private static int tokens[] = {\n");
         break;
       case pascal:
@@ -2296,10 +2295,10 @@ public class CodeParser extends AbstractPhase {
           }
           break;
         case java:
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           if (i == terminals) {
             environment.output.printf("%d // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
-            Tabea(environment.output, environment.getIndent() - 1);
+            indent(environment.output, environment.getIndent() - 1);
             environment.output.printf("};\n\n");
 
           } else {
@@ -2353,10 +2352,6 @@ public class CodeParser extends AbstractPhase {
   }
 
   private void defineTokens() {
-    // PIDENT id;
-    // char *var;
-    // int first = 1;
-
     boolean first = true;
     for (Terminal id : runtimeData.getTerminals()) {
       String var = variable(id.getName(), id.getToken());
@@ -2372,11 +2367,11 @@ public class CodeParser extends AbstractPhase {
             break;
           case java:
             if (first) {
-              Tabea(environment.include, environment.getIndent() - 1);
+              indent(environment.include, environment.getIndent() - 1);
               environment.include.printf("// Token definitions\n");
               first = false;
             }
-            Tabea(environment.include, environment.getIndent() - 1);
+            indent(environment.include, environment.getIndent() - 1);
             environment.include.printf("private static final int %s=%d;\n", var, id.getToken());
             break;
           case pascal:
@@ -2394,18 +2389,18 @@ public class CodeParser extends AbstractPhase {
   }
 
   private Rule locateRuleWithId(int id) {
-    Rule stx = null;
+    Rule rule = null;
     for (int i = 0; i < runtimeData.getRules().size(); i++) {
-      stx = runtimeData.getRules().get(i);
-      if (id == stx.getLeftHandId()) {
+      rule = runtimeData.getRules().get(i);
+      if (id == rule.getLeftHandId()) {
         break;
       }
     }
-    return stx;
+    return rule;
   }
 
-  private int lineNumber(Rule stx) {
-    return stx != null ? stx.getLineNumber() - 1 : -1;
+  private int lineNumber(Rule rule) {
+    return rule != null ? rule.getLineNumber() - 1 : -1;
   }
 
   public void execute() throws ParsingException {
@@ -2413,7 +2408,7 @@ public class CodeParser extends AbstractPhase {
       System.out.println("Parse");
     }
     try {
-      currentCharacter = GetCar();
+      currentCharacter = getCharacter();
       lineNumber = 0;
       markers = 0;
       Terminal terminal = new Terminal("$");

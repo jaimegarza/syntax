@@ -35,6 +35,9 @@ import me.jaimegarza.syntax.definition.Rule;
 
 public abstract class AbstractPhase {
 
+  protected Environment environment;
+  protected RuntimeData runtimeData;
+
   protected static Object resizeArray(Object oldArray, int newSize) {
     int oldSize = java.lang.reflect.Array.getLength(oldArray);
     Class<?> elementType = oldArray.getClass().getComponentType();
@@ -46,11 +49,7 @@ public abstract class AbstractPhase {
     return newArray;
   }
 
-  protected Environment environment;
-  protected RuntimeData runtimeData;
-
   protected boolean isEmpty(int k) {
-
     for (Rule rule : runtimeData.getRules()) {
       if (rule.getLeftHand().getId() == k && rule.getItems().size() == 0) {
         return true;
@@ -59,7 +58,7 @@ public abstract class AbstractPhase {
     return false;
   }
 
-  protected void Tabea(PrintStream out, int n) {
+  protected void indent(PrintStream out, int n) {
     int i;
 
     for (i = 0; i < n; i++) {

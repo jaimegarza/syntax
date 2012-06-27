@@ -106,17 +106,17 @@ public class CodeWriter extends AbstractPhase {
         break;
       case java:
         // reserve a place for where the size of the table will be written
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private static final int FINAL=%d;\n", runtimeData.getStates().length);
         // fPos = ftell(environment.output);
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private static final int SYMBS=%5d;\n\n", runtimeData.getTerminals().size() +
                                                                              runtimeData.getNonTerminals().size() -
                                                                                1);
         if (!environment.isPacked()) {
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("// Parsing Table\n");
-          Tabea(environment.output, environment.getIndent());
+          indent(environment.output, environment.getIndent());
           environment.output.printf("private int parsingTable[][] = {\n");
         }
         break;
@@ -125,30 +125,30 @@ public class CodeWriter extends AbstractPhase {
 
   private void printTableRow(State state) {
     int parserLine[] = state.getRow();
-    int estado = state.getId();
-    int col;
-    int t2;
+    int stateNumber = state.getId();
+    int column;
+    int index;
 
     if (environment.isPacked()) {
       return;
     }
-    int t1 = runtimeData.getTerminals().size() + runtimeData.getNonTerminals().size() - 2;
+    int symbolCounter = runtimeData.getTerminals().size() + runtimeData.getNonTerminals().size() - 2;
     switch (environment.getLanguage()) {
       case pascal:
         environment.output.print("        (");
-        for (col = t2 = 0; t2 <= t1; ++t2) {
+        for (column = index = 0; index <= symbolCounter; ++index) {
           // If this column does not fit, cut with \n
-          if ((col + 1) * 5 + 9 > environment.getMargin()) {
+          if ((column + 1) * 5 + 9 > environment.getMargin()) {
             environment.output.printf("\n         ");
-            col = 0;
+            column = 0;
           }
-          col++;
-          environment.output.printf("%4d", parserLine[t2]);
-          if (t2 < t1) {
+          column++;
+          environment.output.printf("%4d", parserLine[index]);
+          if (index < symbolCounter) {
             environment.output.printf(",");
           }
         }
-        if (estado == runtimeData.getStates().length - 1) {
+        if (stateNumber == runtimeData.getStates().length - 1) {
           environment.output.printf("));\n");
         } else {
           environment.output.printf("),\n");
@@ -156,19 +156,19 @@ public class CodeWriter extends AbstractPhase {
         break;
       case C:
         environment.output.printf("    {");
-        for (col = t2 = 0; t2 <= t1; ++t2) {
+        for (column = index = 0; index <= symbolCounter; ++index) {
           // If this column does not fit, cut with \n
-          if ((col + 1) * 5 + 5 > environment.getMargin()) {
+          if ((column + 1) * 5 + 5 > environment.getMargin()) {
             environment.output.printf("\n     ");
-            col = 0;
+            column = 0;
           }
-          col++;
-          environment.output.printf("%4d", parserLine[t2]);
-          if (t2 < t1) {
+          column++;
+          environment.output.printf("%4d", parserLine[index]);
+          if (index < symbolCounter) {
             environment.output.printf(",");
           }
         }
-        if (estado == runtimeData.getStates().length - 1) {
+        if (stateNumber == runtimeData.getStates().length - 1) {
           environment.output.printf("}\n};\n");
         } else {
           environment.output.printf("},\n");
@@ -178,26 +178,26 @@ public class CodeWriter extends AbstractPhase {
   }
 
   private void printFooter() {
-    int c;
-    int t1;
-    int t2;
+    int numberOfRules;
+    int index;
+    int itemSize;
     int i;
 
     if (environment.isPacked()) {
-      ImprimeTablas();
+      printTables();
     }
 
     switch (environment.getLanguage()) {
       case pascal:
         environment.output.printf("\n");
-        c = runtimeData.getRules().size();
-        environment.output.printf("  StxGrammarTable : Array [0..%d] of GRAMMAR = (\n", c - 1);
-        t1 = 0;
+        numberOfRules = runtimeData.getRules().size();
+        environment.output.printf("  StxGrammarTable : Array [0..%d] of GRAMMAR = (\n", numberOfRules - 1);
+        index = 0;
         for (Rule stx : runtimeData.getRules()) {
-          t2 = stx.getItems().size();
+          itemSize = stx.getItems().size();
           environment.output.printf("    (symbol:%d; reductions:%d)", environment.isPacked() ? stx.getLeftHand()
-              .getToken() : stx.getLeftHandId(), t2);
-          if (++t1 == c) {
+              .getToken() : stx.getLeftHandId(), itemSize);
+          if (++index == numberOfRules) {
             environment.output.printf(");\n");
           } else {
             environment.output.printf(",\n");
@@ -216,8 +216,6 @@ public class CodeWriter extends AbstractPhase {
             i++;
           }
         }
-        // fseek(environment.output,fPos+19l,SEEK_SET);
-        // environment.output.printf("%5d",runtimeData.getStates().length);
         break;
       case C:
         environment.output.printf("\n"
@@ -227,14 +225,14 @@ public class CodeWriter extends AbstractPhase {
                                     + "\tshort\treductions;\n"
                                     + "} GRAMMAR, *PGRAMMAR;\n"
                                     + "\n");
-        c = runtimeData.getRules().size();
-        environment.output.printf("GRAMMAR StxGrammarTable[%d]={\n", c);
-        t1 = 0;
+        numberOfRules = runtimeData.getRules().size();
+        environment.output.printf("GRAMMAR StxGrammarTable[%d]={\n", numberOfRules);
+        index = 0;
         for (Rule stx : runtimeData.getRules()) {
-          t2 = stx.getItems().size();
+          itemSize = stx.getItems().size();
           environment.output.printf("\t{%d, %d}",
-              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), t2);
-          if (++t1 == c) {
+              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), itemSize);
+          if (++index == numberOfRules) {
             environment.output.printf("\n};\n\n");
           } else {
             environment.output.printf(",\n");
@@ -253,59 +251,57 @@ public class CodeWriter extends AbstractPhase {
             i++;
           }
         }
-        // fseek(environment.output,fPos+16l,SEEK_SET);
-        // environment.output.printf("%5d",runtimeData.getStates().length + 1);
         break;
       case java:
         environment.output.printf("\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("// symbols and reductions table\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private class Grammar {\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int symbol;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int reductions;\n\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("Grammar(int symbol, int reductions) {\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.symbol = symbol;\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.reductions = reductions;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("}\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("}\n\n");
-        c = runtimeData.getRules().size();
-        Tabea(environment.output, environment.getIndent() - 1);
+        numberOfRules = runtimeData.getRules().size();
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private Grammar grammarTable[]={\n");
-        t1 = 0;
+        index = 0;
         for (Rule stx : runtimeData.getRules()) {
-          t2 = stx.getItems().size();
-          Tabea(environment.output, environment.getIndent());
+          itemSize = stx.getItems().size();
+          indent(environment.output, environment.getIndent());
           environment.output.printf("new Grammar(%d, %d)",
-              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), t2);
-          if (++t1 == c) {
+              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), itemSize);
+          if (++index == numberOfRules) {
             environment.output.printf("\n");
-            Tabea(environment.output, environment.getIndent() - 1);
+            indent(environment.output, environment.getIndent() - 1);
             environment.output.printf("};\n\n");
           } else {
             environment.output.printf(",\n");
           }
         }
         if (environment.isPacked()) {
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("private final int NON_TERMINALS=%d;\n", runtimeData.getNonTerminals().size());
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("private final int nonTerminals[] = {\n");
           i = 1;
           for (NonTerminal id : runtimeData.getNonTerminals()) {
-            Tabea(environment.output, environment.getIndent());
+            indent(environment.output, environment.getIndent());
             if (i == runtimeData.getNonTerminals().size()) {
               environment.output.printf("\n");
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("%d // %s\n", id.getToken(), id.getName());
-              Tabea(environment.output, environment.getIndent() - 1);
+              indent(environment.output, environment.getIndent() - 1);
               environment.output.printf("};\n\n");
             } else {
               environment.output.printf("%d // %s,", id.getToken(), id.getName());
@@ -315,9 +311,9 @@ public class CodeWriter extends AbstractPhase {
         }
         if (!runtimeData.isStackTypeDefined()) {
           environment.output.printf("\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("private class LexicalValue {\n");
-          Tabea(environment.output, environment.getIndent() - 1);
+          indent(environment.output, environment.getIndent() - 1);
           environment.output.printf("}\n\n");
         }
         if (runtimeData.getRules().size() == 0) {
@@ -326,32 +322,29 @@ public class CodeWriter extends AbstractPhase {
 
             case java:
               environment.output.printf("\n");
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("// Code Generator\n");
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("int stackTop;\n\n");
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("int generateCode(int rule) {\n");
-              Tabea(environment.output, environment.getIndent() + 1);
+              indent(environment.output, environment.getIndent() + 1);
               environment.output.printf("return 1;\n");
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("}\n\n");
               break;
           }
         }
-
-        // fseek(environment.output,fPos,SEEK_SET);
-        // environment.output.printf("%5d",runtimeData.getStates().length + 1);
         break;
     }
   }
 
-  private void ImprimeTablas() {
-    int estado, accion, num_gotos, err;
+  private void printTables() {
+    int stateNumber, action, numGotos, error;
 
     switch (environment.getLanguage()) {
       case pascal:
@@ -373,49 +366,49 @@ public class CodeWriter extends AbstractPhase {
             runtimeData.getNumberOfActions());
         break;
       case java:
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("// Acction table\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private class Action {\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("private int symbol;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("private int state;\n\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("Action(int symbol, int state) {\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.symbol = symbol;\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.state = state;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("}\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("}\n\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private static final int ACTIONS=%d;\n\n", runtimeData.getNumberOfActions());
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private Action actionTable[] = {\n");
         break;
     }
-    accion = 0;
-    for (estado = 0; estado < runtimeData.getStates().length; estado++) {
-      if (runtimeData.getStates()[estado].getPosition() >= accion) {
-        for (Action pAct : runtimeData.getStates()[estado].getActions()) {
+    action = 0;
+    for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
+      if (runtimeData.getStates()[stateNumber].getPosition() >= action) {
+        for (Action anAction : runtimeData.getStates()[stateNumber].getActions()) {
           switch (environment.getLanguage()) {
             case C:
-              environment.output.printf("\t{%d, %d}", pAct.getSymbol().getToken(), pAct.getStateNumber());
-              if (accion == runtimeData.getNumberOfActions() - 1) {
+              environment.output.printf("\t{%d, %d}", anAction.getSymbol().getToken(), anAction.getStateNumber());
+              if (action == runtimeData.getNumberOfActions() - 1) {
                 environment.output.printf("\n};\n");
               } else {
                 environment.output.printf(",\n");
               }
               break;
             case java:
-              Tabea(environment.output, environment.getIndent());
-              environment.output.printf("new Action(%d, %d)", pAct.getSymbol().getToken(), pAct.getStateNumber());
-              if (accion == runtimeData.getNumberOfActions() - 1) {
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("new Action(%d, %d)", anAction.getSymbol().getToken(), anAction.getStateNumber());
+              if (action == runtimeData.getNumberOfActions() - 1) {
                 environment.output.printf("\n");
-                Tabea(environment.output, environment.getIndent() - 1);
+                indent(environment.output, environment.getIndent() - 1);
                 environment.output.printf("};\n");
               } else {
                 environment.output.printf(",\n");
@@ -423,21 +416,20 @@ public class CodeWriter extends AbstractPhase {
               break;
             case pascal:
               environment.output
-                  .printf("    (symbol:%d; state:%d)", pAct.getSymbol().getToken(), pAct.getStateNumber());
-              if (accion == runtimeData.getNumberOfActions() - 1) {
+                  .printf("    (symbol:%d; state:%d)", anAction.getSymbol().getToken(), anAction.getStateNumber());
+              if (action == runtimeData.getNumberOfActions() - 1) {
                 environment.output.printf(");\n");
               } else {
                 environment.output.printf(",\n");
               }
               break;
           }
-          accion++;
+          action++;
         }
       }
     }
 
-    // tabla de goto
-    num_gotos = 0;
+    numGotos = 0;
     switch (environment.getLanguage()) {
       case C:
         environment.output.printf("\n"
@@ -452,27 +444,27 @@ public class CodeWriter extends AbstractPhase {
         break;
       case java:
         environment.output.printf("\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("// Goto table\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private class Goto {\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int origin;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int destination;\n\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("Goto(int origin, int destination) {\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.origin = origin;\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.destination = destination;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("}\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("}\n\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private static final int NUM_GOTOS=%d;\n", runtimeData.getNumberOfGoTos());
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private Goto gotoTable[] = {\n");
         break;
       case pascal:
@@ -485,18 +477,18 @@ public class CodeWriter extends AbstractPhase {
           switch (environment.getLanguage()) {
             case C:
               environment.output.printf("\t{%d, %d}", pGoto.getOrigin(), pGoto.getDestination());
-              if (num_gotos == runtimeData.getNumberOfGoTos() - 1) {
+              if (numGotos == runtimeData.getNumberOfGoTos() - 1) {
                 environment.output.printf("\n};\n");
               } else {
                 environment.output.printf(",\n");
               }
               break;
             case java:
-              Tabea(environment.output, environment.getIndent());
+              indent(environment.output, environment.getIndent());
               environment.output.printf("new Goto(%d, %d)", pGoto.getOrigin(), pGoto.getDestination());
-              if (num_gotos == runtimeData.getNumberOfGoTos() - 1) {
+              if (numGotos == runtimeData.getNumberOfGoTos() - 1) {
                 environment.output.printf("\n");
-                Tabea(environment.output, environment.getIndent() - 1);
+                indent(environment.output, environment.getIndent() - 1);
                 environment.output.printf("};\n");
               } else {
                 environment.output.printf(",\n");
@@ -504,18 +496,17 @@ public class CodeWriter extends AbstractPhase {
               break;
             case pascal:
               environment.output.printf("    (origin:%d; destination:%d)", pGoto.getOrigin(), pGoto.getDestination());
-              if (num_gotos == runtimeData.getNumberOfGoTos() - 1) {
+              if (numGotos == runtimeData.getNumberOfGoTos() - 1) {
                 environment.output.printf(");\n");
               } else {
                 environment.output.printf(",\n");
               }
               break;
           }
-          num_gotos++;
+          numGotos++;
         }
       }
     }
-    // tabla de parsing
     switch (environment.getLanguage()) {
       case C:
         environment.output.printf("\n"
@@ -531,59 +522,59 @@ public class CodeWriter extends AbstractPhase {
         break;
       case java:
         environment.output.printf("\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("// Parsing table\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private class Parser {\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int position;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int defa;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int elements;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("int msg;\n\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("Parser(int position, int defa, int elements, int msg) {\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.position = position;\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.defa = defa;\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.elements = elements;\n");
-        Tabea(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
         environment.output.printf("this.msg = msg;\n");
-        Tabea(environment.output, environment.getIndent());
+        indent(environment.output, environment.getIndent());
         environment.output.printf("}\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("}\n\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private Parser parsingTable[] = {\n");
         break;
       case pascal:
         environment.output.printf("\n" + "  StxParsingTable : array [TABLEROWS] of PARSER = (\n");
         break;
     }
-    for (estado = 0; estado < runtimeData.getStates().length; estado++) {
+    for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
       switch (environment.getLanguage()) {
         case C:
-          environment.output.printf("\t{%d, %d, %d, %d}", runtimeData.getStates()[estado].getPosition(),
-              runtimeData.getStates()[estado].getDefaultValue(), runtimeData.getStates()[estado].getHowMany(),
-              runtimeData.getStates()[estado].getMessage());
-          if (estado == runtimeData.getStates().length - 1) {
+          environment.output.printf("\t{%d, %d, %d, %d}", runtimeData.getStates()[stateNumber].getPosition(),
+              runtimeData.getStates()[stateNumber].getDefaultValue(), runtimeData.getStates()[stateNumber].getHowMany(),
+              runtimeData.getStates()[stateNumber].getMessage());
+          if (stateNumber == runtimeData.getStates().length - 1) {
             environment.output.printf("\n};\n");
           } else {
             environment.output.printf(",\n");
           }
           break;
         case java:
-          Tabea(environment.output, environment.getIndent());
-          environment.output.printf("new Parser(%d, %d, %d, %d)", runtimeData.getStates()[estado].getPosition(),
-              runtimeData.getStates()[estado].getDefaultValue(), runtimeData.getStates()[estado].getHowMany(),
-              runtimeData.getStates()[estado].getMessage());
-          if (estado == runtimeData.getStates().length - 1) {
+          indent(environment.output, environment.getIndent());
+          environment.output.printf("new Parser(%d, %d, %d, %d)", runtimeData.getStates()[stateNumber].getPosition(),
+              runtimeData.getStates()[stateNumber].getDefaultValue(), runtimeData.getStates()[stateNumber].getHowMany(),
+              runtimeData.getStates()[stateNumber].getMessage());
+          if (stateNumber == runtimeData.getStates().length - 1) {
             environment.output.printf("\n");
-            Tabea(environment.output, environment.getIndent() - 1);
+            indent(environment.output, environment.getIndent() - 1);
             environment.output.printf("};\n");
           } else {
             environment.output.printf(",\n");
@@ -591,9 +582,9 @@ public class CodeWriter extends AbstractPhase {
           break;
         case pascal:
           environment.output.printf("    (position:%d; defa:%d; elements:%d; msg:%d)",
-              runtimeData.getStates()[estado].getPosition(), runtimeData.getStates()[estado].getDefaultValue(),
-              runtimeData.getStates()[estado].getHowMany(), runtimeData.getStates()[estado].getMessage());
-          if (estado == runtimeData.getStates().length - 1) {
+              runtimeData.getStates()[stateNumber].getPosition(), runtimeData.getStates()[stateNumber].getDefaultValue(),
+              runtimeData.getStates()[stateNumber].getHowMany(), runtimeData.getStates()[stateNumber].getMessage());
+          if (stateNumber == runtimeData.getStates().length - 1) {
             environment.output.printf(");\n");
           } else {
             environment.output.printf(",\n");
@@ -601,14 +592,13 @@ public class CodeWriter extends AbstractPhase {
           break;
       }
     }
-    // tabla de mensaje de errores
     switch (environment.getLanguage()) {
       case C:
         environment.output.printf("\nchar * StxErrorTable[] = {\n");
         break;
       case java:
         environment.output.printf("\n");
-        Tabea(environment.output, environment.getIndent() - 1);
+        indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("private String errorTable[] = {\n");
         break;
       case pascal:
@@ -616,22 +606,22 @@ public class CodeWriter extends AbstractPhase {
             .getErrorMessages().size() - 1);
         break;
     }
-    for (err = 0; err < runtimeData.getErrorMessages().size(); err++) {
+    for (error = 0; error < runtimeData.getErrorMessages().size(); error++) {
       switch (environment.getLanguage()) {
         case C:
-          environment.output.printf("\t\"%s\"", runtimeData.getErrorMessages().get(err));
-          if (err == runtimeData.getErrorMessages().size() - 1) {
+          environment.output.printf("\t\"%s\"", runtimeData.getErrorMessages().get(error));
+          if (error == runtimeData.getErrorMessages().size() - 1) {
             environment.output.printf("\n};\n");
           } else {
             environment.output.printf(",\n");
           }
           break;
         case java:
-          Tabea(environment.output, environment.getIndent());
-          environment.output.printf("\"%s\"", runtimeData.getErrorMessages().get(err));
-          if (err == runtimeData.getErrorMessages().size() - 1) {
+          indent(environment.output, environment.getIndent());
+          environment.output.printf("\"%s\"", runtimeData.getErrorMessages().get(error));
+          if (error == runtimeData.getErrorMessages().size() - 1) {
             environment.output.printf("\n");
-            Tabea(environment.output, environment.getIndent() - 1);
+            indent(environment.output, environment.getIndent() - 1);
             environment.output.printf("};\n");
           } else {
             environment.output.printf(",\n");
@@ -639,7 +629,7 @@ public class CodeWriter extends AbstractPhase {
           break;
         case pascal:
           environment.output.printf("    \'");
-          String errorMessage = runtimeData.getErrorMessages().get(err);
+          String errorMessage = runtimeData.getErrorMessages().get(error);
           for (int i = 0; i < errorMessage.length(); i++) {
             char c = errorMessage.charAt(i);
             if (c == '\'') {
@@ -648,7 +638,7 @@ public class CodeWriter extends AbstractPhase {
             environment.output.printf("%c", c);
           }
           environment.output.printf("\'");
-          if (err == runtimeData.getErrorMessages().size() - 1) {
+          if (error == runtimeData.getErrorMessages().size() - 1) {
             environment.output.printf(");\n");
           } else {
             environment.output.printf(",\n");
@@ -659,11 +649,7 @@ public class CodeWriter extends AbstractPhase {
   }
 
   private void finishOutput() throws IOException {
-    // char * buffer = NULL;
-    // int readed;
     String filename;
-    // int fh;
-    // int tam;
 
     filename = "skeletons/parser-skeleton-" +
                (environment.isPacked() ? "packed" : "expanded") +
@@ -711,7 +697,7 @@ public class CodeWriter extends AbstractPhase {
     environment.output.println();
 
     if (environment.getLanguage() == Language.C && environment.isEmitLine()) {
-      environment.output.printf("#line %d \"%s\"\n", runtimeData.nLine + 1, environment.getSourceFile().toString());
+      environment.output.printf("#line %d \"%s\"\n", runtimeData.sourceLineNumber + 1, environment.getSourceFile().toString());
     }
 
     int c = environment.source.read();

@@ -54,8 +54,7 @@ public class RuntimeData {
   private List<String> errorMessages;
   private boolean finalActions;
 
-  public int nLine = 0;
-  public char c;
+  public int sourceLineNumber = 0;
   private boolean stackTypeDefined;
 
   public NonTerminal getRoot() {

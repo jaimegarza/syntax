@@ -110,16 +110,16 @@ public class TableGenerator extends AbstractPhase {
     return l;
   }
 
-  private int locate(List<Dot> ik) {
-    int h;
+  private int locateStateWithDots(List<Dot> ik) {
+    int stateNumber;
 
-    for (h = 1; h <= finalState; h++) {
-      List<Dot> originalMarkers = I[h].getOriginalMarkers();
+    for (stateNumber = 1; stateNumber <= finalState; stateNumber++) {
+      List<Dot> originalMarkers = I[stateNumber].getOriginalMarkers();
       if (ik.equals(originalMarkers)) {
         if (environment.isDebug()) {
-          System.out.println("Equals " + ik + " against markers in state " + h + " " + originalMarkers);
+          System.out.println("Equals " + ik + " against markers in state " + stateNumber + " " + originalMarkers);
         }
-        return h;
+        return stateNumber;
       }
     }
     return finalState + 1;
@@ -179,14 +179,14 @@ public class TableGenerator extends AbstractPhase {
     }
   }
 
-  void printLookahead(Set<Integer> c) {
-    if (c == null || environment.getAlgorithm() != Algorithm.LALR) {
+  void printLookahead(Set<Integer> lookAhead) {
+    if (lookAhead == null || environment.getAlgorithm() != Algorithm.LALR) {
       return;
     }
 
     environment.report.print("     { ");
     for (Symbol tkn : runtimeData.getTerminals()) {
-      if (c.contains(tkn.getId())) {
+      if (lookAhead.contains(tkn.getId())) {
         environment.report.print(tkn.getName() + " ");
       }
     }
@@ -227,26 +227,26 @@ public class TableGenerator extends AbstractPhase {
     }
   }
 
-  int computeDefaultAction(int parserLine[], int nElems) {
-    int iDefa = 0, iDefaCount = 0;
+  int computeDefaultAction(int parserLine[], int numberOfElements) {
+    int defaultValue = 0, defaultCount = 0;
     int i, j, count;
 
-    for (i = 0; i < nElems; i++) {
-      if (parserLine[i] < 0 && parserLine[i] != iDefa) {
+    for (i = 0; i < numberOfElements; i++) {
+      if (parserLine[i] < 0 && parserLine[i] != defaultValue) {
         // Cuenta ocurrencias
-        for (j = count = 0; j < nElems; j++) {
+        for (j = count = 0; j < numberOfElements; j++) {
           if (parserLine[j] == parserLine[i]) {
             count++;
           }
         }
-        if (count > iDefaCount) {
-          iDefaCount = count;
-          iDefa = parserLine[i];
+        if (count > defaultCount) {
+          defaultCount = count;
+          defaultValue = parserLine[i];
         }
       }
     }
 
-    return iDefa;
+    return defaultValue;
   }
 
   private List<Action> packActions(int parserLine[], int iDefa) {
@@ -293,17 +293,12 @@ public class TableGenerator extends AbstractPhase {
   }
 
   private void packState(int parserLine[], int estado) {
-    /*
-     * int t1, t2, col, defa, i, j, cTokens, cSimbolos; PACTION pAcciones, pAct,
-     * pCual, pNext, pErrToken; PIDENT id, pErrSymbol; static char msg[1024];
-     */
-
     if (environment.isPacked() == false) {
       return;
     }
 
-    int defa = computeDefaultAction(parserLine, runtimeData.getTerminals().size());
-    List<Action> actions = packActions(parserLine, defa);
+    int defaultAction = computeDefaultAction(parserLine, runtimeData.getTerminals().size());
+    List<Action> actions = packActions(parserLine, defaultAction);
     int existingState = findActions(estado, actions);
     if (existingState >= 0) {
       actions = I[existingState].getActions();
@@ -314,28 +309,28 @@ public class TableGenerator extends AbstractPhase {
       environment.report.printf("\nActions\n--------\n");
       actionNumber += actions.size();
     }
-    I[estado].setDefaultValue(defa);
+    I[estado].setDefaultValue(defaultAction);
     I[estado].setActionSize(actions.size());
     I[estado].setActions(actions);
-    int cTokens = 0;
-    Action pErrToken = null;
-    for (Action pAct : actions) {
-      environment.report.printf("\tWith %s ", pAct.getSymbol().getName());
-      if (pAct.getStateNumber() < 0) {
-        environment.report.printf("Reduce by rule %d\n", -pAct.getStateNumber());
-      } else if (pAct.getStateNumber() == ACCEPT) {
+    int tokenCount = 0;
+    Action errorToken = null;
+    for (Action action : actions) {
+      environment.report.printf("\tWith %s ", action.getSymbol().getName());
+      if (action.getStateNumber() < 0) {
+        environment.report.printf("Reduce by rule %d\n", -action.getStateNumber());
+      } else if (action.getStateNumber() == ACCEPT) {
         environment.report.printf("Accept\n");
       } else {
-        environment.report.printf("Shift to state %d\n", pAct.getStateNumber());
-        pErrToken = pAct;
-        cTokens++;
+        environment.report.printf("Shift to state %d\n", action.getStateNumber());
+        errorToken = action;
+        tokenCount++;
       }
     }
     // compute and emit GOTO's
-    int cSimbolos = 0;
+    int symbolCount = 0;
 
     int terminals = runtimeData.getTerminals().size();
-    NonTerminal pErrSymbol = null;
+    NonTerminal errorSymbol = null;
     for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
       if (parserLine[terminals + i] != 0) {
         NonTerminal symbol = null;
@@ -351,35 +346,35 @@ public class TableGenerator extends AbstractPhase {
           continue;
         }
         environment.report.printf("\tWith %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
-        cSimbolos++;
-        pErrSymbol = symbol;
+        symbolCount++;
+        errorSymbol = symbol;
         addGoto(symbol, estado, parserLine[i + terminals]);
       }
     }
     // imprime default
     environment.report.printf("\tDefault: ");
-    if (defa < 0) {
-      environment.report.printf("Reduce by rule %d\n", -defa);
+    if (defaultAction < 0) {
+      environment.report.printf("Reduce by rule %d\n", -defaultAction);
     } else {
       environment.report.printf("Error\n");
     }
     environment.report.printf("\nErrors\n-------\n");
-    if (cTokens == 1) {
+    if (tokenCount == 1) {
       String message = "";
-      message = pErrToken.getSymbol().getFullName() + " expected";
+      message = errorToken.getSymbol().getFullName() + " expected";
       environment.report.println("\t" + message);
       I[estado].setMessage(addErrorMessage(message));
-    } else if (cSimbolos == 1) {
-      String message = "Expecting " + pErrSymbol.getFullName();
+    } else if (symbolCount == 1) {
+      String message = "Expecting " + errorSymbol.getFullName();
       environment.report.println("\t" + message);
       I[estado].setMessage(addErrorMessage(message));
-    } else if (cTokens != 0 && (cTokens < cSimbolos || cSimbolos == 0)) {
+    } else if (tokenCount != 0 && (tokenCount < symbolCount || symbolCount == 0)) {
       StringBuilder messageBuffer = new StringBuilder();
       int i = 0;
       for (Action action : actions) {
         if (action.getStateNumber() > 0 && action.getStateNumber() != ACCEPT) {
           if (i > 0) {
-            if (i == cTokens - 1) {
+            if (i == tokenCount - 1) {
               messageBuffer.append(" or ");
             } else {
               messageBuffer.append(", ");
@@ -392,7 +387,7 @@ public class TableGenerator extends AbstractPhase {
       messageBuffer.append(" expected");
       environment.report.println("\t" + messageBuffer.toString());
       I[estado].setMessage(addErrorMessage(messageBuffer.toString()));
-    } else if (cSimbolos != 0) {
+    } else if (symbolCount != 0) {
       StringBuilder messageBuffer = new StringBuilder("Expecting ");
       int j = 0;
       for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
@@ -400,7 +395,7 @@ public class TableGenerator extends AbstractPhase {
           for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
             if (nonTerminal.getId() == i + terminals) {
               if (j > 0) {
-                if (j == cSimbolos - 1) {
+                if (j == symbolCount - 1) {
                   messageBuffer.append(" or ");
                 } else {
                   messageBuffer.append(", ");
@@ -425,10 +420,9 @@ public class TableGenerator extends AbstractPhase {
     }
   }
 
-  boolean Precedence(int parserLine[], Symbol tkn, Rule rule) {
+  boolean getPrecedence(int parserLine[], Symbol tkn, Rule rule) {
     Associativity association;
 
-    /* Alguno no tiene precedencia ?? */
     if (tkn.getPrecedence() == 0 || rule.getPrecedence() == 0) {
       return true;
     }
@@ -476,7 +470,7 @@ public class TableGenerator extends AbstractPhase {
             }
             if (containsToken) {
               if (parserLine[tkn.getId()] > 0) {
-                if (Precedence(parserLine, tkn, dot.getRule())) {
+                if (getPrecedence(parserLine, tkn, dot.getRule())) {
                   environment.error(dot.getRule().getLineNumber(),
                       "Warning: Shift/Reduce conflict on state %d[%s Shift:%d Reduce:%d].", estado, tkn.getName(),
                       parserLine[tkn.getId()], dot.getRule().getRulenum());
@@ -496,14 +490,14 @@ public class TableGenerator extends AbstractPhase {
     }
   }
 
-  private int AgregaGoto(NonTerminal id, int origen, int destino) {
-    GoTo goTo = new GoTo(origen, destino);
+  private int agregateGoto(NonTerminal id, int origin, int destination) {
+    GoTo goTo = new GoTo(origin, destination);
     id.addGoTo(goTo);
     numberOfGotos++;
     return 1;
   }
 
-  private int QuitaGoto(NonTerminal id, int iDefa) {
+  private int removeGoto(NonTerminal id, int iDefa) {
     for (int i = 0; i < id.getGotos().size(); i++) {
       if (id.getGotos().get(i).getDestination() == iDefa) {
         id.getGotos().remove(i);
@@ -513,39 +507,39 @@ public class TableGenerator extends AbstractPhase {
     return id.getGotos().size();
   }
 
-  private int GotoDefault(NonTerminal id) {
-    int iDefa = 0, iDefaCount = 0;
+  private int getDefaultGoto(NonTerminal id) {
+    int defaultValue = 0, defaultCount = 0;
     int count;
 
     for (GoTo pGoto : id.getGotos()) {
-      if (pGoto.getDestination() != iDefa) {
+      if (pGoto.getDestination() != defaultValue) {
         count = 0;
         for (GoTo pAux : id.getGotos()) {
           if (pAux.getDestination() == pGoto.getDestination()) {
             count++;
           }
         }
-        if (count > iDefaCount) {
-          iDefaCount = count;
-          iDefa = pGoto.getDestination();
+        if (count > defaultCount) {
+          defaultCount = count;
+          defaultValue = pGoto.getDestination();
         }
       }
     }
 
-    return iDefa;
+    return defaultValue;
   }
 
-  private void CompactaGotos() {
+  private void compactGotos() {
     int iDefa;
     int nElems, iPosicion;
 
     iPosicion = 0;
     for (NonTerminal id : runtimeData.getNonTerminals()) {
-      iDefa = GotoDefault(id);
+      iDefa = getDefaultGoto(id);
       if (iDefa != 0) {
-        nElems = QuitaGoto(id, iDefa);
+        nElems = removeGoto(id, iDefa);
         id.setToken(iPosicion);
-        AgregaGoto(id, -1, iDefa);
+        agregateGoto(id, -1, iDefa);
         iPosicion += nElems + 1;
       }
     }
@@ -610,7 +604,7 @@ public class TableGenerator extends AbstractPhase {
               }
             }
             // I[stateIndex].cutToMark();
-            int gotoState = locate(auxiliaryMarkers);
+            int gotoState = locateStateWithDots(auxiliaryMarkers);
             // I[stateIndex].restore();
             if (gotoState > finalState) {
               if (++finalState >= I.length) { // resize if needed
@@ -662,7 +656,7 @@ public class TableGenerator extends AbstractPhase {
       }
     }
 
-    CompactaGotos();
+    compactGotos();
 
     I = Arrays.copyOf(I, finalState + 1);
     runtimeData.setStates(I);
