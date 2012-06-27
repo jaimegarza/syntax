@@ -53,7 +53,7 @@ public class RuntimeData {
   private int numberOfRecoveries;
   private List<String> errorMessages;
   private boolean finalActions;
-  
+
   public int nLine = 0;
   public char c;
   private boolean stackTypeDefined;
@@ -105,11 +105,11 @@ public class RuntimeData {
   public State[] getStates() {
     return I;
   }
-  
+
   public void setStates(State[] I) {
     this.I = I;
   }
-  
+
   public <T extends Symbol> T findSymbolByName(List<T> table, String name) {
     for (T symbol : table) {
       if (symbol.getName().equals(name)) {
@@ -119,7 +119,7 @@ public class RuntimeData {
     }
     return null;
   }
-  
+
   public <T extends Symbol> T findSymbolByToken(List<T> table, int tokenId) {
     for (T symbol : table) {
       if (symbol.getToken() == tokenId) {
@@ -128,7 +128,7 @@ public class RuntimeData {
     }
     return null;
   }
-  
+
   public <T extends Symbol> T findSymbolById(List<T> table, int id) {
     for (T symbol : table) {
       if (symbol.getId() == id) {
@@ -137,7 +137,7 @@ public class RuntimeData {
     }
     return null;
   }
-  
+
   public Terminal findTerminalByName(String name) {
     return findSymbolByName(terminals, name);
   }

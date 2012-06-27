@@ -56,12 +56,12 @@ public class RuleItem {
   public int getSymbolId() {
     return symbol.getId();
   }
-  
+
   public RuleItem next() {
     for (int i = 0; i < rule.getItems().size(); i++) {
       RuleItem r = rule.getItem(i);
       if (this.equals(r)) {
-        return rule.getItem(i+1);
+        return rule.getItem(i + 1);
       }
     }
     return null;
@@ -69,9 +69,11 @@ public class RuleItem {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    
-    try{
+    if (this == obj) {
+      return true;
+    }
+
+    try {
       return getSymbolId() == ((RuleItem) obj).getSymbolId();
     } catch (NullPointerException unused) {
       return false;

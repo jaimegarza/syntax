@@ -31,7 +31,7 @@ package me.jaimegarza.syntax.generator.parser;
 public class ReservedWord {
   String word;
   int token;
-  
+
   public ReservedWord(String word, int token) {
     super();
     this.word = word;

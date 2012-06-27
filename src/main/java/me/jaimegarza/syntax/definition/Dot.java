@@ -33,7 +33,8 @@ import java.util.Set;
 
 public class Dot {
   State state;
-  private RuleItem item; // can be null, which means I am marking the end of a set of rule entries
+  private RuleItem item; // can be null, which means I am marking the end of a
+                         // set of rule entries
   private Rule rule; // must not be null
   private Set<Integer> lookahead = new HashSet<Integer>();
 
@@ -77,7 +78,7 @@ public class Dot {
     if (item != null) {
       int index = rule.getItems().indexOf(item);
       if (index >= -1) {
-        entry = rule.getItem(index+1);
+        entry = rule.getItem(index + 1);
       }
     }
     return entry;
@@ -93,18 +94,20 @@ public class Dot {
     }
     return null;
   }
-  
+
   public void addLookahead(int symbolId) {
     lookahead.add(symbolId);
   }
-  
+
   public void addAllLookaheads(Set<Integer> symbolIds) {
     lookahead.addAll(symbolIds);
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
+    if (this == obj) {
+      return true;
+    }
 
     try {
       Dot rm = (Dot) obj;

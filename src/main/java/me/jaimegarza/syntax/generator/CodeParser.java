@@ -45,10 +45,10 @@ import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
-import me.jaimegarza.syntax.generator.parser.ParserAction;
-import me.jaimegarza.syntax.generator.parser.ParserGoTo;
 import me.jaimegarza.syntax.generator.parser.Grammar;
 import me.jaimegarza.syntax.generator.parser.Parser;
+import me.jaimegarza.syntax.generator.parser.ParserAction;
+import me.jaimegarza.syntax.generator.parser.ParserGoTo;
 import me.jaimegarza.syntax.generator.parser.ReservedWord;
 import me.jaimegarza.syntax.generator.parser.StackElement;
 
@@ -234,9 +234,11 @@ public class CodeParser extends AbstractPhase {
     int i;
 
     /* Look in actions if there is a transaction with the token */
-    for (i = 0; i < StxParsingTable[state].elements; i++)
-      if (StxActionTable[position + i].symbol == sym)
+    for (i = 0; i < StxParsingTable[state].elements; i++) {
+      if (StxActionTable[position + i].symbol == sym) {
         return StxActionTable[position + i].state;
+      }
+    }
     /* otherwise */
     return StxParsingTable[state].defa;
   }
@@ -247,9 +249,11 @@ public class CodeParser extends AbstractPhase {
    */
   int StxGoto(int state, int position) {
     /* Search in gotos if there is a state transition */
-    for (; StxGotoTable[position].origin != -1; position++)
-      if (StxGotoTable[position].origin == state)
+    for (; StxGotoTable[position].origin != -1; position++) {
+      if (StxGotoTable[position].origin == state) {
         return StxGotoTable[position].destination;
+      }
+    }
     /* default */
     return StxGotoTable[position].destination;
   }
@@ -320,16 +324,18 @@ public class CodeParser extends AbstractPhase {
         break;
       case 5:
         {
-          if (!RuleEndAction())
+          if (!RuleEndAction()) {
             return false;
+          }
 
           finalActions = false;
         }
         break;
       case 6:
         {
-          if (!RuleEndAction())
+          if (!RuleEndAction()) {
             return false;
+          }
           finalActions = true;
         }
         break;
@@ -356,15 +362,17 @@ public class CodeParser extends AbstractPhase {
         }
         break;
       case 14:
-        if (!DeclUnion())
+        if (!DeclUnion()) {
           return false;
+        }
         break;
       case 15:
         currentType = null;
         break;
       case 16:
-        if (!DeclAction())
+        if (!DeclAction()) {
           return false;
+        }
         break;
       case 18:
         {
@@ -413,8 +421,9 @@ public class CodeParser extends AbstractPhase {
         return NameOneNonTerminal(StxStack[pStxStack - 2].id, StxStack[pStxStack].id);
       case 33:
         {
-          if (StxStack[pStxStack - 2].value != -1)
+          if (StxStack[pStxStack - 2].value != -1) {
             StxStack[pStxStack - 3].value = StxStack[pStxStack - 2].value;
+          }
           Terminal terminal = runtimeData.findTerminalByName(StxStack[pStxStack - 3].id);
           if (terminal == null) {
             terminal = isErrorToken ? new ErrorToken(StxStack[pStxStack - 3].id) : new Terminal(
@@ -430,17 +439,20 @@ public class CodeParser extends AbstractPhase {
             terminal.setPrecedence(rulePrecedence);
             terminal.setAssociativity(ruleAssociativity);
           }
-          if (currentType != null)
+          if (currentType != null) {
             terminal.setType(currentType);
+          }
           if (StxStack[pStxStack - 3].value >= 0) {
-            if (terminal.getToken() != -1)
+            if (terminal.getToken() != -1) {
               environment.error(-1, "Warning: Token \'%s\' already has a value.", terminal.getName());
-            for (Terminal cual : runtimeData.getTerminals())
+            }
+            for (Terminal cual : runtimeData.getTerminals()) {
               if (cual != terminal && cual.getToken() == StxStack[pStxStack - 3].value) {
                 environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
                     StxStack[pStxStack - 3].value, cual.getName());
                 return false;
               }
+            }
             terminal.setToken(StxStack[pStxStack - 3].value);
           }
           if (StxStack[pStxStack - 1].id != "") {
@@ -533,8 +545,9 @@ public class CodeParser extends AbstractPhase {
         break;
       case 63:
         {
-          if (StxStack[pStxStack].id.length() == 0)
+          if (StxStack[pStxStack].id.length() == 0) {
             break;
+          }
           if (isFirstToken) {
             rulePrecedence = 0;
             ruleAssociativity = Associativity.NONE;
@@ -565,12 +578,13 @@ public class CodeParser extends AbstractPhase {
                 terminal = new Terminal(StxStack[pStxStack].id);
                 runtimeData.getTerminals().add(terminal);
                 if (StxStack[pStxStack].value >= 0) {
-                  for (Terminal cual : runtimeData.getTerminals())
+                  for (Terminal cual : runtimeData.getTerminals()) {
                     if (cual != terminal && cual.getToken() == StxStack[pStxStack].value) {
                       environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
                           StxStack[pStxStack].value, cual.getName());
                       return false;
                     }
+                  }
                   terminal.setToken(StxStack[pStxStack].value);
                 }
                 symbol = terminal;
@@ -609,8 +623,9 @@ public class CodeParser extends AbstractPhase {
       case 65:
         {
           i = pRule != null ? pRule.size() : 0;
-          if (!RuleAction(runtimeData.getRules().size(), i, currentNonTerminalName))
+          if (!RuleAction(runtimeData.getRules().size(), i, currentNonTerminalName)) {
             return false;
+          }
           bActionDone = true;
         }
         break;
@@ -643,10 +658,12 @@ public class CodeParser extends AbstractPhase {
            * Look if the state on the stack's top has a transition with one of
            * the recovering elements in StxRecoverTable
            */
-          for (i = 0; i < StxRecoverTable.length; i++)
-            if ((acc = StxAction(StxState, StxRecoverTable[i])) > 0)
+          for (i = 0; i < StxRecoverTable.length; i++) {
+            if ((acc = StxAction(StxState, StxRecoverTable[i])) > 0) {
               /* valid shift */
               return StxShift(StxRecoverTable[i], acc);
+            }
+          }
           if (environment.isDebug()) {
             System.out.printf("Recuperate removing state %d and go to state %d\n", StxState, sStxStack[pStxStack - 1]);
           }
@@ -659,8 +676,9 @@ public class CodeParser extends AbstractPhase {
         if (environment.isDebug()) {
           System.out.printf("Recuperate removing symbol %d\n", StxSym);
         }
-        if (StxSym == 0) /* End of input string */
+        if (StxSym == 0) {
           return 0;
+        }
         StxSym = StxScan();
         return 1;
     }
@@ -694,8 +712,9 @@ public class CodeParser extends AbstractPhase {
           return false;
         }
         StxSym = StxScan();
-        if (StxErrorFlag > 0)
+        if (StxErrorFlag > 0) {
           StxErrorFlag--; /* properly recovering from error */
+        }
       } else if (action < 0) {
         if (StxReduce(StxSym, -action) == 0) {
           if (StxErrorFlag == -1) {
@@ -1022,8 +1041,9 @@ public class CodeParser extends AbstractPhase {
           currentCharacter = '/';
           break;
         }
-      } else
+      } else {
         break;
+      }
     }
 
     if (currentCharacter == '\0') {
@@ -1173,30 +1193,31 @@ public class CodeParser extends AbstractPhase {
       return TOK_ERROR;
     }
     tokenNumber = -1;
-    if (currentStringValue.equals("\\a"))
+    if (currentStringValue.equals("\\a")) {
       tokenNumber = 7;
-    else if (currentStringValue.equals("\\b"))
+    } else if (currentStringValue.equals("\\b")) {
       tokenNumber = '\b';
-    else if (currentStringValue.equals("\\n"))
+    } else if (currentStringValue.equals("\\n")) {
       tokenNumber = '\n';
-    else if (currentStringValue.equals("\\t"))
+    } else if (currentStringValue.equals("\\t")) {
       tokenNumber = '\t';
-    else if (currentStringValue.equals("\\f"))
+    } else if (currentStringValue.equals("\\f")) {
       tokenNumber = '\f';
-    else if (currentStringValue.equals("\\r"))
+    } else if (currentStringValue.equals("\\r")) {
       tokenNumber = '\r';
-    else if (currentStringValue.length() >= 2 && currentStringValue.substring(0, 2).equals("\\x")) {
+    } else if (currentStringValue.length() >= 2 && currentStringValue.substring(0, 2).equals("\\x")) {
       int p = 2;
       tokenNumber = 0;
       while (2 > 1) {
-        if (currentStringValue.charAt(p) >= '0' && currentStringValue.charAt(p) <= '9')
+        if (currentStringValue.charAt(p) >= '0' && currentStringValue.charAt(p) <= '9') {
           tokenNumber = tokenNumber * 16 + currentStringValue.charAt(p++) - '0';
-        else if (currentStringValue.charAt(p) >= 'A' && currentStringValue.charAt(p) <= 'F')
+        } else if (currentStringValue.charAt(p) >= 'A' && currentStringValue.charAt(p) <= 'F') {
           tokenNumber = tokenNumber * 16 + currentStringValue.charAt(p++) - 'A' + 10;
-        else if (currentStringValue.charAt(p) >= 'a' && currentStringValue.charAt(p) <= 'f')
+        } else if (currentStringValue.charAt(p) >= 'a' && currentStringValue.charAt(p) <= 'f') {
           tokenNumber = tokenNumber * 16 + currentStringValue.charAt(p++) - 'a' + 10;
-        else
+        } else {
           break;
+        }
       }
     } else if (currentStringValue.length() >= 2 && currentStringValue.substring(0, 2).equals("\\0")) {
       int p = 2;
@@ -1379,24 +1400,27 @@ public class CodeParser extends AbstractPhase {
     while (!bFin) {
       switch (currentCharacter) {
         case ';': /* final action in C & comment in ASM */
-          if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks == 0)
+          if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks == 0) {
             bFin = true;
+          }
           break;
 
         case '{': /* level++ in C & COMMENT in PAS */
-          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java)
+          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
             nBracks++;
-          else if (environment.getLanguage() == Language.pascal) {
+          } else if (environment.getLanguage() == Language.pascal) {
             environment.output.print(currentCharacter);
-            while ((currentCharacter = GetCar()) != '}')
+            while ((currentCharacter = GetCar()) != '}') {
               environment.output.print(currentCharacter);
+            }
           }
           break;
 
         case '}': /* level -- in C */
           if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
-            if (--nBracks <= 0)
+            if (--nBracks <= 0) {
               bFin = true;
+            }
           }
           break;
 
@@ -1411,20 +1435,23 @@ public class CodeParser extends AbstractPhase {
 
         case '(': /* possible comment in PAS */
         case '/': /* possible comment in C */
-          if (currentCharacter == '(' && environment.getLanguage() != Language.pascal)
+          if (currentCharacter == '(' && environment.getLanguage() != Language.pascal) {
             break;
-          else
+          } else {
             encuentra = ')';
+          }
           if (currentCharacter == '/' &&
               environment.getLanguage() != Language.C &&
-                environment.getLanguage() == Language.java)
+                environment.getLanguage() == Language.java) {
             break;
-          else
+          } else {
             encuentra = '/';
+          }
           environment.output.print(currentCharacter);
           currentCharacter = GetCar();
-          if (currentCharacter != '*') /* es un comentario ?? */
+          if (currentCharacter != '*') {
             continue;
+          }
 
           environment.output.print(currentCharacter);
           currentCharacter = GetCar();
@@ -1436,8 +1463,9 @@ public class CodeParser extends AbstractPhase {
             }
             while (currentCharacter == '*') {
               environment.output.print(currentCharacter);
-              if ((currentCharacter = GetCar()) == encuentra)
+              if ((currentCharacter = GetCar()) == encuentra) {
                 bBreak = true;
+              }
             }
             environment.output.print(currentCharacter);
             currentCharacter = GetCar();
@@ -1495,12 +1523,13 @@ public class CodeParser extends AbstractPhase {
             stackExpression = "StxStack[pStxStack";
           }
           if (currentCharacter == '$') {
-            if (elems == 1)
+            if (elems == 1) {
               environment.output.printf("%s]", stackExpression);
-            else if (elems != 0)
+            } else if (elems != 0) {
               environment.output.printf("%s-%d]", stackExpression, elems - 1);
-            else
+            } else {
               environment.output.printf("%s+1]", stackExpression);
+            }
             if (runtimeData.getTypes().size() != 0) {
               if (tipo == null) {
                 NonTerminal idp = runtimeData.findNonTerminalByName(id);
@@ -1509,8 +1538,9 @@ public class CodeParser extends AbstractPhase {
                   tipo = idp.getType();
                 }
               }
-              if (tipo != null)
+              if (tipo != null) {
                 environment.output.printf(".%s", tipo.getName());
+              }
             }
             currentCharacter = GetCar();
             continue;
@@ -1521,10 +1551,11 @@ public class CodeParser extends AbstractPhase {
           }
           if (Character.isDigit(currentCharacter)) {
             num = 0;
-            if (currentCharacter == '0')
+            if (currentCharacter == '0') {
               base = 8;
-            else
+            } else {
               base = 10;
+            }
             while (Character.isDigit(currentCharacter)) {
               num = num * base + currentCharacter - '0';
               currentCharacter = GetCar();
@@ -1534,10 +1565,11 @@ public class CodeParser extends AbstractPhase {
               environment.error(-1, "Incorrect value of \'$%d\'. Bigger than the number of elements.", num + elems);
               return false;
             }
-            if (num == 0)
+            if (num == 0) {
               environment.output.printf("%s]", stackExpression);
-            else
+            } else {
               environment.output.printf("%s%+d]", stackExpression, num);
+            }
             if (runtimeData.getTypes().size() != 0) {
               if (num + elems <= 0 && tipo == null) {
                 environment.error(-1, "Cannot determine the type for \'$%d\'.", num + elems);
@@ -1563,8 +1595,9 @@ public class CodeParser extends AbstractPhase {
                   }
                 }
               }
-              if (tipo != null)
+              if (tipo != null) {
                 environment.output.printf(".%s", tipo.getName());
+              }
             }
             continue;
           }
@@ -1694,24 +1727,27 @@ public class CodeParser extends AbstractPhase {
           break;
 
         case ';': /* finact in C y comment in ASM */
-          if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks <= 0)
+          if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks <= 0) {
             bFin = true;
+          }
           break;
 
         case '{': /* level++ in C y COMMENT in PAS */
-          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java)
+          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
             nBracks++;
-          else if (environment.getLanguage() == Language.pascal) {
+          } else if (environment.getLanguage() == Language.pascal) {
             environment.output.print(currentCharacter);
-            while ((currentCharacter = GetCar()) != '}')
+            while ((currentCharacter = GetCar()) != '}') {
               environment.output.print(currentCharacter);
+            }
           }
           break;
 
         case '}': /* level -- in C */
           if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
-            if (--nBracks <= 0 && bSkip)
+            if (--nBracks <= 0 && bSkip) {
               bFin = true;
+            }
           }
           if (bFin && bSkip) {
             currentCharacter = GetCar();
@@ -1730,20 +1766,23 @@ public class CodeParser extends AbstractPhase {
 
         case '(': /* possible comment in PAS */
         case '/': /* possible comment in C */
-          if (currentCharacter == '(' && environment.getLanguage() != Language.pascal)
+          if (currentCharacter == '(' && environment.getLanguage() != Language.pascal) {
             break;
-          else
+          } else {
             encuentra = ')';
+          }
           if (currentCharacter == '/' &&
               environment.getLanguage() != Language.C &&
-                environment.getLanguage() == Language.java)
+                environment.getLanguage() == Language.java) {
             break;
-          else
+          } else {
             encuentra = '/';
+          }
           environment.output.print(currentCharacter);
           currentCharacter = GetCar();
-          if (currentCharacter != '*') /* es un comentario ?? */
+          if (currentCharacter != '*') {
             continue;
+          }
 
           environment.output.print(currentCharacter);
           currentCharacter = GetCar();
@@ -1755,8 +1794,9 @@ public class CodeParser extends AbstractPhase {
             }
             while (currentCharacter == '*') {
               environment.output.print(currentCharacter);
-              if ((currentCharacter = GetCar()) == encuentra)
+              if ((currentCharacter = GetCar()) == encuentra) {
                 bBreak = true;
+              }
             }
             environment.output.print(currentCharacter);
             currentCharacter = GetCar();
@@ -1874,10 +1914,12 @@ public class CodeParser extends AbstractPhase {
   }
 
   private boolean DeclAction() throws IOException {
-    while (Character.isWhitespace(currentCharacter))
+    while (Character.isWhitespace(currentCharacter)) {
       currentCharacter = GetCar();
-    if (environment.getLanguage() == Language.C && environment.isEmitLine())
+    }
+    if (environment.getLanguage() == Language.C && environment.isEmitLine()) {
       environment.output.printf("\n#line %d \"%s\"\n", lineNumber, environment.getSourceFile().toString());
+    }
     while (currentCharacter != '\0') {
       if (currentCharacter == '\\') {
         if ((currentCharacter = GetCar()) == '}') {
@@ -1891,8 +1933,9 @@ public class CodeParser extends AbstractPhase {
         if ((currentCharacter = GetCar()) == '}') {
           currentCharacter = GetCar();
           return true;
-        } else
+        } else {
           environment.output.print('%');
+        }
       }
       environment.output.print(currentCharacter);
       currentCharacter = GetCar();
@@ -1905,8 +1948,9 @@ public class CodeParser extends AbstractPhase {
     int nivel;
     boolean caracts;
 
-    if (environment.getLanguage() == Language.C && environment.isEmitLine())
+    if (environment.getLanguage() == Language.C && environment.isEmitLine()) {
       environment.include.printf("\n#line %d \"%s\"\n", lineNumber, environment.getSourceFile().toString());
+    }
 
     runtimeData.setStackTypeDefined(true);
     switch (environment.getLanguage()) {
@@ -1979,8 +2023,9 @@ public class CodeParser extends AbstractPhase {
         caracts = false;
         while (currentCharacter != '%' && currentCharacter != '\\') {
           if (currentCharacter == '\n') {
-            if (caracts)
+            if (caracts) {
               environment.output.printf(");");
+            }
             caracts = false;
           } else {
             if (caracts == false) {
@@ -2132,10 +2177,11 @@ public class CodeParser extends AbstractPhase {
       case C:
         environment.output.printf("\n#define RECOVERS %d\n\n"
                                   + "/* Contains tokens in compact mode, and column in matrix */", nRecupera);
-        if (nRecupera != 0)
+        if (nRecupera != 0) {
           environment.output.printf("\nint StxRecoverTable[RECOVERS] = {\n");
-        else
+        } else {
           environment.output.printf("\nint StxRecoverTable[1] = {0};\n\n");
+        }
         break;
       case java:
         environment.output.printf("\n");
@@ -2145,18 +2191,20 @@ public class CodeParser extends AbstractPhase {
 
         environment.output.printf("// Contains tokens in compact mode, and column in matrix\n");
         Tabea(environment.output, environment.getIndent() - 1);
-        if (nRecupera != 0)
+        if (nRecupera != 0) {
           environment.output.printf("int recoverTable[] = {\n");
-        else
+        } else {
           environment.output.printf("int recoverTable[] = {0};\n\n");
+        }
         break;
       case pascal:
         environment.output.printf("\nConst\n  RECOVERS = %d;\n"
                                   + "{ Contains tokens in compact mode, and column in matrix }", nRecupera - 1);
-        if (nRecupera != 0)
+        if (nRecupera != 0) {
           environment.output.printf("\n  StxRecoverTable : array [0..RECOVERS] of INTEGER = (\n");
-        else
+        } else {
           environment.output.printf("\n  StxRecoverTable : array [0..0] of INTEGER = (0);\n\n");
+        }
         break;
     }
   }
@@ -2185,33 +2233,36 @@ public class CodeParser extends AbstractPhase {
       environment.report.printf("%2d %-40s %-40s %5d %s %5d %5d %-5s ", terminals, id.getId(), id.getName(), id
           .getToken(), id instanceof ErrorToken ? "Yes" : "No ", id.getCount(), id.getPrecedence(), id
           .getAssociativity().displayName());
-      if (id.getType() != null)
+      if (id.getType() != null) {
         environment.report.printf("%s", id.getType().getName());
+      }
       environment.report.printf("\n");
       if (id instanceof ErrorToken) {
         int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
         switch (environment.getLanguage()) {
           case C:
-            if (++nCuales < nRecupera)
+            if (++nCuales < nRecupera) {
               environment.output.printf("\t%d /* %s */,\n", recoveryToken, id.getName());
-            else
+            } else {
               environment.output.printf("\t%d /* %s */\n};\n\n", recoveryToken, id.getName());
+            }
             break;
           case java:
             Tabea(environment.output, environment.getIndent());
-            if (++nCuales < nRecupera)
+            if (++nCuales < nRecupera) {
               environment.output.printf("%d, // %s\n", recoveryToken, id.getName());
-            else {
+            } else {
               environment.output.printf("%d // %s\n", recoveryToken, id.getName());
               Tabea(environment.output, environment.getIndent() - 1);
               environment.output.printf("};\n\n");
             }
             break;
           case pascal:
-            if (++nCuales < nRecupera)
+            if (++nCuales < nRecupera) {
               environment.output.printf("\t%d, (* %s *)\n", recoveryToken, id.getName());
-            else
+            } else {
               environment.output.printf("\t%d (* %s *) );\n\n", recoveryToken, id.getName());
+            }
             break;
         }
       }
@@ -2238,10 +2289,11 @@ public class CodeParser extends AbstractPhase {
     for (Terminal id : runtimeData.getTerminals()) {
       switch (environment.getLanguage()) {
         case C:
-          if (i == terminals)
+          if (i == terminals) {
             environment.output.printf("\t%d /* %s (%s)*/\n};\n\n", id.getToken(), id.getName(), id.getFullName());
-          else
+          } else {
             environment.output.printf("\t%d, /* %s (%s) */\n", id.getToken(), id.getName(), id.getFullName());
+          }
           break;
         case java:
           Tabea(environment.output, environment.getIndent());
@@ -2250,14 +2302,16 @@ public class CodeParser extends AbstractPhase {
             Tabea(environment.output, environment.getIndent() - 1);
             environment.output.printf("};\n\n");
 
-          } else
+          } else {
             environment.output.printf("%d, // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
+          }
           break;
         case pascal:
-          if (i == terminals)
+          if (i == terminals) {
             environment.output.printf("    %d\n (* %s (%s) *) );\n", id.getToken(), id.getName(), id.getFullName());
-          else
+          } else {
             environment.output.printf("    %d,\n (* %s (%s) *)", id.getToken(), id.getName(), id.getFullName());
+          }
           break;
       }
       i++;
@@ -2272,8 +2326,9 @@ public class CodeParser extends AbstractPhase {
     for (NonTerminal id : runtimeData.getNonTerminals()) {
       environment.report.printf("%2d %-40s %-40s %-2d    ", noterminals + terminals, id.getId(), id.getName(),
           id.getCount());
-      if (id.getType() != null)
+      if (id.getType() != null) {
         environment.report.printf("%s", id.getType().getName());
+      }
       environment.report.printf("\n");
       id.setId(noterminals++ + terminals);
       id.setFirst(null);
@@ -2306,7 +2361,7 @@ public class CodeParser extends AbstractPhase {
     for (Terminal id : runtimeData.getTerminals()) {
       String var = variable(id.getName(), id.getToken());
       id.setVariable(var);
-      if (var.equals("_"))
+      if (var.equals("_")) {
         switch (environment.getLanguage()) {
           case C:
             if (first) {
@@ -2333,6 +2388,7 @@ public class CodeParser extends AbstractPhase {
             environment.include.printf("  %s = %d;\n", var, id.getToken());
             break;
         }
+      }
     }
     environment.include.printf("\n");
   }

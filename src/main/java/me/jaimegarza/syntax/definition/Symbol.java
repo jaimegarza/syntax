@@ -28,7 +28,6 @@
 */
 package me.jaimegarza.syntax.definition;
 
-
 public abstract class Symbol {
   protected int id;
   protected String name;
@@ -115,8 +114,10 @@ public abstract class Symbol {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    
+    if (this == obj) {
+      return true;
+    }
+
     try {
       Symbol s = (Symbol) obj;
       return id == s.id && name.equals(s.name) && fullName.equals(s.fullName);

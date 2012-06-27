@@ -31,11 +31,11 @@ package me.jaimegarza.syntax.definition;
 public class Terminal extends Symbol {
 
   private String variable;
-  
+
   public Terminal(String name) {
     super(name);
   }
-  
+
   public Terminal(NonTerminal nonTerminal) {
     super(nonTerminal.name);
     this.count = nonTerminal.count;

@@ -29,21 +29,11 @@
 package me.jaimegarza.syntax.cli;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Pattern;
-
-import me.jaimegarza.syntax.definition.NonTerminal;
-import me.jaimegarza.syntax.definition.Rule;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -65,7 +55,7 @@ import org.apache.commons.logging.LogFactory;
 @SuppressWarnings("unused")
 public class Environment extends Options {
   private static final long serialVersionUID = -4212115971332112220L;
-  
+
   private static final boolean NO_ARG = false;
   private static final boolean HAS_ARG = true;
   private static final boolean NO_OPTIONAL_VALUE = false;
@@ -93,14 +83,14 @@ public class Environment extends Options {
   private File outputFile;
   private File includeFile;
   private File reportFile;
-  
+
   public BufferedReader source = null;
   public PrintStream output = null;
   public PrintStream include = null;
   public PrintStream report = null;
 
   private int parsedLine;
-  
+
   public Environment(final String args[]) {
     this("", args);
   }
@@ -112,7 +102,7 @@ public class Environment extends Options {
     init();
     parse();
   }
-  
+
   public void release() {
     if (source != null) {
       IOUtils.closeQuietly(source);
@@ -127,7 +117,7 @@ public class Environment extends Options {
       IOUtils.closeQuietly(report);
     }
   }
-  
+
   public void parse() {
     CommandLineParser parser = new GnuParser();
     try {
@@ -154,51 +144,57 @@ public class Environment extends Options {
       printHelp();
       System.exit(1);
     }
-    
+
   }
-  
-  public void add(String shortOption, String longOption, boolean hasArg, boolean isValueOptional, boolean isRequired, String description, String argName) {
+
+  public void add(String shortOption, String longOption, boolean hasArg, boolean isValueOptional, boolean isRequired,
+      String description, String argName) {
     Option option = new Option(shortOption, longOption, hasArg, description);
     option.setOptionalArg(isValueOptional);
     option.setRequired(isRequired);
     option.setArgName(argName);
     addOption(option);
   }
-  
+
   public void init() {
     add("h", "help", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "displays the usage of the tool", "");
-    add("l", "language", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Setup the syntax and output to be either java|c|pascal, default c", "language");
+    add("l", "language", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "Setup the syntax and output to be either java|c|pascal, default c", "language");
     add("v", "verbose", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Verbose output, default no", "");
-    add("a", "algorithm", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Algorithm, either s|l (For SLR and LALR, default LALR)", "algorithm");
+    add("a", "algorithm", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "Algorithm, either s|l (For SLR and LALR, default LALR)", "algorithm");
     add("d", "debug", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Prints debug information", "");
     add("n", "noline", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Disable #line directives in C, default enabled", "");
-    add("m", "margin", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Right margin on generated source, default 8000", "margin");
+    add("m", "margin", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Right margin on generated source, default 8000",
+        "margin");
     add("i", "indent", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Indent by n spaces, default 2", "spaces");
-    add("p", "packing", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Packing format of parser (packed|tabular, default packed)", "packing");
-    add("x", "external", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Generate include file (true,on,yes,1|false,off,no,0, default true)", "external");
+    add("p", "packing", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "Packing format of parser (packed|tabular, default packed)", "packing");
+    add("x", "external", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "Generate include file (true,on,yes,1|false,off,no,0, default true)", "external");
   }
-  
+
   public boolean has(String option) {
     if (cmd != null) {
       return cmd.hasOption(option);
     }
     return false;
   }
-  
+
   public String get(String option, String defaultValue) {
     if (cmd != null) {
       return cmd.getOptionValue(option, defaultValue);
     }
     return defaultValue;
   }
-  
+
   public boolean getHelp() {
     return has("h");
   }
-  
+
   public void setLanguage() throws ParseException {
     String value = get("l", "c");
-    if (value.equalsIgnoreCase("c") ) {
+    if (value.equalsIgnoreCase("c")) {
       this.language = Language.C;
     } else if (value.equalsIgnoreCase("j") || value.equalsIgnoreCase("java")) {
       this.language = Language.java;
@@ -230,13 +226,20 @@ public class Environment extends Options {
       throw new ParseException("Option -p|--packing is not valid :" + value);
     }
   }
-  
+
   public void setExternalInclude() throws ParseException {
     String value = get("x", "true");
-    if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("on") || value.equalsIgnoreCase("1")) {
+    if (value.equalsIgnoreCase("true") ||
+        value.equalsIgnoreCase("yes") ||
+          value.equalsIgnoreCase("on") ||
+          value.equalsIgnoreCase("1")) {
       this.externalInclude = true;
-    } else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("off") || value.equalsIgnoreCase("0")) {
-      this.externalInclude = false;;
+    } else if (value.equalsIgnoreCase("false") ||
+               value.equalsIgnoreCase("no") ||
+                 value.equalsIgnoreCase("off") ||
+                 value.equalsIgnoreCase("0")) {
+      this.externalInclude = false;
+      ;
     } else {
       throw new ParseException("Option -x|--external is not valid :" + value);
     }
@@ -245,15 +248,15 @@ public class Environment extends Options {
   public void setVerbose() throws ParseException {
     this.verbose = has("v");
   }
-  
+
   public void setDebug() throws ParseException {
     this.debug = has("d");
   }
-  
+
   public void setEmitLine() throws ParseException {
     this.emitLine = !has("n");
   }
-  
+
   public void setMargin() throws ParseException {
     int value = 0;
     try {
@@ -282,30 +285,30 @@ public class Environment extends Options {
 
   public void printHelp() {
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp( "Syntax [options] filename.sy", this);
+    formatter.printHelp("Syntax [options] filename.sy", this);
   }
 
   public String getTitle() {
     return relatedTitle;
   }
-  
+
   public File getFile(int index, boolean isRequired, String argumentName) throws ParseException {
     if (index >= fileNames.size()) {
       if (isRequired) {
         throw new ParseException("filename for  " + argumentName + "was not provided");
-      } 
+      }
       return null;
     }
     return new File((String) fileNames.get(index));
   }
-  
+
   public String replaceExtension(String filename, String extension) {
     if (filename == null) {
       return null;
     }
-    return FilenameUtils.getFullPath(filename) + FilenameUtils.getBaseName(filename) + extension; 
+    return FilenameUtils.getFullPath(filename) + FilenameUtils.getBaseName(filename) + extension;
   }
-  
+
   public void setSourceFile() throws ParseException {
     File sourceFile = getFile(0, true, "source file");
     this.sourceFile = sourceFile;
@@ -322,7 +325,7 @@ public class Environment extends Options {
       throw new ParseException("Cannot open file " + sourceFile);
     }
   }
-  
+
   public void setReportFile() throws ParseException {
     File reportFile = getFile(2, false, "report file");
     if (reportFile == null) {
@@ -360,20 +363,46 @@ public class Environment extends Options {
 
   @Override
   public String toString() {
-    return relatedTitle + "{\n" +
-        "  verbose: " + verbose + "\n" +
-        "  language: " + language + "\n" +
-        "  algorithm: " + algorithm + "\n" +
-        "  emit #line: " + emitLine + "\n" +
-        "  margin: " + margin + "\n" +
-        "  indent: " + indent + "\n" +
-        "  packed: " + packed + "\n" +
-        "  externalInclude: " + externalInclude + "\n" +
-        "  sourceFile: " + (sourceFile == null ? "unknown" : sourceFile.getPath()) + "\n" +
-        "  outputFile: " + (outputFile == null ? "(none)" : outputFile.getPath()) + "\n" +
-        "  includeFile: " + (includeFile == null ? "(none)" : includeFile.getPath()) + "\n" +
-        "  reportFile: " + (reportFile == null ? "(none)" : reportFile.getPath()) + "\n}\n" +
-        super.toString() + "}";
+    return relatedTitle +
+           "{\n" +
+             "  verbose: " +
+             verbose +
+             "\n" +
+             "  language: " +
+             language +
+             "\n" +
+             "  algorithm: " +
+             algorithm +
+             "\n" +
+             "  emit #line: " +
+             emitLine +
+             "\n" +
+             "  margin: " +
+             margin +
+             "\n" +
+             "  indent: " +
+             indent +
+             "\n" +
+             "  packed: " +
+             packed +
+             "\n" +
+             "  externalInclude: " +
+             externalInclude +
+             "\n" +
+             "  sourceFile: " +
+             (sourceFile == null ? "unknown" : sourceFile.getPath()) +
+             "\n" +
+             "  outputFile: " +
+             (outputFile == null ? "(none)" : outputFile.getPath()) +
+             "\n" +
+             "  includeFile: " +
+             (includeFile == null ? "(none)" : includeFile.getPath()) +
+             "\n" +
+             "  reportFile: " +
+             (reportFile == null ? "(none)" : reportFile.getPath()) +
+             "\n}\n" +
+             super.toString() +
+             "}";
   }
 
   public Language getLanguage() {
@@ -428,11 +457,10 @@ public class Environment extends Options {
     return reportFile;
   }
 
-  public void error(int line, String msg, Object...args) {
-    System.err.printf("%s(%05d) : ", sourceFile, line == -1 ? parsedLine+1 : line);
+  public void error(int line, String msg, Object... args) {
+    System.err.printf("%s(%05d) : ", sourceFile, line == -1 ? parsedLine + 1 : line);
     System.err.printf(msg + "\n", args);
 
   }
-  
 
 }

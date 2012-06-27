@@ -33,9 +33,9 @@ import java.util.List;
 import java.util.Set;
 
 public class NonTerminal extends Symbol {
-  // null means not computed.  empty set is computed with no items
-  Set<Integer> first = null; 
-  //In addition, for LALR follow will remain as null
+  // null means not computed. empty set is computed with no items
+  Set<Integer> first = null;
+  // In addition, for LALR follow will remain as null
   Set<Integer> follow = null;
   List<GoTo> gotos = new LinkedList<GoTo>();
 
@@ -58,7 +58,7 @@ public class NonTerminal extends Symbol {
   public List<GoTo> getGotos() {
     return gotos;
   }
-  
+
   public void addGoTo(GoTo goThere) {
     gotos.add(goThere);
   }

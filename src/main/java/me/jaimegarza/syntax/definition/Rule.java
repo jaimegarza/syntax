@@ -96,15 +96,17 @@ public class Rule {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    
+    if (this == obj) {
+      return true;
+    }
+
     try {
       Rule r = (Rule) obj;
       return rulenum == r.rulenum &&
-        lineNumber == r.lineNumber &&
-        precedence == r.precedence &&
-        leftHand.equals(r.leftHand) /*&&
-        items.equals(r.items);*/;
+             lineNumber == r.lineNumber &&
+               precedence == r.precedence &&
+               leftHand.equals(r.leftHand) /*&&
+                                           items.equals(r.items);*/;
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {

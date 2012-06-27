@@ -37,7 +37,7 @@ public class Action {
     this.symbol = symbol;
     this.stateNumber = stateNumber;
   }
-  
+
   public Symbol getSymbol() {
     return symbol;
   }
@@ -56,8 +56,10 @@ public class Action {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    
+    if (this == obj) {
+      return true;
+    }
+
     try {
       Action a = (Action) obj;
       return symbol.equals(a.symbol) && stateNumber == a.stateNumber;
@@ -67,7 +69,8 @@ public class Action {
       return false;
     }
   }
-  
+
+  @Override
   public String toString() {
     return "with " + symbol + " goto " + stateNumber;
   }

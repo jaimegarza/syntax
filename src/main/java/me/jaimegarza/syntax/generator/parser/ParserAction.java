@@ -28,7 +28,6 @@
 */
 package me.jaimegarza.syntax.generator.parser;
 
-
 public class ParserAction {
   public int symbol;
   public int state;
