@@ -49,8 +49,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Class that extends a set of options to provide a title for a related set of
- * options.
+ * Examines the command line resources and encapsulates the resulting
+ * options in getter methods.
+ * <p>
+ * In addition to that it offers the private output, report and source
+ * fields to use as PrintWriters and BufferedReaders.
  */
 @SuppressWarnings("unused")
 public class Environment extends Options {
@@ -63,7 +66,7 @@ public class Environment extends Options {
   private static final boolean NOT_REQUIRED = false;
   private static final boolean REQUIRED = true;
 
-  public final Log LOG = LogFactory.getLog(this.getClass());
+  private final Log LOG = LogFactory.getLog(this.getClass());
 
   private String relatedTitle;
   private String[] args;
@@ -91,10 +94,19 @@ public class Environment extends Options {
 
   private int parsedLine;
 
+  /**
+   * Construct an environment with the given arguments
+   * @param args command line arguments
+   */
   public Environment(final String args[]) {
     this("", args);
   }
 
+  /**
+   * Construct an environment with the given arguments
+   * @param title title of the program
+   * @param args command line arguments
+   */
   public Environment(final String title, final String args[]) {
     super();
     this.relatedTitle = title;
@@ -103,6 +115,9 @@ public class Environment extends Options {
     parse();
   }
 
+  /**
+   * close files
+   */
   public void release() {
     if (source != null) {
       IOUtils.closeQuietly(source);
@@ -118,7 +133,10 @@ public class Environment extends Options {
     }
   }
 
-  public void parse() {
+  /**
+   * Parse the command line arguments
+   */
+  private void parse() {
     CommandLineParser parser = new GnuParser();
     try {
       cmd = parser.parse(this, args);
@@ -147,7 +165,17 @@ public class Environment extends Options {
 
   }
 
-  public void add(String shortOption, String longOption, boolean hasArg, boolean isValueOptional, boolean isRequired,
+  /**
+   * Register a command line valid option
+   * @param shortOption the -<letter>
+   * @param longOption the --<word> option
+   * @param hasArg if it has an extra argument
+   * @param isValueOptional if it has an arg, is it required?
+   * @param isRequired is this option required?
+   * @param description a long description to be used in help
+   * @param argName the argument name when it has an arg, for the help
+   */
+  private void add(String shortOption, String longOption, boolean hasArg, boolean isValueOptional, boolean isRequired,
       String description, String argName) {
     Option option = new Option(shortOption, longOption, hasArg, description);
     option.setOptionalArg(isValueOptional);
@@ -156,7 +184,10 @@ public class Environment extends Options {
     addOption(option);
   }
 
-  public void init() {
+  /**
+   * initialize the compilation options.
+   */
+  private void init() {
     add("h", "help", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "displays the usage of the tool", "");
     add("l", "language", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Setup the syntax and output to be either java|c|pascal, default c", "language");
@@ -174,25 +205,43 @@ public class Environment extends Options {
         "Generate include file (true,on,yes,1|false,off,no,0, default true)", "external");
   }
 
-  public boolean has(String option) {
+  /**
+   * Check to see if an option is present
+   * @param option the option by string
+   * @return true if provided
+   */
+  private boolean has(String option) {
     if (cmd != null) {
       return cmd.hasOption(option);
     }
     return false;
   }
 
-  public String get(String option, String defaultValue) {
+  /**
+   * Obtain the argument of an option
+   * @param option the option by string
+   * @param defaultValue is the value returned if option not given
+   * @return the option value
+   */
+  private String get(String option, String defaultValue) {
     if (cmd != null) {
       return cmd.getOptionValue(option, defaultValue);
     }
     return defaultValue;
   }
 
-  public boolean getHelp() {
+  /**
+   * @return true if help is requested
+   */
+  private boolean getHelp() {
     return has("h");
   }
 
-  public void setLanguage() throws ParseException {
+  /**
+   * compute the language from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setLanguage() throws ParseException {
     String value = get("l", "c");
     if (value.equalsIgnoreCase("c")) {
       this.language = Language.C;
@@ -205,7 +254,11 @@ public class Environment extends Options {
     }
   }
 
-  public void setAlgorithm() throws ParseException {
+  /**
+   * compute the algorithm from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setAlgorithm() throws ParseException {
     String value = get("a", "l");
     if (value.equalsIgnoreCase("s") || value.equalsIgnoreCase("slr")) {
       this.algorithm = Algorithm.SLR;
@@ -216,7 +269,12 @@ public class Environment extends Options {
     }
   }
 
-  public void setPacking() throws ParseException {
+  /**
+   * compute the packed/unpacked nature of table from options
+   * @throws ParseException if the option cannot be computed
+   */
+
+  private void setPacking() throws ParseException {
     String value = get("p", "p");
     if (value.equalsIgnoreCase("p") || value.equalsIgnoreCase("packed")) {
       this.packed = true;
@@ -227,7 +285,11 @@ public class Environment extends Options {
     }
   }
 
-  public void setExternalInclude() throws ParseException {
+  /**
+   * compute the external file requirements from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setExternalInclude() throws ParseException {
     String value = get("x", "true");
     if (value.equalsIgnoreCase("true") ||
         value.equalsIgnoreCase("yes") ||
@@ -245,19 +307,35 @@ public class Environment extends Options {
     }
   }
 
-  public void setVerbose() throws ParseException {
+  /**
+   * compute the verbosity from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setVerbose() throws ParseException {
     this.verbose = has("v");
   }
 
-  public void setDebug() throws ParseException {
+  /**
+   * compute the debugging output from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setDebug() throws ParseException {
     this.debug = has("d");
   }
 
-  public void setEmitLine() throws ParseException {
+  /**
+   * compute the need to output #line on C files from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setEmitLine() throws ParseException {
     this.emitLine = !has("n");
   }
 
-  public void setMargin() throws ParseException {
+  /**
+   * compute the margin from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setMargin() throws ParseException {
     int value = 0;
     try {
       value = Integer.parseInt(get("m", "8000"));
@@ -270,7 +348,11 @@ public class Environment extends Options {
     this.margin = value;
   }
 
-  public void setIndent() throws ParseException {
+  /**
+   * compute the indentation from options
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setIndent() throws ParseException {
     int value = 0;
     try {
       value = Integer.parseInt(get("i", "2"));
@@ -283,16 +365,30 @@ public class Environment extends Options {
     this.indent = value;
   }
 
-  public void printHelp() {
+  /**
+   * print the usage of the program
+   */
+  private void printHelp() {
     HelpFormatter formatter = new HelpFormatter();
     formatter.printHelp("Syntax [options] filename.sy", this);
   }
 
+  /**
+   * getter for the title
+   */
   public String getTitle() {
     return relatedTitle;
   }
 
-  public File getFile(int index, boolean isRequired, String argumentName) throws ParseException {
+  /**
+   * Obtain the file by index
+   * @param index the index of the filename
+   * @param isRequired if it has to be there
+   * @param argumentName the name of the option
+   * @return the file
+   * @throws ParseException if the option cannot be read
+   */
+  private File getFile(int index, boolean isRequired, String argumentName) throws ParseException {
     if (index >= fileNames.size()) {
       if (isRequired) {
         throw new ParseException("filename for  " + argumentName + "was not provided");
@@ -302,14 +398,24 @@ public class Environment extends Options {
     return new File((String) fileNames.get(index));
   }
 
-  public String replaceExtension(String filename, String extension) {
+  /**
+   * given a filename, return a new filename with the extension provided
+   * @param filename is the input filename
+   * @param extension is the new extension
+   * @return the new filename
+   */
+  private String replaceExtension(String filename, String extension) {
     if (filename == null) {
       return null;
     }
     return FilenameUtils.getFullPath(filename) + FilenameUtils.getBaseName(filename) + extension;
   }
 
-  public void setSourceFile() throws ParseException {
+  /**
+   * Compute the source file
+   * @throws ParseException if the source file cannot be computed
+   */
+  private void setSourceFile() throws ParseException {
     File sourceFile = getFile(0, true, "source file");
     this.sourceFile = sourceFile;
     if (sourceFile != null) {
@@ -326,7 +432,11 @@ public class Environment extends Options {
     }
   }
 
-  public void setReportFile() throws ParseException {
+  /**
+   * Compute the report file
+   * @throws ParseException if the report file cannot be computed
+   */
+  private void setReportFile() throws ParseException {
     File reportFile = getFile(2, false, "report file");
     if (reportFile == null) {
       reportFile = new File(replaceExtension(outputFile.getAbsolutePath(), ".txt"));
@@ -341,7 +451,11 @@ public class Environment extends Options {
     }
   }
 
-  public void setOutputFile() throws ParseException {
+  /**
+   * Compute the output file
+   * @throws ParseException if the output file cannot be computed
+   */
+  private void setOutputFile() throws ParseException {
     File outputFile = getFile(1, false, "output file");
     if (outputFile == null) {
       outputFile = new File(replaceExtension(sourceFile.getAbsolutePath(), language.extension()));
@@ -405,6 +519,9 @@ public class Environment extends Options {
              "}";
   }
 
+  /*****************************************************************************
+   * Getters
+   *****************************************************************************/
   public Language getLanguage() {
     return language;
   }
@@ -437,7 +554,7 @@ public class Environment extends Options {
     return packed;
   }
 
-  public boolean isExternalInclude() {
+  private boolean isExternalInclude() {
     return externalInclude;
   }
 
@@ -457,6 +574,12 @@ public class Environment extends Options {
     return reportFile;
   }
 
+  /**
+   * display an error
+   * @param line is the source file line number
+   * @param msg is the message for printf
+   * @param args are the additional entries in the message
+   */
   public void error(int line, String msg, Object... args) {
     System.err.printf("%s(%05d) : ", sourceFile, line == -1 ? parsedLine + 1 : line);
     System.err.printf(msg + "\n", args);
