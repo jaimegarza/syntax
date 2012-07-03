@@ -28,19 +28,71 @@
 */
 package me.jaimegarza.syntax.definition;
 
-public class Type {
+/**
+ * <i>~pojo class</i><br><br>
+ * 
+ * defines the convenience type used for $$, $1, $2 etc to be used in code
+ * generation rules.  This applies to both terminals and non terminals.
+ * 
+ * @author jaimegarza@gmail.com
+ *
+ */public class Type {
+   /**
+    * The type name.  
+    * It is up to the user to make sure that it is syntactically valid in 
+    * the target language.
+    */
   String name;
 
+  /** 
+   * Construct a type
+   * @param name is the type name
+   */
   public Type(String name) {
     super();
     this.name = name;
   }
 
+  /**
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * @param name the name to set
+   */
   public void setName(String name) {
     this.name = name;
   }
+
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    try {
+      Type t = (Type) obj;
+      return name.equals(t.name);
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
+  }
+
+  /**
+   * Returns the name of the type
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return name;
+  }
+
 }

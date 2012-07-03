@@ -31,26 +31,64 @@ package me.jaimegarza.syntax.definition;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * <i>~pojo class</i><br><br>
+ *
+ * When the parser table is generated with a LALR parser, a set of
+ * lookaheads is computed.  This is similar to a follow set except
+ * that the lookahead is more fine grained than the coarse follow set.
+ * 
+ * Lookaheads are associated to dots, not non-terminals.
+ * 
+ * A lookahead is computed on a per state basis.  A state is observed 
+ * and the set of follow-like terminals is obtained, only on the c
+ * context of that state.
+ * 
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class LookAhead {
+  /**
+   * The set of symbol ids that make a lookahead
+   */
   Set<Integer> symbolIds = new HashSet<Integer>();
+  /**
+   * A carry is obtained when a rule is at the end, and the follow
+   * may require additional computations.
+   */
   boolean carry = true;
 
+  /**
+   * @return the symbolIds
+   */
   public Set<Integer> getSymbolIds() {
     return symbolIds;
   }
 
+  /**
+   * @param symbolIds the symbolIds to set
+   */
   public void setSymbolIds(Set<Integer> symbolIds) {
     this.symbolIds = symbolIds;
   }
 
+  /**
+   * @return the carry
+   */
   public boolean isCarry() {
     return carry;
   }
 
+  /**
+   * @param carry the carry to set
+   */
   public void setCarry(boolean carry) {
     this.carry = carry;
   }
 
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {

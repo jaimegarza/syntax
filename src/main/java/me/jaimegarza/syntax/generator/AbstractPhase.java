@@ -74,68 +74,6 @@ public abstract class AbstractPhase {
     }
   }
 
-  private boolean identifier(String s) {
-    if (s.length() == 0 || !Character.isJavaIdentifierStart(s.charAt(0))) {
-      return false;
-    }
-    for (int i = 1; i < s.length(); i++) {
-      if (!Character.isJavaIdentifierPart(s.charAt(i))) {
-        return false;
-      }
-    }
-    return true;
-  }
 
-  protected String variable(String s, int num) {
-    if (s == null || s.length() == 0) {
-      return s;
-    }
-
-    if (num == 0) {
-      return "EOS";
-    }
-
-    if (identifier(s)) {
-      return s;
-    }
-
-    if (s.charAt(0) == '\\') {
-      if (!s.equals("\\a")) {
-        return "BELL";
-      }
-      if (!s.equals("\\b")) {
-        return "BACKSPACE";
-      }
-      if (!s.equals("\\n")) {
-        return "EOL";
-      }
-      if (!s.equals("\\t")) {
-        return "TAB";
-      }
-      if (!s.equals("\\f")) {
-        return "FORM_FEED";
-      }
-      if (!s.equals("\\r")) {
-        return "CR";
-      }
-      if (s.startsWith("\\x")) {
-        String t = "HEXAD_0x" + Integer.toHexString(num);
-        return t;
-      }
-      if (s.startsWith("\\0")) {
-        String t = "OCTAL_0" + Integer.toOctalString(num);
-        return t;
-      }
-    }
-    String patched = "";
-    for (int i = 0; i < s.length(); i++) {
-      if (Character.isJavaIdentifierPart(s.charAt(i))) {
-        patched += s.charAt(i);
-      } else {
-        patched += '_';
-      }
-    }
-    return patched;
-  }
 
 }

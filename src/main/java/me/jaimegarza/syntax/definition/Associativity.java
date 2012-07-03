@@ -28,15 +28,35 @@
 */
 package me.jaimegarza.syntax.definition;
 
+/**
+ * Associativity is the property of rules and symbols provided to resolve
+ * conflicts.  By declaring ambiguous grammars with associativity we can
+ * deduce if a shift (left) should be taken, or a reduce (right)<p>
+ * Usually the associativity with higer precedence is picked for a rule @see {@link Rule}<p>
+ * For conflict resolution:<pre>
+ *   if shift-reduce conflict
+ *      left associativity implies reduce
+ *      right associativity implies shift
+ *      non assoc implies error</pre>
+ * @author jaimegarza@gmail.com
+ *
+ */
 public enum Associativity {
-  NONE(""), LEFT("LEF"), RIGHT("RIG"), BINARY("BIN");
+  NONE(""), 
+  LEFT("LEF"), 
+  RIGHT("RIG"), 
+  BINARY("BIN");
 
+  /** we GIVE a display name TO the associativity */
   String theName;
 
   Associativity(String theName) {
     this.theName = theName;
   }
 
+  /**
+   * @return the name associated to this element
+   */
   public String displayName() {
     return this.theName;
   }

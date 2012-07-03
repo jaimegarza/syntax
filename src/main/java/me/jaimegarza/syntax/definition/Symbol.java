@@ -28,15 +28,79 @@
 */
 package me.jaimegarza.syntax.definition;
 
+/**
+ * <i>~pojo class</i><br><br>
+ * 
+ * Represents a symbol in the grammar.  Symbols have the following hierarchy:
+ * <pre>
+ *  -+ <b>Symbol</b>
+ *   |
+ *   +--+ {@link Terminal}     - Lexical Symbol (i.e. number, id '+')
+ *   |  |
+ *   |  +-- {@link ErrorToken} - Lexical Symbol declared with <b>%error</b>
+ *   |
+ *   +--{@link NonTerminal}    - Syntactical symbol (i.e. Expression, Statement)
+ *   </pre>
+ *   
+ * This class is abstract.<p>
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public abstract class Symbol {
+  /**
+   * The numeric identifier for the symbol.  Sequence.
+   */
   protected int id;
+  /**
+   * the name of the symbol.
+   */
   protected String name;
+  /**
+   * the full name.  by default it equals the name, but a full name
+   * can be declared in the grammar spec.  Useful for error generation.
+   */
   protected String fullName;
+  /**
+   * The numeric precedence of the symbol.  Precedence is used, when provided
+   * to resolve ambiguities when giving LR grammars with conflicts.<p>
+   * precedence is usually provided with <b>%prec</b>.
+   * 
+   * Usually the associativity with higher precedence is picked for a {@link Rule}<br>
+   * For conflict resolution:<pre>
+   *   if shift-reduce conflict
+   *      left associativity implies reduce
+   *      right associativity implies shift
+   *      non assoc implies error</pre>
+   */
   protected int precedence;
+  /**
+   * The associativity of a given symbol.  Associativity is used, when
+   * provided, to resolve ambiguities when providing LR grammars with conflicts.
+   */
   protected Associativity associativity;
+  /**
+   * Reference count of the symbol
+   */
   protected int count;
+  /**
+   * The lexical value returned from the lexical analyzer. Can be provided
+   * in <b>%token</b>
+   */
   protected int token;
+  /**
+   * The type of the symbol.  A type is a string that is used on the generation
+   * phase to resolve $$, $1, $2, etc.  They get properly replaced with stack
+   * references like:<p>
+   * 
+   * stack[stackTop-1].<i><b>type</b></i>
+   */
   protected Type type;
+  
+  /**
+   * A language-named representation of a terminal.  This code is computed
+   */
+  protected String variable;
 
   public Symbol(String name) {
     super();
@@ -48,70 +112,199 @@ public abstract class Symbol {
     this.associativity = Associativity.NONE;
   }
 
+  /**
+   * Compute a language usable variable name
+   * @return
+   */
+  public void computeVariable() {
+    if (name == null || name.length() == 0) {
+      variable = name;
+    }
+
+    if (token == 0) {
+      variable = "EOS";
+    }
+
+    if (isIdentifier()) {
+      variable = name;
+    }
+
+    if (name.charAt(0) == '\\') {
+      if (!name.equals("\\a")) {
+        variable = "BELL";
+      }
+      if (!name.equals("\\b")) {
+        variable = "BACKSPACE";
+      }
+      if (!name.equals("\\n")) {
+        variable = "EOL";
+      }
+      if (!name.equals("\\t")) {
+        variable = "TAB";
+      }
+      if (!name.equals("\\f")) {
+        variable = "FORM_FEED";
+      }
+      if (!name.equals("\\r")) {
+        variable = "CR";
+      }
+      if (name.startsWith("\\x")) {
+        String t = "HEXAD_0x" + Integer.toHexString(token);
+        variable = t;
+      }
+      if (name.startsWith("\\0")) {
+        String t = "OCTAL_0" + Integer.toOctalString(token);
+        variable = t;
+      }
+    }
+    String patched = "";
+    for (int i = 0; i < name.length(); i++) {
+      if (Character.isJavaIdentifierPart(name.charAt(i))) {
+        patched += name.charAt(i);
+      } else {
+        patched += '_';
+      }
+    }
+    variable = patched;
+  }
+
+  /**
+   * is the name of this non-terminal already a good variable name
+   * @return
+   */
+  public boolean isIdentifier() {
+    if (name.length() == 0 || !Character.isJavaIdentifierStart(name.charAt(0))) {
+      return false;
+    }
+    for (int i = 1; i < name.length(); i++) {
+      if (!Character.isJavaIdentifierPart(name.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public String getVariable() {
+    return variable;
+  }
+
+  /* Getters and setters */
+  
+  /**
+   * @return the id
+   */
   public int getId() {
     return id;
   }
 
+  /**
+   * @param id the id to set
+   */
   public void setId(int id) {
     this.id = id;
   }
 
+  /**
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * @param name the name to set
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * @return the fullName
+   */
   public String getFullName() {
     return fullName;
   }
 
+  /**
+   * @param fullName the fullName to set
+   */
   public void setFullName(String fullName) {
     this.fullName = fullName;
   }
 
+  /**
+   * @return the precedence
+   */
   public int getPrecedence() {
     return precedence;
   }
 
+  /**
+   * @param precedence the precedence to set
+   */
   public void setPrecedence(int precedence) {
     this.precedence = precedence;
   }
 
+  /**
+   * @return the associativity
+   */
   public Associativity getAssociativity() {
     return associativity;
   }
 
+  /**
+   * @param associativity the associativity to set
+   */
   public void setAssociativity(Associativity associativity) {
     this.associativity = associativity;
   }
 
+  /**
+   * @return the count
+   */
   public int getCount() {
     return count;
   }
 
+  /**
+   * @param count the count to set
+   */
   public void setCount(int count) {
     this.count = count;
   }
 
+  /**
+   * @return the token
+   */
   public int getToken() {
     return token;
   }
 
+  /**
+   * @param token the token to set
+   */
   public void setToken(int token) {
     this.token = token;
   }
 
+  /**
+   * @return the type
+   */
   public Type getType() {
     return type;
   }
 
+  /**
+   * @param type the type to set
+   */
   public void setType(Type type) {
     this.type = type;
   }
 
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -128,6 +321,11 @@ public abstract class Symbol {
     }
   }
 
+  /**
+   * Minimal representation.  Returns the name for simplicity of other objects'
+   * toString() implementations.
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return "\"" + name + "\"(" + id + ")";

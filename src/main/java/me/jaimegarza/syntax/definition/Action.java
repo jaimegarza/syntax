@@ -28,32 +28,70 @@
 */
 package me.jaimegarza.syntax.definition;
 
+/**
+ * <i>~pojo class</i><br><br>
+ * 
+ * For packed parsers, the parsing table is divided in a list of
+ * {@link Action} and {@link GoTo}.  The parsing table just points at the 
+ * entry point of the actions.
+ * 
+ * This class describes a transition from one state to another by 
+ * specifying the symbol and the destination.  It is a mapping for a set of states
+ * over a symbol.
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class Action {
+  /** The {@link Symbol} with wich the transition is to happen */
   Symbol symbol;
+  /** The new state to which to move to */
   int stateNumber;
 
+  /**
+   * Construct an action
+   * @param symbol the symbol that will cause the action
+   * @param stateNumber the destination state
+   */
   public Action(Symbol symbol, int stateNumber) {
     super();
     this.symbol = symbol;
     this.stateNumber = stateNumber;
   }
+  
+  /* Getters and setters */
 
+  /**
+   * @return the symbol
+   */
   public Symbol getSymbol() {
     return symbol;
   }
 
+  /**
+   * @param symbol the symbol to set
+   */
   public void setSymbol(Symbol symbol) {
     this.symbol = symbol;
   }
 
+  /**
+   * @return the stateNumber
+   */
   public int getStateNumber() {
     return stateNumber;
   }
 
+  /**
+   * @param stateNumber the stateNumber to set
+   */
   public void setStateNumber(int stateNumber) {
     this.stateNumber = stateNumber;
   }
 
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -70,6 +108,10 @@ public class Action {
     }
   }
 
+  /**
+   * Returns a phrase with the symbol and its destination
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return "with " + symbol + " goto " + stateNumber;

@@ -28,6 +28,36 @@
 */
 package me.jaimegarza.syntax.definition;
 
+/**
+ * <i>~pojo class</i><br><br>
+ * 
+ * Represents an error non terminal in the grammar . Error tokens are defined 
+ * with <b>%error</b>.  They are used by the grammar to generate an error
+ * recovery table.  When an error is found during the resulting code's parsing phase,
+ * the recover table is used to try to recover the engine to a valid state where
+ * compilation could continue so that the parsing does not stop at the first
+ * error.<p>
+ * 
+ * The error recovery system is based on an algorithm that drops stack states until one
+ * with a proper error token transition is found.<p>
+ * 
+ * Other than that, error tokens are just another non-terminal symbol.<p>
+ * 
+ * Symbols have the following hierarchy:
+ * <pre>
+ *  -+ {@link Symbol}
+ *   |
+ *   +--+ {@link Terminal}     - Lexical Symbol (i.e. number, id '+')
+ *   |  |
+ *   |  +-- ErrorToken - Lexical Symbol declared with <b>%error</b>
+ *   |
+ *   +-- <b>{@link NonTerminal}</b>   - Syntactical symbol (i.e. Expression, Statement)
+ *   </pre>
+ *   
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class ErrorToken extends Terminal {
 
   public ErrorToken(String name) {

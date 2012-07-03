@@ -28,35 +28,50 @@
 */
 package me.jaimegarza.syntax.definition;
 
-public class RuleItem {
+/**
+ * <i>~pojo class</i><br><br>
+ * 
+ * During the parsing process, the grammar is represented as a list of {@link Rule}s.
+ * Each rule is composed of a list of zero or many RuleItems. This representation
+ * is used throughout the multiple processes to generate the structure of the syntax
+ * including computing first, follow, lookaheads, states, actions, grammar tables, and 
+ * finally parsing tables.
+ * 
+ *  This class defines a whole rule.
+ *  
+ * @author jaimegarza@gmail.com
+ *
+ */public class RuleItem {
+  /**
+   * The symbol associated to the item.
+   */
   Symbol symbol;
+  /**
+   * The parent rule of the rule item.
+   */
   Rule rule;
 
+  /**
+   * Construct a rule item with the given symbol
+   * @param symbol
+   */
   public RuleItem(Symbol symbol) {
     super();
     this.symbol = symbol;
   }
 
-  public Symbol getSymbol() {
-    return symbol;
-  }
-
-  public void setSymbol(Symbol symbol) {
-    this.symbol = symbol;
-  }
-
-  public Rule getRule() {
-    return rule;
-  }
-
-  public void setRule(Rule rule) {
-    this.rule = rule;
-  }
-
+  /**
+   * Convenience method to get the id of the symbol in the rule item
+   * @return the id of the symbol
+   */
   public int getSymbolId() {
     return symbol.getId();
   }
 
+  /**
+   * Move to the next item in the rule
+   * @return the next item, or null if at the end
+   */
   public RuleItem next() {
     for (int i = 0; i < rule.getItems().size(); i++) {
       RuleItem r = rule.getItem(i);
@@ -66,7 +81,40 @@ public class RuleItem {
     }
     return null;
   }
+  
+  /* Getters and setters */
 
+  /**
+   * @return the symbol
+   */
+  public Symbol getSymbol() {
+    return symbol;
+  }
+
+  /**
+   * @param symbol the symbol to set
+   */
+  public void setSymbol(Symbol symbol) {
+    this.symbol = symbol;
+  }
+
+  /**
+   * @return the rule
+   */
+  public Rule getRule() {
+    return rule;
+  }
+
+  /**
+   * @param rule the rule to set
+   */
+  public void setRule(Rule rule) {
+    this.rule = rule;
+  }
+
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -82,6 +130,10 @@ public class RuleItem {
     }
   }
 
+  /**
+   * Returns the symbol string value.
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return symbol.toString();

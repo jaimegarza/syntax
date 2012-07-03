@@ -31,48 +31,123 @@ package me.jaimegarza.syntax.definition;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * <i>~pojo class</i><br><br>
+ * 
+ * During the table creation process an algorithm is performed to obtain a
+ * state machine (turing machine) with the shifts and reduces needed at all
+ * states of the system.  To do that, we analyze every possible state of the 
+ * grammar by the using the concept of a dot.<p>
+ * 
+ * The algorithm is as follows:
+ * <ol>
+ * <li> Locate the initial symbol, and place a dot at the first element
+ *    of the rules where the initial symbol is on the left hand. For example:
+ *    <pre>  S -> . E</pre>
+ * 
+ * <li> Compute the closure of a state on every non terminal symbol.  
+ *    The closure is the set of rules that have the non terminal in the
+ *    left hand side, for each non terminal with a dot at its left.
+ *    A dot is assigned at the first position on the closure rules.
+ *    For example:
+ *    <pre>  S -> .E
+ *  <i>closure:</i>
+ *  E -> .E + T
+ *  E -> .E - T</pre>
+ *   Closure rules are identical when the two rules are the same, and the 
+ *   dot positions are also the same.<br><br>
+ *   
+ * <li> After the state (set of rules and dots) is known, it is checked for 
+ *    uniqueness.<br><br>
+ *    
+ * <li> We iterate through each of the states moving dots to the right of non
+ *    terminals and terminals, and finding the destination state.  
+ *    For instance:
+ *    <pre>  <i>state 0</i>
+ *  S -> .E
+ *  <i>closure:</i>
+ *  E -> .E + T   closure on E
+ *  E -> .E - T   closure on E
+ *  E -> .T       closure on E
+ *  T -> .T * F   closure on T
+ *  T -> .T / F   closure on T
+ *  T -> .F       closure on T
+ *  F -> .number  closure on F
+ *  F -> .- F     closure on F
+ *  F -> .( F )   closure on F
+ * 
+ *  <i>state 1 (with its closure, transition of state 0 with E)</i>
+ *  S -> E .
+ *  E -> E .+ T
+ *  E -> E .- T
+ *  
+ *  <i>state 2 (with its closure, transition of state 1 with +)</i>
+ *  E -> E + .T
+ *  <i>closure:</i>
+ *  T -> .T * F   closure on T
+ *  T -> .T / F   closure on T
+ *  T -> .F       closure on T
+ *  F -> .number  closure on F
+ *  F -> .- F     closure on F
+ *  F -> .( F )   closure on F
+ *  
+ *  <i>etc...</i></pre>
+ * </ol>
+ * 
+ * Out of this dot traversal, all states are known, and all its transition to
+ * other states are also known.<p>
+ * 
+ * As such, a dot is a positional element that defines a rule, and the position
+ * the observed rule item.
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class Dot {
+  /** 
+   * The state to which this dot belongs.  It must not be null.
+   */
   State state;
-  private RuleItem item; // can be null, which means I am marking the end of a
-                         // set of rule entries
-  private Rule rule; // must not be null
+  /**
+   * the rule item that this dot points to. It can be null, which means that 
+   * it is marking the end of a rule.  Another way to say this is that the dot
+   * is at the right most position of the rule.l
+   */
+  private RuleItem item;
+  /**
+   * The rule to which this dot belongs.  This rule is the parent of all rule 
+   * items.  It must not be null.
+   */
+  private Rule rule;
+  /**
+   * When computing LALR (as opposed to SLR) the lookahead is the set of all non
+   * terminals that can be reached from this symbol.  in the case of the dot: 
+   * <pre>  F -> .number
+   * the lookaheads for the dot are {number} 
+   */
   private Set<Integer> lookahead = new HashSet<Integer>();
 
+  /**
+   * Construct a dot
+   * @param state is the vertical parent {@link State} of this dot
+   * @param rule is the {@link Rule} where this dot points.
+   * @param item is the {@link RuleItem} to the right of the dot.  It can be null.
+   * 
+   */
   public Dot(State state, Rule rule, RuleItem item) {
     super();
     this.state = state;
     this.item = item;
     this.rule = rule;
   }
-
-  public State getState() {
-    return state;
-  }
-
-  public void setState(State state) {
-    this.state = state;
-  }
-
-  public RuleItem getItem() {
-    return item;
-  }
-
-  public void setItem(RuleItem item) {
-    this.item = item;
-  }
-
-  public Rule getRule() {
-    return rule;
-  }
-
-  public void setRule(Rule rule) {
-    this.rule = rule;
-  }
-
-  public Set<Integer> getLookahead() {
-    return lookahead;
-  }
-
+  
+  /**
+   * Given a dot, move the dot to the right of the pointed symbol<br>
+   * It does this by going to the rule and finding the rule item i+1 
+   * from the rule item i.
+   * 
+   * @return the next rule item, or null
+   */
   public RuleItem nextRuleEntry() {
     RuleItem entry = null;
     if (item != null) {
@@ -84,25 +159,93 @@ public class Dot {
     return entry;
   }
 
+  /**
+   * State dots are linked.  Get the next dot in the state.
+   * @return the next dot, or null.
+   * 
+   * @see {@link State#dots} for a "state view" of its dots.
+   */
   public Dot next() {
     int index = 0;
-    for (Dot aMarker : state.getMarkers()) {
+    for (Dot aMarker : state.getDots()) {
       if (aMarker == this) {
-        return state.getMarker(index + 1);
+        return state.getDot(index + 1);
       }
       index++;
     }
     return null;
   }
 
+  /**
+   * Adds a non terminal to the dot
+   * @param symbolId is the id of the non terminal
+   */
   public void addLookahead(int symbolId) {
     lookahead.add(symbolId);
   }
 
+  /**
+   * merge lookaheads into this dot
+   * @param symbolIds
+   */
   public void addAllLookaheads(Set<Integer> symbolIds) {
     lookahead.addAll(symbolIds);
   }
 
+  /* Getters and setters */
+
+  /**
+   * @return the lookahead
+   */
+  public Set<Integer> getLookahead() {
+    return lookahead;
+  }
+
+  /**
+   * @return the state
+   */
+  public State getState() {
+    return state;
+  }
+
+  /**
+   * @param state the state to set
+   */
+  public void setState(State state) {
+    this.state = state;
+  }
+
+  /**
+   * @return the item
+   */
+  public RuleItem getItem() {
+    return item;
+  }
+
+  /**
+   * @param item the item to set
+   */
+  public void setItem(RuleItem item) {
+    this.item = item;
+  }
+
+  /**
+   * @return the rule
+   */
+  public Rule getRule() {
+    return rule;
+  }
+
+  /**
+   * @param rule the rule to set
+   */
+  public void setRule(Rule rule) {
+    this.rule = rule;
+  }
+
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -119,6 +262,10 @@ public class Dot {
     }
   }
 
+  /**
+   * Returns a "dotted" representation of the rule items in the rule
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     String s = "";
