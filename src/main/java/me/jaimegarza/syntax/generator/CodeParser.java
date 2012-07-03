@@ -45,12 +45,6 @@ import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
-import me.jaimegarza.syntax.generator.parser.Grammar;
-import me.jaimegarza.syntax.generator.parser.Parser;
-import me.jaimegarza.syntax.generator.parser.ParserAction;
-import me.jaimegarza.syntax.generator.parser.ParserGoTo;
-import me.jaimegarza.syntax.generator.parser.ReservedWord;
-import me.jaimegarza.syntax.generator.parser.StackElement;
 
 public class CodeParser extends AbstractPhase {
   private static final String DISTINGUISHED_SYMBOL_NAME = "Sys$Root";
@@ -1089,11 +1083,11 @@ public class CodeParser extends AbstractPhase {
         currentCharacter = getCharacter();
       }
       for (ReservedWord rw : RWord) {
-        if (currentStringValue.equals(rw.getWord())) {
-          if (rw.getToken() == TOK_UNION) {
+        if (currentStringValue.equals(rw.word)) {
+          if (rw.token == TOK_UNION) {
             isCurlyBrace = true;
           }
-          return rw.getToken();
+          return rw.token;
         }
       }
       isError = true;
@@ -2433,6 +2427,88 @@ public class CodeParser extends AbstractPhase {
       runtimeData.setFinalActions(finalActions);
     } catch (IOException e) {
       throw new ParsingException("IOError ocurred when parsing: " + e.getMessage(), e);
+    }
+  }
+  
+  /* Inner classes */
+  private static class Parser {
+    public int position;
+    public int defa;
+    public int elements;
+    public int msg;
+
+    Parser(int position, int defa, int elements, int msg) {
+      super();
+      this.position = position;
+      this.defa = defa;
+      this.elements = elements;
+      this.msg = msg;
+    }
+  }
+  
+  private static class Grammar {
+    public int symbol;
+    public int reductions;
+
+    Grammar(int symbol, int reductions) {
+      super();
+      this.symbol = symbol;
+      this.reductions = reductions;
+    }
+  }
+  
+  private static class ParserAction {
+    public int symbol;
+    public int state;
+
+    ParserAction(int symbol, int state) {
+      super();
+      this.symbol = symbol;
+      this.state = state;
+    }
+  }
+
+  private static class ParserGoTo {
+    public int origin;
+    public int destination;
+
+    ParserGoTo(int origin, int destination) {
+      super();
+      this.origin = origin;
+      this.destination = destination;
+    }
+  }
+
+  private static class ReservedWord {
+    String word;
+    int token;
+
+    ReservedWord(String word, int token) {
+      super();
+      this.word = word;
+      this.token = token;
+    }
+  }
+
+  private static class StackElement {
+    public int stateNumber;
+    public int value;
+    public boolean mustClose;
+    public String id;
+    public String regex;
+
+    StackElement(int estado, int value, boolean mustClose, String id, String regex) {
+      super();
+      this.stateNumber = estado;
+      this.value = value;
+      this.mustClose = mustClose;
+      this.id = id;
+      this.regex = regex;
+    }
+
+    @Override
+    public String toString() {
+      return "state:" + stateNumber + ", value:" + value + ", mustClose:" + mustClose + ", id:" + id;
     }
   }
 }
