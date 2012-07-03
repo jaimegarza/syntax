@@ -74,13 +74,13 @@ public class TableGenerator extends AbstractPhase {
     // return rules.contains(i) ? i : null;
   }
 
-  LookAhead getLookAhead(Rule rule, RuleItem itm) {
+  LookAhead getLookAhead(Rule rule, RuleItem item) {
     LookAhead l = new LookAhead();
-    if (itm == null) {
+    if (item == null) {
       return l;
     }
 
-    int index = rule.getItems().indexOf(itm);
+    int index = rule.getItems().indexOf(item);
     if (index == -1) {
       return l;
     }
@@ -93,14 +93,14 @@ public class TableGenerator extends AbstractPhase {
 
     index++;
     while (index < rule.getItems().size()) {
-      itm = rule.getItem(index);
-      if (itm.getSymbol() instanceof Terminal) {
-        l.getSymbolIds().add(itm.getSymbolId());
+      item = rule.getItem(index);
+      if (item.getSymbol() instanceof Terminal) {
+        l.getSymbolIds().add(item.getSymbolId());
         l.setCarry(false);
         break;
       } else {
-        l.getSymbolIds().addAll(((NonTerminal) itm.getSymbol()).getFirst());
-        if (!isEmpty(itm.getSymbolId())) {
+        l.getSymbolIds().addAll(((NonTerminal) item.getSymbol()).getFirst());
+        if (!isEmpty(item.getSymbolId())) {
           l.setCarry(false);
           break;
         }
@@ -114,7 +114,7 @@ public class TableGenerator extends AbstractPhase {
     int stateNumber;
 
     for (stateNumber = 1; stateNumber <= finalState; stateNumber++) {
-      List<Dot> originalMarkers = I[stateNumber].getOriginalMarkers();
+      List<Dot> originalMarkers = I[stateNumber].getOriginalDots();
       if (ik.equals(originalMarkers)) {
         if (environment.isDebug()) {
           System.out.println("Equals " + ik + " against markers in state " + stateNumber + " " + originalMarkers);
@@ -132,7 +132,7 @@ public class TableGenerator extends AbstractPhase {
       return false;
     }
 
-    i = I[j].getMarker(0);
+    i = I[j].getDot(0);
     k = ik.get(0);
 
     if (i.getLookahead() != null && k.getLookahead() != null && i.getLookahead().containsAll(k.getLookahead())) {
@@ -148,12 +148,16 @@ public class TableGenerator extends AbstractPhase {
     return true;
   }
 
+  /**
+   * TODO: closure and marking needs to be re-thought more as core dots and closure dots.
+   * @param state
+   */
   private void closure(State state) {
-    for (Dot marker = state.getMarker(0); marker != null; marker = marker.next()) {
+    for (Dot marker = state.getDot(0); marker != null; marker = marker.next()) {
       if (marker.getItem() != null && marker.getItem().getSymbol() instanceof NonTerminal) {
         for (Rule rule : runtimeData.getRules()) {
           if (rule.getLeftHandId() == marker.getItem().getSymbolId()) {
-            Dot auxiliary = isThere(rule, rule.getItem(0), state.getMarkers());
+            Dot auxiliary = isThere(rule, rule.getItem(0), state.getDots());
             if (auxiliary != null) {
               if (environment.getAlgorithm() == Algorithm.LALR) {
                 LookAhead l = getLookAhead(rule, marker.getItem());
@@ -171,7 +175,7 @@ public class TableGenerator extends AbstractPhase {
                   marker.getLookahead().addAll(auxiliary.getLookahead());
                 }
               }
-              state.getMarkers().add(auxiliary);
+              state.getDots().add(auxiliary);
             }
           }
         }
@@ -194,7 +198,7 @@ public class TableGenerator extends AbstractPhase {
   }
 
   void printStateReport(int stateNum) {
-    List<Dot> markers = I[stateNum].getMarkers();
+    List<Dot> markers = I[stateNum].getDots();
     environment.report.println();
     environment.report.printf("State #%3d", stateNum);
     if (I[stateNum].getFrom() >= 0) {
@@ -310,7 +314,6 @@ public class TableGenerator extends AbstractPhase {
       actionNumber += actions.size();
     }
     I[estado].setDefaultValue(defaultAction);
-    I[estado].setActionSize(actions.size());
     I[estado].setActions(actions);
     int tokenCount = 0;
     Action errorToken = null;
@@ -454,7 +457,7 @@ public class TableGenerator extends AbstractPhase {
   }
 
   private void computeReduce(int parserLine[], int estado) {
-    for (Dot dot : I[estado].getMarkers()) {
+    for (Dot dot : I[estado].getDots()) {
       if (dot.getItem() == null) {
         if (dot.getItem() != null && dot.getItem().getSymbol().equals(runtimeData.getRoot())) {
           environment.report.println("ACCEPT BY " + -dot.getRule().getRulenum());
@@ -490,56 +493,19 @@ public class TableGenerator extends AbstractPhase {
     }
   }
 
-  private int agregateGoto(NonTerminal id, int origin, int destination) {
-    GoTo goTo = new GoTo(origin, destination);
-    id.addGoTo(goTo);
-    numberOfGotos++;
-    return 1;
-  }
-
-  private int removeGoto(NonTerminal id, int iDefa) {
-    for (int i = 0; i < id.getGotos().size(); i++) {
-      if (id.getGotos().get(i).getDestination() == iDefa) {
-        id.getGotos().remove(i);
-        numberOfGotos--;
-      }
-    }
-    return id.getGotos().size();
-  }
-
-  private int getDefaultGoto(NonTerminal id) {
-    int defaultValue = 0, defaultCount = 0;
-    int count;
-
-    for (GoTo pGoto : id.getGotos()) {
-      if (pGoto.getDestination() != defaultValue) {
-        count = 0;
-        for (GoTo pAux : id.getGotos()) {
-          if (pAux.getDestination() == pGoto.getDestination()) {
-            count++;
-          }
-        }
-        if (count > defaultCount) {
-          defaultCount = count;
-          defaultValue = pGoto.getDestination();
-        }
-      }
-    }
-
-    return defaultValue;
-  }
-
   private void compactGotos() {
     int iDefa;
     int nElems, iPosicion;
 
     iPosicion = 0;
     for (NonTerminal id : runtimeData.getNonTerminals()) {
-      iDefa = getDefaultGoto(id);
+      iDefa = id.getDefaultGoto();
       if (iDefa != 0) {
-        nElems = removeGoto(id, iDefa);
+        nElems = id.removeGoto(iDefa);
+        numberOfGotos--;
         id.setToken(iPosicion);
-        agregateGoto(id, -1, iDefa);
+        id.appendGoto(-1, iDefa);
+        numberOfGotos++;
         iPosicion += nElems + 1;
       }
     }
@@ -556,7 +522,7 @@ public class TableGenerator extends AbstractPhase {
         if (environment.getAlgorithm() == Algorithm.LALR) {
           dot.addLookahead(0); // empty element
         }
-        I[0].addMarker(dot);
+        I[0].addDot(dot);
       }
     }
     I[0].mark();
@@ -581,7 +547,7 @@ public class TableGenerator extends AbstractPhase {
         }
         // empty line
         Arrays.fill(parserLine, 0);
-        Dot marker = I[stateIndex].getMarker(0);
+        Dot marker = I[stateIndex].getDot(0);
         // I[stateIndex].mark();
         // closure(I[stateIndex]);
         if (doPrint) {
@@ -614,7 +580,7 @@ public class TableGenerator extends AbstractPhase {
               for (Dot m : auxiliaryMarkers) {
                 m.setState(I[finalState]);
               }
-              I[finalState].addAllMarkers(auxiliaryMarkers);
+              I[finalState].addAllDots(auxiliaryMarkers);
               I[finalState].mark();
               closure(I[finalState]);
               if (environment.isDebug()) {

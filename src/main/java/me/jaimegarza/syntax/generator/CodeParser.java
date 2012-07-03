@@ -2096,13 +2096,19 @@ public class CodeParser extends AbstractPhase {
     ruleAssociativity = Associativity.NONE;
     return rule;
   }
-
+  
+  /**
+   * Check non terminals whose precedence is zero, and make them terminals.
+   */
   private void reviewDeclarations() {
-    for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
+    for (int i = 0; i < runtimeData.getNonTerminals().size(); ) {
+      NonTerminal nonTerminal = runtimeData.getNonTerminals().get(i);
       if (nonTerminal.getPrecedence() == 0) {
         environment.error(-1, "Warning: token \'%s\' not declared.", nonTerminal.getName());
         runtimeData.getTerminals().add(new Terminal(nonTerminal));
         runtimeData.getNonTerminals().remove(nonTerminal);
+      } else {
+        i++;
       }
     }
   }
@@ -2354,16 +2360,15 @@ public class CodeParser extends AbstractPhase {
   private void defineTokens() {
     boolean first = true;
     for (Terminal id : runtimeData.getTerminals()) {
-      String var = variable(id.getName(), id.getToken());
-      id.setVariable(var);
-      if (var.equals("_")) {
+      id.computeVariable();
+      if (id.getVariable().equals("_")) {
         switch (environment.getLanguage()) {
           case C:
             if (first) {
               environment.include.printf("\n/* Token definitions */\n");
               first = false;
             }
-            environment.include.printf("#define %s %d\n", var, id.getToken());
+            environment.include.printf("#define %s %d\n", id.getVariable(), id.getToken());
             break;
           case java:
             if (first) {
@@ -2372,7 +2377,7 @@ public class CodeParser extends AbstractPhase {
               first = false;
             }
             indent(environment.include, environment.getIndent() - 1);
-            environment.include.printf("private static final int %s=%d;\n", var, id.getToken());
+            environment.include.printf("private static final int %s=%d;\n", id.getVariable(), id.getToken());
             break;
           case pascal:
             if (first) {
@@ -2380,7 +2385,7 @@ public class CodeParser extends AbstractPhase {
               environment.include.printf("\nConst\n");
               first = false;
             }
-            environment.include.printf("  %s = %d;\n", var, id.getToken());
+            environment.include.printf("  %s = %d;\n", id.getVariable(), id.getToken());
             break;
         }
       }

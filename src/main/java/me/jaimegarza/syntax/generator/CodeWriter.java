@@ -559,7 +559,7 @@ public class CodeWriter extends AbstractPhase {
       switch (environment.getLanguage()) {
         case C:
           environment.output.printf("\t{%d, %d, %d, %d}", runtimeData.getStates()[stateNumber].getPosition(),
-              runtimeData.getStates()[stateNumber].getDefaultValue(), runtimeData.getStates()[stateNumber].getHowMany(),
+              runtimeData.getStates()[stateNumber].getDefaultValue(), runtimeData.getStates()[stateNumber].getActionSize(),
               runtimeData.getStates()[stateNumber].getMessage());
           if (stateNumber == runtimeData.getStates().length - 1) {
             environment.output.printf("\n};\n");
@@ -570,7 +570,7 @@ public class CodeWriter extends AbstractPhase {
         case java:
           indent(environment.output, environment.getIndent());
           environment.output.printf("new Parser(%d, %d, %d, %d)", runtimeData.getStates()[stateNumber].getPosition(),
-              runtimeData.getStates()[stateNumber].getDefaultValue(), runtimeData.getStates()[stateNumber].getHowMany(),
+              runtimeData.getStates()[stateNumber].getDefaultValue(), runtimeData.getStates()[stateNumber].getActionSize(),
               runtimeData.getStates()[stateNumber].getMessage());
           if (stateNumber == runtimeData.getStates().length - 1) {
             environment.output.printf("\n");
@@ -583,7 +583,7 @@ public class CodeWriter extends AbstractPhase {
         case pascal:
           environment.output.printf("    (position:%d; defa:%d; elements:%d; msg:%d)",
               runtimeData.getStates()[stateNumber].getPosition(), runtimeData.getStates()[stateNumber].getDefaultValue(),
-              runtimeData.getStates()[stateNumber].getHowMany(), runtimeData.getStates()[stateNumber].getMessage());
+              runtimeData.getStates()[stateNumber].getActionSize(), runtimeData.getStates()[stateNumber].getMessage());
           if (stateNumber == runtimeData.getStates().length - 1) {
             environment.output.printf(");\n");
           } else {
@@ -648,6 +648,11 @@ public class CodeWriter extends AbstractPhase {
     }
   }
 
+  /**
+   * TODO - add all the parser skeletons in a nice way.
+   * TODO - make sure we have lexic driven parsers together with the run-once parsers
+   * @throws IOException
+   */
   private void finishOutput() throws IOException {
     String filename;
 

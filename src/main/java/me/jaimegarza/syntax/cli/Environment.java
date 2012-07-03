@@ -200,7 +200,11 @@ public class Environment extends Options {
         "margin");
     add("i", "indent", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Indent by n spaces, default 2", "spaces");
     add("p", "packing", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
-        "Packing format of parser (packed|tabular, default packed)", "packing");
+        "Packing format of parser (packed|tabular, default packed)\n" +
+        "* please note that unpacked tables are \n" +
+        "* mostly for didactical purposes as they \n" +
+        "* may lend a big number of states in a \n" +
+        "* sparsely populated table.", "packing");
     add("x", "external", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Generate include file (true,on,yes,1|false,off,no,0, default true)", "external");
   }
@@ -475,6 +479,140 @@ public class Environment extends Options {
     }
   }
 
+  /**
+   * display an error
+   * @param line is the source file line number
+   * @param msg is the message for printf
+   * @param args are the additional entries in the message
+   */
+  public void error(int line, String msg, Object... args) {
+    System.err.printf("%s(%05d) : ", sourceFile, line == -1 ? parsedLine + 1 : line);
+    System.err.printf(msg + "\n", args);
+
+  }
+
+  /**
+   * @return the relatedTitle
+   */
+  public String getRelatedTitle() {
+    return relatedTitle;
+  }
+
+  /**
+   * @return the args
+   */
+  public String[] getArgs() {
+    return args;
+  }
+
+  /**
+   * @return the cmd
+   */
+  public CommandLine getCmd() {
+    return cmd;
+  }
+
+  /**
+   * @return the language
+   */
+  public Language getLanguage() {
+    return language;
+  }
+
+  /**
+   * @return the verbose
+   */
+  public boolean isVerbose() {
+    return verbose;
+  }
+
+  /**
+   * @return the debug
+   */
+  public boolean isDebug() {
+    return debug;
+  }
+
+  /**
+   * @return the algorithm
+   */
+  public Algorithm getAlgorithm() {
+    return algorithm;
+  }
+
+  /**
+   * @return the emitLine
+   */
+  public boolean isEmitLine() {
+    return emitLine;
+  }
+
+  /**
+   * @return the margin
+   */
+  public int getMargin() {
+    return margin;
+  }
+
+  /**
+   * @return the indent
+   */
+  public int getIndent() {
+    return indent;
+  }
+
+  /**
+   * @return the packed
+   */
+  public boolean isPacked() {
+    return packed;
+  }
+
+  /**
+   * @return the externalInclude
+   */
+  public boolean isExternalInclude() {
+    return externalInclude;
+  }
+
+  /**
+   * @return the sourceFile
+   */
+  public File getSourceFile() {
+    return sourceFile;
+  }
+
+  /**
+   * @return the outputFile
+   */
+  public File getOutputFile() {
+    return outputFile;
+  }
+
+  /**
+   * @return the includeFile
+   */
+  public File getIncludeFile() {
+    return includeFile;
+  }
+
+  /**
+   * @return the reportFile
+   */
+  public File getReportFile() {
+    return reportFile;
+  }
+
+  /**
+   * @return the parsedLine
+   */
+  public int getParsedLine() {
+    return parsedLine;
+  }
+
+  /**
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return relatedTitle +
@@ -517,73 +655,6 @@ public class Environment extends Options {
              "\n}\n" +
              super.toString() +
              "}";
-  }
-
-  /*****************************************************************************
-   * Getters
-   *****************************************************************************/
-  public Language getLanguage() {
-    return language;
-  }
-
-  public boolean isVerbose() {
-    return verbose;
-  }
-
-  public boolean isDebug() {
-    return debug;
-  }
-
-  public Algorithm getAlgorithm() {
-    return algorithm;
-  }
-
-  public boolean isEmitLine() {
-    return emitLine;
-  }
-
-  public int getMargin() {
-    return margin;
-  }
-
-  public int getIndent() {
-    return indent;
-  }
-
-  public boolean isPacked() {
-    return packed;
-  }
-
-  private boolean isExternalInclude() {
-    return externalInclude;
-  }
-
-  public File getSourceFile() {
-    return sourceFile;
-  }
-
-  public File getOutputFile() {
-    return outputFile;
-  }
-
-  public File getIncludeFile() {
-    return includeFile;
-  }
-
-  public File getReportFile() {
-    return reportFile;
-  }
-
-  /**
-   * display an error
-   * @param line is the source file line number
-   * @param msg is the message for printf
-   * @param args are the additional entries in the message
-   */
-  public void error(int line, String msg, Object... args) {
-    System.err.printf("%s(%05d) : ", sourceFile, line == -1 ? parsedLine + 1 : line);
-    System.err.printf(msg + "\n", args);
-
   }
 
 }

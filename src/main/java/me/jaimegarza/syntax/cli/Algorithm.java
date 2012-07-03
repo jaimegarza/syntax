@@ -61,6 +61,10 @@ package me.jaimegarza.syntax.cli;
  * impractically too large.
  * <p>
  * 
+ * TODO: Perhaps add LR and/or Honalee
+ * TODO: It would be great to encapsulate the class to use for
+ *       Each algorithm (i.e. compute equal states)
+ * 
  * @see {@link me.jaimegarza.syntax.generator.StructuralAnalyzer} for the creation
  *   of follow ups
  *

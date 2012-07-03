@@ -28,14 +28,41 @@
 */
 package me.jaimegarza.syntax.definition;
 
+/**
+ * <i>~pojo class</i><br><br>
+ * 
+ * Represents a terminal (lexical element) in the grammar (i.e. number, identifier, 
+ * '+').  Symbols have the 
+ * following hierarchy:
+ * <pre>
+ *  -+ {@link Symbol}
+ *   |
+ *   +--+ Terminal     - Lexical Symbol (i.e. number, id '+')
+ *   |  |
+ *   |  +-- {@link ErrorToken} - Lexical Symbol declared with <b>%error</b>
+ *   |
+ *   +-- <b>{@link NonTerminal}</b>   - Syntactical symbol (i.e. Expression, Statement)
+ *   </pre>
+ * 
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class Terminal extends Symbol {
 
-  private String variable;
-
+  /**
+   * Construct one non terminal
+   * @param name is the name of the non terminal
+   */
   public Terminal(String name) {
     super(name);
   }
 
+  /**
+   * Convert a non-terminal to a terminal (as part of the grammar analysis,
+   * when an element has not been declared, a warning will be raised and then
+   * declared as a terminal.
+   * @param nonTerminal is the existing non terminal.
+   */
   public Terminal(NonTerminal nonTerminal) {
     super(nonTerminal.name);
     this.count = nonTerminal.count;
@@ -45,19 +72,7 @@ public class Terminal extends Symbol {
     this.precedence = nonTerminal.precedence;
     this.token = nonTerminal.token;
     this.type = nonTerminal.type;
-  }
-
-  public String getVariable() {
-    return variable;
-  }
-
-  public void setVariable(String variable) {
-    this.variable = variable;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
+    this.variable = nonTerminal.variable;
   }
 
 }

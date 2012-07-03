@@ -58,6 +58,14 @@ import org.apache.commons.logging.LogFactory;
  * - Eject the output table in a compressed mode (yacc) or a matrix, for readability.
  * - Unlike yacc, the output is properly formated and readable.
  * 
+ * TODO: Integrate with JavaCC in order to implement LC parsers (Left Corner Parsers)
+ *       A left corner parser is a LR parser that on reduce action delegates to a
+ *       LL parser to complete its compilation.  It is desirable to insert
+ *       JavaCC definitions as "actions" if possible.
+ * TODO: Include a regular expression mode for tokens (For LEX-like recognition)
+ *       Lexical actions could then be entered in regex format with a predefined
+ *       code structure 
+ * 
  * @author jaimegarza@gmail.com
  *
  */
