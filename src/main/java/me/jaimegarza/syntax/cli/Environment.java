@@ -34,6 +34,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
+import me.jaimegarza.syntax.code.Fragments;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -93,6 +97,8 @@ public class Environment extends Options {
   public PrintStream report = null;
 
   private int parsedLine;
+  private Locale locale;
+  ResourceBundle fragmentBundle;
 
   /**
    * Construct an environment with the given arguments
@@ -256,6 +262,9 @@ public class Environment extends Options {
     } else {
       throw new ParseException("Option -a|--algorithm is not valid :" + value);
     }
+    this.locale = new Locale(/*this.language.bundle()*/"c");
+    fragmentBundle = ResourceBundle.getBundle(Fragments.class.getCanonicalName(), locale);
+
   }
 
   /**
@@ -608,6 +617,13 @@ public class Environment extends Options {
    */
   public int getParsedLine() {
     return parsedLine;
+  }
+
+  /**
+   * @return the locale
+   */
+  public Locale getLocale() {
+    return locale;
   }
 
   /**

@@ -33,11 +33,30 @@ import java.io.PrintStream;
 import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.Rule;
 
+/**
+ * Base clase for all phases.  Common routines will be placed here
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public abstract class AbstractPhase {
-
+  /**
+   * Every phase needs to have the environment defined
+   */
   protected Environment environment;
+  /**
+   * Every phase needs to have the runtime defined.
+   */
   protected RuntimeData runtimeData;
 
+  /**
+   * Given an array, make sure it is the right size, expanding
+   * if needed.
+   * 
+   * @param oldArray is the array as it exists
+   * @param newSize defines the size that is needed
+   * @return a new array, or the same oldArray if the size is OK
+   */
   protected static Object resizeArray(Object oldArray, int newSize) {
     int oldSize = java.lang.reflect.Array.getLength(oldArray);
     Class<?> elementType = oldArray.getClass().getComponentType();
@@ -49,15 +68,29 @@ public abstract class AbstractPhase {
     return newArray;
   }
 
-  protected boolean isEmpty(int k) {
+  /**
+   * Check to see if a rule identified by ruleId is empty, i.e. it has no
+   * rule items.
+   * 
+   * @param ruleId is the id of the rule to check
+   * @return true or false
+   */
+  protected boolean isEmpty(int ruleId) {
     for (Rule rule : runtimeData.getRules()) {
-      if (rule.getLeftHand().getId() == k && rule.getItems().size() == 0) {
+      if (rule.getLeftHand().getId() == ruleId && rule.getItems().size() == 0) {
         return true;
       }
     }
     return false;
   }
 
+  /**
+   * Outputs the proper number of spaces, as needed by param n.<p>
+   * An indentation is four spaces for C, and 2 for java and pascal
+   * 
+   * @param out is the output stream to be written to
+   * @param n is the number of indentations.
+   */
   protected void indent(PrintStream out, int n) {
     int i;
 
@@ -73,7 +106,4 @@ public abstract class AbstractPhase {
       }
     }
   }
-
-
-
 }

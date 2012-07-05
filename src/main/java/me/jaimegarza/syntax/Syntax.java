@@ -58,10 +58,18 @@ import org.apache.commons.logging.LogFactory;
  * - Eject the output table in a compressed mode (yacc) or a matrix, for readability.
  * - Unlike yacc, the output is properly formated and readable.
  * 
- * TODO: Integrate with JavaCC in order to implement LC parsers (Left Corner Parsers)
- *       A left corner parser is a LR parser that on reduce action delegates to a
- *       LL parser to complete its compilation.  It is desirable to insert
- *       JavaCC definitions as "actions" if possible.
+ * TODO: suport the concept of %external to be able to modularize a parser
+ *       into multiple sub parsers.  The parsers may not be LR.  They can actually
+ *       be LR (i.e. JavaCC, antlr).  Or they can be LR as well (Cup, BYacc -j).
+ *       LR-LL parser combinations are also called LC (left corner) parsers and
+ *       can be useful for complex grammars.<p>
+ *       What I need is a mechanism to declare:
+ *       <ol>
+ *       <li>Calling the sub code as an action
+ *       <li>Receiving and putting the return value in the stack as $$, $1, etc.
+ *       <li>Triggering errors (perhaps on exceptions
+ *       <li>naming objects with prefixes so that I can link to syntax parsers
+ *       </ol>
  * TODO: Include a regular expression mode for tokens (For LEX-like recognition)
  *       Lexical actions could then be entered in regex format with a predefined
  *       code structure 
