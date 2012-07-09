@@ -131,6 +131,18 @@ package me.jaimegarza.syntax.definition;
   }
 
   /**
+   * Utility method to compare two items, accounting for nulls
+   * @param a the first element.  Can be null.
+   * @param b the second element.  Can be null.
+   * @return true if both are null, otherwise the result of a.equals(b)
+   */
+  public static boolean equals(RuleItem a, RuleItem b) {
+    if (a == null) return b == null; // now a is NOT null
+    if (b == null) return false; // now none is null
+    return a.equals(b);
+  }
+  
+  /**
    * Returns the symbol string value.
    * @see java.lang.Object#toString()
    */
