@@ -148,15 +148,15 @@ public class Dot {
    * 
    * @return the next rule item, or null
    */
-  public RuleItem nextRuleEntry() {
-    RuleItem entry = null;
-    if (item != null) {
-      int index = rule.getItems().indexOf(item);
-      if (index >= -1) {
-        entry = rule.getItem(index + 1);
+  public RuleItem nextItem() {
+    int index = 0;
+    for (RuleItem item : rule.getItems()) {
+      if (this.item == item) {
+        return rule.getItem(index+1);
       }
+      index++;
     }
-    return entry;
+    return null;
   }
 
   /**
@@ -167,7 +167,7 @@ public class Dot {
    */
   public Dot next() {
     int index = 0;
-    for (Dot aMarker : state.getDots()) {
+    for (Dot aMarker : state.getAllDots()) {
       if (aMarker == this) {
         return state.getDot(index + 1);
       }
@@ -254,7 +254,7 @@ public class Dot {
 
     try {
       Dot rm = (Dot) obj;
-      return item.equals(rm.item) && rule.equals(rm.rule);
+      return RuleItem.equals(item,  rm.item) && rule.equals(rm.rule);
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {
@@ -262,6 +262,18 @@ public class Dot {
     }
   }
 
+  /**
+   * Utility method to compare two dots, accounting for nulls
+   * @param a the first element.  Can be null.
+   * @param b the second element.  Can be null.
+   * @return true if both are null, otherwise the result of a.equals(b)
+   */
+  public static boolean equals(Dot a, Dot b) {
+    if (a == null) return b == null; // now a is NOT null
+    if (b == null) return false; // now none is null
+    return a.equals(b);
+  }
+  
   /**
    * Returns a "dotted" representation of the rule items in the rule
    * @see java.lang.Object#toString()
