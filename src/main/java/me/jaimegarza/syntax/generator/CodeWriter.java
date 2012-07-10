@@ -45,10 +45,8 @@ import me.jaimegarza.syntax.definition.State;
 
 public class CodeWriter extends AbstractPhase {
 
-  public CodeWriter(Environment environment, RuntimeData runtimeData) {
-    super();
-    this.environment = environment;
-    this.runtimeData = runtimeData;
+  public CodeWriter(Environment environment) {
+    super(environment);
   }
 
   private void printHeader() {

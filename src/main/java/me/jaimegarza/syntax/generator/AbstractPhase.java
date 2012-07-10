@@ -31,7 +31,6 @@ package me.jaimegarza.syntax.generator;
 import java.io.PrintStream;
 
 import me.jaimegarza.syntax.cli.Environment;
-import me.jaimegarza.syntax.definition.Rule;
 
 /**
  * Base clase for all phases.  Common routines will be placed here
@@ -48,6 +47,11 @@ public abstract class AbstractPhase {
    * Every phase needs to have the runtime defined.
    */
   protected RuntimeData runtimeData;
+  
+  public AbstractPhase(Environment environment) {
+    this.environment = environment;
+    this.runtimeData = environment.getRuntimeData();
+  }
 
   /**
    * Given an array, make sure it is the right size, expanding
@@ -66,22 +70,6 @@ public abstract class AbstractPhase {
       System.arraycopy(oldArray, 0, newArray, 0, preserveLength);
     }
     return newArray;
-  }
-
-  /**
-   * Check to see if a rule identified by ruleId is empty, i.e. it has no
-   * rule items.
-   * 
-   * @param ruleId is the id of the rule to check
-   * @return true or false
-   */
-  protected boolean isEmpty(int ruleId) {
-    for (Rule rule : runtimeData.getRules()) {
-      if (rule.getLeftHand().getId() == ruleId && rule.getItems().size() == 0) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

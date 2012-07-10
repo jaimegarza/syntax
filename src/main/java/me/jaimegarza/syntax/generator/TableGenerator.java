@@ -31,22 +31,36 @@ package me.jaimegarza.syntax.generator;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
-import me.jaimegarza.syntax.cli.Algorithm;
 import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.Dot;
 import me.jaimegarza.syntax.definition.GoTo;
-import me.jaimegarza.syntax.definition.LookAhead;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
-import me.jaimegarza.syntax.definition.Terminal;
 
+/**
+ * Phases:
+ * 
+ * <ol>
+ *   <li>Code Parser
+ *   <li>Structural Analysis
+ *   <li><b>Table Generation</b> (This Phase)
+ *   <li>Writing Code
+ * </ol>
+ * Table Generation is the phase that computes:
+ * <ul>
+ *   <li> All states
+ *   <li> Parsing table
+ * </ul>
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class TableGenerator extends AbstractPhase {
   private static final int MIN_STATE_ARRAY_LENGTH = 100;
   private static final int STATE_INCR_SIZE = 50;
@@ -58,124 +72,75 @@ public class TableGenerator extends AbstractPhase {
   private int numberOfGotos;
   private List<String> errorMessages = new LinkedList<String>();
 
-  public TableGenerator(Environment environment, RuntimeData runtimeData) {
-    super();
-    this.environment = environment;
-    this.runtimeData = runtimeData;
+  /**
+   * Construct a TableGenerator for an environment
+   * @param environment
+   */
+  public TableGenerator(Environment environment) {
+    super(environment);
   }
 
-  Dot isThere(Rule rule, RuleItem item, List<Dot> markers) {
-    for (Dot i : markers) {
+  /**
+   * Locate a dot in the list, by rule and rule item.
+   * 
+   * @param dots the list of dots
+   * @param rule the rule of the dot
+   * @param item the rule item of the dot
+   * @return a dot in the list, or null
+   */
+  private Dot findDot( List<Dot> dots, Rule rule, RuleItem item) {
+    for (Dot i : dots) {
       if (i.getRule() == rule && i.getItem() == item) {
         return i;
       }
     }
     return null;
-    // return rules.contains(i) ? i : null;
   }
 
-  LookAhead getLookAhead(Rule rule, RuleItem item) {
-    LookAhead l = new LookAhead();
-    if (item == null) {
-      return l;
-    }
-
-    int index = rule.getItems().indexOf(item);
-    if (index == -1) {
-      return l;
-    }
-
-    l.setCarry(true);
-
-    if (index >= rule.getItems().size() - 1) {
-      return l;
-    }
-
-    index++;
-    while (index < rule.getItems().size()) {
-      item = rule.getItem(index);
-      if (item.getSymbol() instanceof Terminal) {
-        l.getSymbolIds().add(item.getSymbolId());
-        l.setCarry(false);
-        break;
-      } else {
-        l.getSymbolIds().addAll(((NonTerminal) item.getSymbol()).getFirst());
-        if (!isEmpty(item.getSymbolId())) {
-          l.setCarry(false);
-          break;
-        }
-      }
-      index++;
-    }
-    return l;
-  }
-
-  private int locateStateWithDots(List<Dot> ik) {
+  /**
+   * Locate a state with the given dots.  Kernel dots
+   * fully identify a state
+   * @param markers is the set of dots in the state
+   * @return a stateIndex, or finalState + 1 (meaning, a new state) 
+   */
+  private int findStateWithDots(List<Dot> markers) {
     int stateNumber;
 
     for (stateNumber = 1; stateNumber <= finalState; stateNumber++) {
-      List<Dot> originalMarkers = I[stateNumber].getOriginalDots();
-      if (ik.equals(originalMarkers)) {
-        if (environment.isDebug()) {
-          System.out.println("Equals " + ik + " against markers in state " + stateNumber + " " + originalMarkers);
-        }
+      List<Dot> originalMarkers = I[stateNumber].getKernelDots();
+      // using containsAll as a protective measure since equals implies order as well.
+      if (markers.containsAll(originalMarkers)) { //if (markers.equals(originalMarkers)) {
         return stateNumber;
       }
     }
     return finalState + 1;
   }
 
-  private boolean mergeLookAheads(int j, List<Dot> ik) {
-    Dot i, k;
-
-    if (environment.getAlgorithm() != Algorithm.LALR) {
-      return false;
-    }
-
-    i = I[j].getDot(0);
-    k = ik.get(0);
-
-    if (i.getLookahead() != null && k.getLookahead() != null && i.getLookahead().containsAll(k.getLookahead())) {
-      return false;
-    }
-
-    while (i != null && k != null && i.getRule().equals(k.getRule()) && i.getItem().equals(k.getItem())) {
-
-      i.getLookahead().addAll(k.getLookahead());
-      i = i.next();
-      k = k.next();
-    }
-    return true;
-  }
-
   /**
-   * TODO: closure and marking needs to be re-thought more as core dots and closure dots.
-   * @param state
+   * Compute the closure of a state.  From {@link State}:<p>
+   * ...the closure of a dot -- where &chi; &epsilon; <b>N</b> &cup; <b>T</b> and &beta; 
+   * &epsilon; (<b>N</b> &cup;
+   * <b>T</b>)* -- is defined as <pre>
+   * <i>closure</i>(<b>n</b>&#7522; &rarr; &alpha; . &chi;&beta;) =
+   * 
+   *   1. &empty; if &chi; &epsilon; T or &not;&exist;&chi;&beta;; or
+   *   2. {&chi; &rarr; . &delta;; &forall; &chi; &epsilon; N} | &chi; &rarr; <b>&delta;</b> &epsilon; <b>R</b>
+   * </pre>
+   * <p>
+   * @param state is the state whose closure is being computed
    */
   private void closure(State state) {
     for (Dot marker = state.getDot(0); marker != null; marker = marker.next()) {
       if (marker.getItem() != null && marker.getItem().getSymbol() instanceof NonTerminal) {
         for (Rule rule : runtimeData.getRules()) {
           if (rule.getLeftHandId() == marker.getItem().getSymbolId()) {
-            Dot auxiliary = isThere(rule, rule.getItem(0), state.getDots());
+            Dot auxiliary = findDot(state.getKernelDots(), rule, rule.getItem(0));
             if (auxiliary != null) {
-              if (environment.getAlgorithm() == Algorithm.LALR) {
-                LookAhead l = getLookAhead(rule, marker.getItem());
-                auxiliary.getLookahead().addAll(l.getSymbolIds());
-                if (l.isCarry()) {
-                  marker.getLookahead().addAll(auxiliary.getLookahead());
-                }
-              }
+              environment.algorithm.mergeLookaheads(marker, auxiliary);
             } else {
               auxiliary = new Dot(state, rule, rule.getItem(0));
-              if (environment.getAlgorithm() == Algorithm.LALR) {
-                LookAhead l = getLookAhead(rule, marker.getItem());
-                auxiliary.addAllLookaheads(l.getSymbolIds());
-                if (l.isCarry()) {
-                  marker.getLookahead().addAll(auxiliary.getLookahead());
-                }
-              }
-              state.getDots().add(auxiliary);
+              environment.algorithm.mergeLookaheads(marker, auxiliary);
+              state.addClosureDot(auxiliary);
             }
           }
         }
@@ -183,22 +148,11 @@ public class TableGenerator extends AbstractPhase {
     }
   }
 
-  void printLookahead(Set<Integer> lookAhead) {
-    if (lookAhead == null || environment.getAlgorithm() != Algorithm.LALR) {
-      return;
-    }
-
-    environment.report.print("     { ");
-    for (Symbol tkn : runtimeData.getTerminals()) {
-      if (lookAhead.contains(tkn.getId())) {
-        environment.report.print(tkn.getName() + " ");
-      }
-    }
-    environment.report.print("}");
-  }
-
-  void printStateReport(int stateNum) {
-    List<Dot> markers = I[stateNum].getDots();
+  /**
+   * Given a state, write it to the literal report
+   * @param stateNum is the desired state
+   */
+  private void printStateReport(int stateNum) {
     environment.report.println();
     environment.report.printf("State #%3d", stateNum);
     if (I[stateNum].getFrom() >= 0) {
@@ -207,31 +161,57 @@ public class TableGenerator extends AbstractPhase {
     } else {
       environment.report.println(" - Root");
     }
-    for (Dot dot : markers) {
-      environment.report.printf("%3d ", dot.getRule().getRulenum());
-      environment.report.printf("%s -> ", dot.getRule().getLeftHand().getName());
-      RuleItem item = dot.getRule().getItem(0);
-      if (item == null) {
-        environment.report.print(".");
-      }
-      int i = 0;
-      while (item != null) {
-        if (dot.getItem() != null && dot.getItem() == item) {
-          environment.report.print(". ");
-        }
-        environment.report.printf("%s ", item.getSymbol().getName());
-        item = dot.getRule().getItem(++i);
-        if (item == null && dot.getItem() == null) {
-          environment.report.print(".");
-        }
-      }
-      printLookahead(dot.getLookahead());
-      dot = dot.next();
-      environment.report.println();
+    for (Dot dot : I[stateNum].getKernelDots()) {
+      printDotReport(dot);
+    }
+    if (I[stateNum].getClosureDots().size() > 0) {
+      environment.report.println("    ---------------------------------------------------------");
+    }
+    for (Dot dot : I[stateNum].getClosureDots()) {
+      printDotReport(dot);
     }
   }
 
-  int computeDefaultAction(int parserLine[], int numberOfElements) {
+  /**
+   * Given a dot, report it to the textual stream
+   * 
+   * @param dot is the dot to report
+   */
+  private void printDotReport(Dot dot) {
+    environment.report.printf("%3d ", dot.getRule().getRulenum());
+    environment.report.printf("%s -> ", dot.getRule().getLeftHand().getName());
+    RuleItem item = dot.getRule().getItem(0);
+    if (item == null) {
+      environment.report.print(".");
+    }
+    int i = 0;
+    while (item != null) {
+      if (dot.getItem() != null && dot.getItem() == item) {
+        environment.report.print(". ");
+      }
+      environment.report.printf("%s ", item.getSymbol().getName());
+      item = dot.getRule().getItem(++i);
+      if (item == null && dot.getItem() == null) {
+        environment.report.print(".");
+      }
+    }
+    environment.algorithm.printLookahead(dot);
+    //dot = dot.next();
+    environment.report.println();
+    //return dot;
+  }
+
+  /**
+   * given a parser line with transitions, find the one with the highest 
+   * frequency such that it can be assumed to be the default.  Usually
+   * only terminals are considered in the computation
+   * 
+   * @param parserLine is the parsing line with state transitions
+   * @param numberOfElements restricts the number of elements in the parsing table
+   *    to consider
+   * @return the default, or 0 if it is best to assume error
+   */
+  private int computeDefaultAction(int parserLine[], int numberOfElements) {
     int defaultValue = 0, defaultCount = 0;
     int i, j, count;
 
@@ -253,12 +233,22 @@ public class TableGenerator extends AbstractPhase {
     return defaultValue;
   }
 
-  private List<Action> packActions(int parserLine[], int iDefa) {
+  /**
+   * A parsing line is a sparsely populated array with multiple zeros.  This
+   * method returns a list of those values that are non zero AND
+   * are not the default
+   * 
+   * @param parserLine is the parser line with state transitions
+   * @param defaultValue is the default value to exclude
+   * @return the list of {@link Action}s
+   */
+  private List<Action> packActions(int parserLine[], int defaultValue) {
     List<Action> actions = new LinkedList<Action>();
 
     // loop parsing row on terminals only
+    // remember that parsing tables are indexed by the symbol number, hence i is symbol number
     for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
-      if (parserLine[i] != 0 && parserLine[i] != iDefa) {
+      if (parserLine[i] != 0 && parserLine[i] != defaultValue) {
         // a shift action with symbol number = i
         for (Symbol symbol : runtimeData.getTerminals()) {
           if (symbol.getId() == i) {
@@ -271,7 +261,15 @@ public class TableGenerator extends AbstractPhase {
     return actions;
   }
 
-  int findActions(int stateNumber, List<Action> actions) {
+  /**
+   * Locate a state with identical actions.  This way they can share them
+   * @param stateNumber is the currentState.  Actions will be searched
+   * on states prior to this.
+   * 
+   * @param actions is the list of actions to search
+   * @return gthe stateNumber, or -1 if not found
+   */
+  private int findActions(int stateNumber, List<Action> actions) {
     for (int state = 0; state < stateNumber; state++) {
       if (I[state].getActions().equals(actions)) {
         return state;
@@ -280,13 +278,25 @@ public class TableGenerator extends AbstractPhase {
     return -1;
   }
 
-  private void addGoto(NonTerminal id, int origen, int destino) {
-    GoTo goTo = new GoTo(origen, destino);
+  /**
+   * Add a non-terminal state transition
+   * @param id is the non terminal for the transition in the origin state
+   * @param origin the origin state where transition happens
+   * @param destination the destination state of the transition 
+   */
+  private void addGoto(NonTerminal id, int origin, int destination) {
+    GoTo goTo = new GoTo(origin, destination);
 
     id.addGoTo(goTo);
     numberOfGotos++;
   }
 
+  /**
+   * An error message was detected.  Add it to the list of messages
+   * @param message is the error message.
+   * @return the index in the table, which will be used as a pointer in
+   *       the parsing table.
+   */
   private int addErrorMessage(String message) {
     int index = errorMessages.indexOf(message);
     if (index != -1) {
@@ -296,29 +306,36 @@ public class TableGenerator extends AbstractPhase {
     return errorMessages.size() - 1;
   }
 
-  private void packState(int parserLine[], int estado) {
+  /**
+   * Compress a state's parser line, adding the actions to the packed
+   * parser table.
+   * 
+   * @param parserLine is the parsing table's line
+   * @param stateNumber is the current state
+   */
+  private void packState(int parserLine[], int stateNumber) {
     if (environment.isPacked() == false) {
       return;
     }
 
     int defaultAction = computeDefaultAction(parserLine, runtimeData.getTerminals().size());
     List<Action> actions = packActions(parserLine, defaultAction);
-    int existingState = findActions(estado, actions);
+    int existingState = findActions(stateNumber, actions);
     if (existingState >= 0) {
       actions = I[existingState].getActions();
-      I[estado].setPosition(I[existingState].getPosition());
+      I[stateNumber].setPosition(I[existingState].getPosition());
       environment.report.printf("\nActions (same as state %d)\n------------------------------\n", existingState);
     } else {
-      I[estado].setPosition(actionNumber);
+      I[stateNumber].setPosition(actionNumber);
       environment.report.printf("\nActions\n--------\n");
       actionNumber += actions.size();
     }
-    I[estado].setDefaultValue(defaultAction);
-    I[estado].setActions(actions);
+    I[stateNumber].setDefaultValue(defaultAction);
+    I[stateNumber].setActions(actions);
     int tokenCount = 0;
     Action errorToken = null;
     for (Action action : actions) {
-      environment.report.printf("\tWith %s ", action.getSymbol().getName());
+      environment.report.printf("    With %s ", action.getSymbol().getName());
       if (action.getStateNumber() < 0) {
         environment.report.printf("Reduce by rule %d\n", -action.getStateNumber());
       } else if (action.getStateNumber() == ACCEPT) {
@@ -348,14 +365,14 @@ public class TableGenerator extends AbstractPhase {
         if (symbol == null) {
           continue;
         }
-        environment.report.printf("\tWith %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
+        environment.report.printf("    With %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
         symbolCount++;
         errorSymbol = symbol;
-        addGoto(symbol, estado, parserLine[i + terminals]);
+        addGoto(symbol, stateNumber, parserLine[i + terminals]);
       }
     }
     // imprime default
-    environment.report.printf("\tDefault: ");
+    environment.report.printf("    Default: ");
     if (defaultAction < 0) {
       environment.report.printf("Reduce by rule %d\n", -defaultAction);
     } else {
@@ -365,12 +382,12 @@ public class TableGenerator extends AbstractPhase {
     if (tokenCount == 1) {
       String message = "";
       message = errorToken.getSymbol().getFullName() + " expected";
-      environment.report.println("\t" + message);
-      I[estado].setMessage(addErrorMessage(message));
+      environment.report.println("    " + message);
+      I[stateNumber].setMessage(addErrorMessage(message));
     } else if (symbolCount == 1) {
       String message = "Expecting " + errorSymbol.getFullName();
-      environment.report.println("\t" + message);
-      I[estado].setMessage(addErrorMessage(message));
+      environment.report.println("    " + message);
+      I[stateNumber].setMessage(addErrorMessage(message));
     } else if (tokenCount != 0 && (tokenCount < symbolCount || symbolCount == 0)) {
       StringBuilder messageBuffer = new StringBuilder();
       int i = 0;
@@ -388,8 +405,8 @@ public class TableGenerator extends AbstractPhase {
         }
       }
       messageBuffer.append(" expected");
-      environment.report.println("\t" + messageBuffer.toString());
-      I[estado].setMessage(addErrorMessage(messageBuffer.toString()));
+      environment.report.println("    " + messageBuffer.toString());
+      I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
     } else if (symbolCount != 0) {
       StringBuilder messageBuffer = new StringBuilder("Expecting ");
       int j = 0;
@@ -416,18 +433,71 @@ public class TableGenerator extends AbstractPhase {
           break;
         }
       }
-      environment.report.println("\t" + messageBuffer.toString());
-      I[estado].setMessage(addErrorMessage(messageBuffer.toString()));
+      environment.report.println("    " + messageBuffer.toString());
+      I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
     } else {
-      I[estado].setMessage(-1);
+      I[stateNumber].setMessage(-1);
     }
   }
 
-  boolean getPrecedence(int parserLine[], Symbol tkn, Rule rule) {
+  /**
+   * Given the associativity and order of rules find IF a shift/reduce 
+   * can be resolved to either shift, or reduce.
+   * <p>
+   * Precedence conflicts occur in ambiguous grammars where if is both possible 
+   * to have a shift or a reduce.  Note should be made that sometimes is both
+   * convenient for readability and parser size. 
+   * <p>
+   * To declare precedence, bot rules and tokens can be assigned
+   * a precedence and associativity.  For tokens the precedence gets
+   * declared with <b>%left</b>, <b>%right</b> or <b>%binary</b>
+   * 
+   * Consider the following example with an ambiguous non-LR grammar, (or non LL
+   * top down for that matter)<pre><code>
+   * 
+   * E -> E + E
+   * E -> E - E
+   * E -> E * E
+   * E -> E / E
+   * E -> - E
+   * E -> number
+   * </code></pre>
+   * 
+   * To solve it, the first step is to declare the tokens precedence<pre><code>
+   * %left +, -  <--- sets the associativity, and by virtue of being above, lower precedence.
+   * %left *, /  <--- sets the associativity, abd by being second higher precedence
+   * </code></pre>
+   * 
+   * There is still a second conflict caused by E -> -E.  We know that unary minus is right associative
+   * so we declare a new token (new since - is already used)<pre><code>
+   * %right UMINUS
+   * </code></pre>
+   * and then assign the precedence <b>directly</b> to the rule.  This is a contextual precedence<pre><code>
+   * E -> -E %prec UMINUS  <--- gives the rule higher precedence
+   * </code></pre>
+   * Rules in general get their precedence from the last non-terminal in the rule, or by %prec<p>
+   * Precedence gets resolved in the generation as follows:
+   * <ol>
+   *   <li>if the non-terminal precedence is higher than that of the rule, make it a shift conflict is higher, take the shift
+   *   <li>if the non terminal precedence is lower than that of the rule, make it a reduce.
+   *   <li>if the non-terminal and the rule have the same precedence, use associativity:
+   *     <ul>
+   *       <li>left associativity implies <b>reduce</b>
+   *       <li>right associativity implies <b>shift</b>
+   *       <li>binary associativity implies <b>error</b>
+   *     </ul>
+   * </ol>
+   * in cases when the shift/reduce conflict has not been solved, shift is taken, and a warning is printed.<p>
+   * @param parserLine the parser line contents
+   * @param tkn the token causing the conflict
+   * @param rule the rule involved in the conflict
+   * @return true if properly resolved
+   */
+  private boolean resolveShiftReduceConflict(int parserLine[], Symbol tkn, Rule rule) {
     Associativity association;
 
     if (tkn.getPrecedence() == 0 || rule.getPrecedence() == 0) {
-      return true;
+      return false;
     }
 
     if (tkn.getPrecedence() == rule.getPrecedence()) {
@@ -441,7 +511,7 @@ public class TableGenerator extends AbstractPhase {
     switch (association) {
       case NONE:
       case BINARY:
-        return true;
+        return false;
 
       case LEFT:
         parserLine[tkn.getId()] = -rule.getRulenum();
@@ -453,34 +523,34 @@ public class TableGenerator extends AbstractPhase {
         break;
     }
 
-    return false;
+    return true;
   }
 
-  private void computeReduce(int parserLine[], int estado) {
-    for (Dot dot : I[estado].getDots()) {
-      if (dot.getItem() == null) {
-        if (dot.getItem() != null && dot.getItem().getSymbol().equals(runtimeData.getRoot())) {
+  /**
+   * Complete the reduces of a parser line in the given state
+   * @param parserLine the state's parser line
+   * @param stateNumber the state number
+   */
+  private void computeReduce(int parserLine[], int stateNumber) {
+    for (Dot dot : I[stateNumber].getAllDots()) {
+      if (dot.getItem() == null) { // I like dots at the end of rules
+        if (dot.getRule().getLeftHand().equals(runtimeData.getRoot())) {
           environment.report.println("ACCEPT BY " + -dot.getRule().getRulenum());
           parserLine[0] = ACCEPT;
         } else {
           environment.report.printf("REDUCE BY -%d\n", dot.getRule().getRulenum());
           for (Symbol tkn : runtimeData.getTerminals()) {
-            boolean containsToken;
-            if (environment.getAlgorithm() == Algorithm.LALR) {
-              containsToken = dot.getLookahead().contains(tkn.getId());
-            } else {
-              containsToken = dot.getRule().getLeftHand().getFollow().contains(tkn.getId());
-            }
+            boolean containsToken = environment.algorithm.dotContains(dot, tkn.getId());
             if (containsToken) {
               if (parserLine[tkn.getId()] > 0) {
-                if (getPrecedence(parserLine, tkn, dot.getRule())) {
+                if (!resolveShiftReduceConflict(parserLine, tkn, dot.getRule())) {
                   environment.error(dot.getRule().getLineNumber(),
-                      "Warning: Shift/Reduce conflict on state %d[%s Shift:%d Reduce:%d].", estado, tkn.getName(),
+                      "Warning: Shift/Reduce conflict on state %d[%s Shift:%d Reduce:%d].", stateNumber, tkn.getName(),
                       parserLine[tkn.getId()], dot.getRule().getRulenum());
                 }
               } else if (parserLine[tkn.getId()] < 0) {
                 environment.error(dot.getRule().getLineNumber(),
-                    "Warning: Reduce/Reduce conflict on state %d[%s Reduce:%d Reduce:%d].", estado, tkn.getName(),
+                    "Warning: Reduce/Reduce conflict on state %d[%s Reduce:%d Reduce:%d].", stateNumber, tkn.getName(),
                     -parserLine[tkn.getId()], dot.getRule().getRulenum());
                 parserLine[tkn.getId()] = Math.max(-dot.getRule().getRulenum(), parserLine[tkn.getId()]);
               } else {
@@ -493,145 +563,198 @@ public class TableGenerator extends AbstractPhase {
     }
   }
 
+  /**
+   * Compact the go to table
+   */
   private void compactGotos() {
-    int iDefa;
-    int nElems, iPosicion;
+    int defaultValue;
+    int numElems, position;
 
-    iPosicion = 0;
+    position = 0;
     for (NonTerminal id : runtimeData.getNonTerminals()) {
-      iDefa = id.getDefaultGoto();
-      if (iDefa != 0) {
-        nElems = id.removeGoto(iDefa);
+      defaultValue = id.getDefaultGoto();
+      if (defaultValue != 0) {
+        numElems = id.removeGoto(defaultValue);
         numberOfGotos--;
-        id.setToken(iPosicion);
-        id.appendGoto(-1, iDefa);
+        id.setToken(position);
+        id.appendGoto(-1, defaultValue);
         numberOfGotos++;
-        iPosicion += nElems + 1;
+        position += numElems + 1;
       }
     }
   }
 
-  public void execute() {
-    int parserLine[] = new int[runtimeData.getTerminals().size() + runtimeData.getNonTerminals().size()];
-
-    // Generate state 0
-    I[0] = new State(0, -1, null);
+  /**
+   * Get the starting symbol, and put a dot on each rule that 
+   * starts with it.
+   * 
+   * @return the list of dots
+   */
+  private List<Dot> computeStartingDots() {
+    List<Dot>initialDots = new LinkedList<Dot>();
     for (Rule rule : runtimeData.getRules()) {
       if (rule.getLeftHand().equals(runtimeData.getRoot())) {
         Dot dot = new Dot(I[0], rule, rule.getItem(0));
-        if (environment.getAlgorithm() == Algorithm.LALR) {
-          dot.addLookahead(0); // empty element
-        }
-        I[0].addDot(dot);
+        environment.algorithm.initializeDot(dot);
+        initialDots.add(dot);
       }
     }
-    I[0].mark();
-    closure(I[0]);
+    return initialDots;
+  }
+
+  /**
+   * Create a new state, with its originating state and symbol transition, 
+   * adding the dots for it.
+   * 
+   * @param fromState the state where the state transition originated
+   * @param symbol is the transition symbol
+   * @param dots is the elements of the state
+   */
+  private void createNewState(int stateNumber, int fromState, Symbol symbol, List<Dot> dots) {
+    if (stateNumber >= I.length) { // resize if needed
+      I = Arrays.copyOf(I, I.length + STATE_INCR_SIZE);
+    }
+    I[stateNumber] = new State(stateNumber, fromState, symbol);
+    for (Dot m : dots) {
+      m.setState(I[stateNumber]);
+    }
+    I[stateNumber].addAllKernelDots(dots);
+    closure(I[stateNumber]);
     if (environment.isDebug()) {
-      printDebuggingState(0, I[0]);
+      System.out.println("Created new state " + stateNumber + ":\n" + I[stateNumber]);
     }
+  }
 
-    // generate till the end
-    boolean doPrint = environment.getAlgorithm() != Algorithm.LALR;
-    finalState = 0;
-    while (2 > 1) { // forever
-      int stateIndex = 0;
-      int affected = 0;
-      while (stateIndex <= finalState) {
-        if (!doPrint && !I[stateIndex].isReview()) {
-          stateIndex++;
-          continue;
-        }
-        if (environment.isVerbose()) {
-          System.out.printf("Reviewing state %05d of %05d\r", stateIndex, finalState);
-        }
-        // empty line
-        Arrays.fill(parserLine, 0);
-        Dot marker = I[stateIndex].getDot(0);
-        // I[stateIndex].mark();
-        // closure(I[stateIndex]);
-        if (doPrint) {
-          printStateReport(stateIndex);
-        }
+  /**
+   * Moves a given dot to the right.
+   * Check each dot after the given dot and check to see if it points to the
+   * same symbol.  if it does create a new dot pointing to after the symbol.<p>
+   * 
+   * This operation may result in more than one dot.
+   *   
+   * @param state being reviewed
+   * @param dot the dot being checked
+   * @return
+   */
+  private List<Dot> moveDotToTheRight(State state, Dot dot) {
+    List<Dot> auxiliaryMarkers = new LinkedList<Dot>();
+    for (Dot lookaheadMarker = dot; lookaheadMarker != null; lookaheadMarker = lookaheadMarker.next()) {
+      if (lookaheadMarker.getItem() != null &&
+          lookaheadMarker.getItem().getSymbol().equals(dot.getItem().getSymbol())) {
+        Dot auxiliary = new Dot(state, lookaheadMarker.getRule(), lookaheadMarker.nextItem());
+        environment.algorithm.addAllLookaheads(auxiliary, lookaheadMarker);
+        auxiliaryMarkers.add(auxiliary);
+      }
+    }
+    return auxiliaryMarkers;
+  }
 
-        // generate goto
-        // marker points to the rules in the state
-        while (marker != null) {
-          if (marker.getItem() != null && parserLine[marker.getItem().getSymbolId()] == 0) {
-            List<Dot> auxiliaryMarkers = new LinkedList<Dot>();
-            for (Dot lookaheadMarker = marker; lookaheadMarker != null; lookaheadMarker = lookaheadMarker.next()) {
-              if (lookaheadMarker.getItem() != null &&
-                  lookaheadMarker.getItem().getSymbol().equals(marker.getItem().getSymbol())) {
-                Dot auxiliary = new Dot(I[stateIndex], lookaheadMarker.getRule(), lookaheadMarker.nextRuleEntry());
-                if (environment.getAlgorithm() == Algorithm.LALR) {
-                  auxiliary.addAllLookaheads(lookaheadMarker.getLookahead());
-                }
-                auxiliaryMarkers.add(auxiliary);
-              }
-            }
-            // I[stateIndex].cutToMark();
-            int gotoState = locateStateWithDots(auxiliaryMarkers);
-            // I[stateIndex].restore();
-            if (gotoState > finalState) {
-              if (++finalState >= I.length) { // resize if needed
-                I = Arrays.copyOf(I, I.length + STATE_INCR_SIZE);
-              }
-              I[finalState] = new State(finalState, stateIndex, marker.getItem().getSymbol());
-              for (Dot m : auxiliaryMarkers) {
-                m.setState(I[finalState]);
-              }
-              I[finalState].addAllDots(auxiliaryMarkers);
-              I[finalState].mark();
-              closure(I[finalState]);
-              if (environment.isDebug()) {
-                printDebuggingState(finalState, I[finalState]);
-              }
-              gotoState = finalState;
-            } else {
-              // Merge lookaheads
-              if (mergeLookAheads(gotoState, auxiliaryMarkers)) {
-                I[gotoState].setReview(true);
-                affected++;
-              }
-            }
-            if (environment.isDebug()) {
-              System.out.println("On state " +
-                                 stateIndex +
-                                   " with " +
-                                   marker.getItem().getSymbol() +
-                                   " go to " +
-                                   gotoState);
-            }
-            parserLine[marker.getItem().getSymbolId()] = gotoState;
+  /**
+   * Go dot by dot computing state transitions for each of the pointed symbols.
+   * 
+   * @param parserLine is the current parser table's line
+   * @param stateIndex is the current state
+   * @return
+   */
+  private boolean computeStateTransitions(int[] parserLine, int stateIndex) {
+    boolean affected = false;
+    
+    Arrays.fill(parserLine, 0);
+
+    for (Dot marker = I[stateIndex].getDot(0); marker != null; marker = marker.next()) {
+      if (marker.getItem() != null && parserLine[marker.getItem().getSymbolId()] == 0) {
+        List<Dot> auxiliaryMarkers = moveDotToTheRight(I[stateIndex], marker);
+        int gotoState = findStateWithDots(auxiliaryMarkers);
+        if (gotoState > finalState) { // meaning, this is a new state
+          createNewState(++finalState, stateIndex, marker.getItem().getSymbol(), auxiliaryMarkers);
+          gotoState = finalState;
+        } else {
+          // Merge lookaheads
+          if (environment.algorithm.addLookaheadsToState(I, gotoState, auxiliaryMarkers)) {
+            I[gotoState].setReview(true);
+            affected = true;
           }
-          marker = marker.next();
-        }/* while k <> null */
-        if (doPrint) {
-          computeReduce(parserLine, stateIndex);
-          I[stateIndex].setMessage(-1);
-          I[stateIndex].setRow(parserLine);
-          packState(parserLine, stateIndex);
         }
-        I[stateIndex].setReview(false);
-        stateIndex++;
-      }
-      if (doPrint) {
-        break;
-      } else if (affected == 0) {
-        doPrint = true;
+        if (environment.isDebug()) {
+          System.out.println("On state " + stateIndex + " with " + marker.getItem().getSymbol() + " go to " + gotoState);
+        }
+        parserLine[marker.getItem().getSymbolId()] = gotoState;
       }
     }
+    return affected;
+  }
 
+  /**
+   * finalize a state
+   * @param parserLine is the parsing table's current row
+   * @param stateNumber is the current state
+   */
+  private void completeState(int[] parserLine, int stateNumber) {
+    computeReduce(parserLine, stateNumber);
+    I[stateNumber].setMessage(-1);
+    I[stateNumber].setRow(parserLine);
+    packState(parserLine, stateNumber);
+  }
+
+  /**
+   * Set data to runtimeData and make sure the state
+   * array is the proper size.
+   */
+  private void completeGeneration() {
     compactGotos();
 
+    // reduce size to proper length
     I = Arrays.copyOf(I, finalState + 1);
+
     runtimeData.setStates(I);
     runtimeData.setNumberOfActions(actionNumber);
     runtimeData.setNumberOfGoTos(numberOfGotos);
     runtimeData.setErrorMessages(errorMessages);
   }
+  /**
+   * Generates the parsing table by computing the states of the grammar.
+   */
+  public void execute() {
+    int parserLine[] = new int[runtimeData.getTerminals().size() + runtimeData.getNonTerminals().size()];
+    List<Dot> initialDots = computeStartingDots();
+    createNewState(0, -1, null, initialDots);
 
-  private void printDebuggingState(int stateNum, State state) {
-    System.out.println("Created new state " + stateNum + ":\n" + state);
+    // make sure that for multi-pass algorithms we do not initially print.
+    boolean finalPhase = environment.algorithm.isMultiPass() == false;
+    boolean completed = false;
+    finalState = 0;
+    // generate till the end. Loop multiple times until all resolved and all printed.
+    while (!completed) {
+      System.out.println("\n\nStarting a new phase with " + finalPhase + " and " + finalState + " states");
+      int affected = 0;
+      for (int stateIndex = 0;stateIndex <= finalState; stateIndex++) {
+        //skip state if not to be reviewed (unless we want to print it)
+        if (I[stateIndex].isReview() == false && finalPhase == false) {
+          continue;
+        }
+        if (environment.isVerbose()) {
+          System.out.printf("Reviewing state %d of %d\n", stateIndex, finalState);
+        }
+        if (finalPhase) {
+          printStateReport(stateIndex);
+        }
+
+        if (computeStateTransitions(parserLine, stateIndex)) {
+          affected++;
+        }
+        
+        if (finalPhase) {
+          completeState(parserLine, stateIndex);
+        }
+        I[stateIndex].setReview(false);
+      }
+      
+      if (finalPhase) {
+        completed = true;
+      } else if (affected == 0) {
+        finalPhase = true;
+      }
+    }
+    completeGeneration();
   }
 }

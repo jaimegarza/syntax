@@ -26,7 +26,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.cli;
+package me.jaimegarza.syntax.algorithm;
 
 /**
  * Describes the algorithm supported by the compiler-compiler.<p>

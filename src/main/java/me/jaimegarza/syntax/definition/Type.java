@@ -28,6 +28,9 @@
 */
 package me.jaimegarza.syntax.definition;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * <i>~pojo class</i><br><br>
  * 
@@ -43,7 +46,14 @@ package me.jaimegarza.syntax.definition;
     * the target language.
     */
   String name;
+  List<Symbol> usedBy = new LinkedList<Symbol>();
 
+  public void addUsage(Symbol symbol) {
+    if (!usedBy.contains(symbol)) {
+      usedBy.add(symbol);
+    }
+  }
+  
   /** 
    * Construct a type
    * @param name is the type name
@@ -92,7 +102,14 @@ package me.jaimegarza.syntax.definition;
    */
   @Override
   public String toString() {
-    return name;
+    String s = name;
+    if (usedBy.size() > 0) {
+      s += "\n    Used by:";
+      for (Symbol symbol : usedBy) {
+        s += "\n    +-- " + symbol;
+      }
+    }
+    return s;
   }
 
 }

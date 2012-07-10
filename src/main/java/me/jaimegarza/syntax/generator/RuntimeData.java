@@ -56,6 +56,22 @@ public class RuntimeData {
 
   public int sourceLineNumber = 0;
   private boolean stackTypeDefined;
+  
+  /**
+   * Check to see if a rule identified by nonTerminalId is empty, i.e. it has no
+   * rule items.
+   * 
+   * @param nonTerminalId is the id of the rule to check
+   * @return true or false
+   */
+  public boolean symbolCanBeEmpty(int nonTerminalId) {
+    for (Rule rule : rules) {
+      if (rule.getLeftHand().getId() == nonTerminalId && rule.getItems().size() == 0) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   public NonTerminal getRoot() {
     return root;

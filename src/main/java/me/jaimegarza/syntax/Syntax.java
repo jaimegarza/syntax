@@ -31,7 +31,6 @@ package me.jaimegarza.syntax;
 import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.generator.CodeParser;
 import me.jaimegarza.syntax.generator.CodeWriter;
-import me.jaimegarza.syntax.generator.RuntimeData;
 import me.jaimegarza.syntax.generator.StructuralAnalyzer;
 import me.jaimegarza.syntax.generator.TableGenerator;
 
@@ -80,7 +79,6 @@ import org.apache.commons.logging.LogFactory;
 public class Syntax {
 
   private Environment environment;
-  private RuntimeData runtimeData = new RuntimeData();
 
   public final Log LOG = LogFactory.getLog(this.getClass());
 
@@ -102,10 +100,10 @@ public class Syntax {
    * 4. Output the components of the resulting code.
    */
   private void execute() {
-    CodeParser parser = new CodeParser(environment, runtimeData);
-    StructuralAnalyzer analyzer = new StructuralAnalyzer(environment, runtimeData);
-    TableGenerator generator = new TableGenerator(environment, runtimeData);
-    CodeWriter writer = new CodeWriter(environment, runtimeData);
+    CodeParser parser = new CodeParser(environment);
+    StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
+    TableGenerator generator = new TableGenerator(environment);
+    CodeWriter writer = new CodeWriter(environment);
     try {
       parser.execute();
       analyzer.execute();

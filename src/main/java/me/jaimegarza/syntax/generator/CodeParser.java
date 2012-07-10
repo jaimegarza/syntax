@@ -47,7 +47,7 @@ import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
 
 public class CodeParser extends AbstractPhase {
-  private static final String DISTINGUISHED_SYMBOL_NAME = "Sys$Root";
+  private static final String DISTINGUISHED_SYMBOL_NAME = "$start";
   private static final int TOK_MARCA = 256;
   private static final int TOK_START = 257;
   private static final int TOK_TOKEN = 258;
@@ -214,10 +214,8 @@ public class CodeParser extends AbstractPhase {
   private boolean isFirstToken = true;
   private int numberOfRecoveries;
 
-  public CodeParser(Environment environment, RuntimeData runtimeData) {
-    super();
-    this.environment = environment;
-    this.runtimeData = runtimeData;
+  public CodeParser(Environment environment) {
+    super(environment);
   }
 
   /*
@@ -435,6 +433,7 @@ public class CodeParser extends AbstractPhase {
           }
           if (currentType != null) {
             terminal.setType(currentType);
+            currentType.addUsage(terminal);
           }
           if (StxStack[pStxStack - 3].value >= 0) {
             if (terminal.getToken() != -1) {
@@ -512,7 +511,11 @@ public class CodeParser extends AbstractPhase {
         break;
       case 53:
         currentType = new Type(StxStack[pStxStack].id);
-        runtimeData.getTypes().add(currentType);
+        if (runtimeData.getTypes().contains(currentType)) {
+          currentType = runtimeData.getTypes().get(runtimeData.getTypes().indexOf(currentType));
+        } else {
+          runtimeData.getTypes().add(currentType);
+        }
         break;
       case 54:
         currentType = null;
@@ -740,7 +743,12 @@ public class CodeParser extends AbstractPhase {
       nonTerminal.setCount(nonTerminal.getCount() - 1);
     }
     Type type = new Type(idnt);
-    runtimeData.getTypes().add(type);
+    if (runtimeData.getTypes().contains(type)) {
+      type = runtimeData.getTypes().get(runtimeData.getTypes().indexOf(type));
+    } else {
+      runtimeData.getTypes().add(type);
+    }
+    type.addUsage(nonTerminal);
     nonTerminal.setType(type);
     return true;
   }
@@ -2332,6 +2340,16 @@ public class CodeParser extends AbstractPhase {
       id.setId(noterminals++ + terminals);
       id.setFirst(null);
       id.setFollow(null);
+    }
+    
+    environment.report.printf("\n");
+    environment.report
+        .printf("Types\n");
+    environment.report
+        .printf("_____________________________________________\n");
+
+    for (Type type : runtimeData.getTypes()) {
+      environment.report.println(type.toString());
     }
   }
 
