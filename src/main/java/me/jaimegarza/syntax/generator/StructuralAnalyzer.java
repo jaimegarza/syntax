@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 import me.jaimegarza.syntax.AnalysisException;
-import me.jaimegarza.syntax.cli.Algorithm;
+import me.jaimegarza.syntax.algorithm.Algorithm;
 import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
@@ -43,10 +43,8 @@ import me.jaimegarza.syntax.definition.Terminal;
 public class StructuralAnalyzer extends AbstractPhase {
   private Set<Integer> searchItems = new HashSet<Integer>();
 
-  public StructuralAnalyzer(Environment environment, RuntimeData runtimeData) {
-    super();
-    this.environment = environment;
-    this.runtimeData = runtimeData;
+  public StructuralAnalyzer(Environment environment) {
+    super(environment);
   }
 
   /**
@@ -121,7 +119,7 @@ public class StructuralAnalyzer extends AbstractPhase {
     if (items.get(nextItemIndex).getSymbol() instanceof NonTerminal) {
       NonTerminal nonTerminal = (NonTerminal) items.get(nextItemIndex).getSymbol();
       follow.addAll(nonTerminal.getFirst());
-      if (!isEmpty(nonTerminal.getId())) {
+      if (runtimeData.symbolCanBeEmpty(nonTerminal.getId()) == false) {
         return false;
       }
     } else {
@@ -157,7 +155,7 @@ public class StructuralAnalyzer extends AbstractPhase {
     for (RuleItem item : rule.getItems()) {
       if (item.getSymbol() instanceof NonTerminal) {
         getFirstForNonTerminal(ntId, first, item);
-        if (!isEmpty(item.getSymbol().getId())) {
+        if (runtimeData.symbolCanBeEmpty(item.getSymbol().getId()) == false) {
           break; // non propagating first. Stop.
         }
       } else {
@@ -214,7 +212,7 @@ public class StructuralAnalyzer extends AbstractPhase {
       }
     }
 
-    if (environment.getAlgorithm() == Algorithm.LALR) {
+    if (environment.getAlgorithmType() == Algorithm.LALR) {
       return;
     }
 
@@ -248,7 +246,7 @@ public class StructuralAnalyzer extends AbstractPhase {
     // LALR does not compute follows. Only SLR. LALR does it by going case by
     // case in the table
     // generation to compute contextual follows.
-    if (environment.getAlgorithm() == Algorithm.LALR) {
+    if (environment.getAlgorithmType() == Algorithm.LALR) {
       print();
       return;
     }

@@ -116,7 +116,20 @@ public class State {
    * A state does not itself contain a list of rules. It has a list
    * of {@link Dot}s, which themselves identify the rules uniquely. 
    */
-  List<Dot> dots = new LinkedList<Dot>();
+  List<Dot> kernelDots = new LinkedList<Dot>();
+  /**
+   * I keep the closure separate, so that the equals method is done only on the
+   * kernel dots.
+   */
+  List<Dot> closureDots = new LinkedList<Dot>();
+  /**
+   * 
+   */
+  List<Dot> effectiveDots = null;
+  /**
+   * The actual list of effective dots is dirty.  On new request, rebuild.
+   */
+  boolean dirtyList = true;
   /**
    * For packed grammars, it identifies the default action to take.
    * A state assigns a default action in order to eliminate sparse 
@@ -154,17 +167,6 @@ public class State {
    */
   int message;
   /**
-   * Original size of the dot list before closure. See {@link #mark()},
-   * {@link #cutToMark()} and {@link #restore()} for additional 
-   * information
-   */
-  private int mark = 0;
-  /**
-   * Saved (clipboard) list of dots.  See {@link #mark()}, 
-   * {@link #cutToMark()} and {@link #restore()} for additional information
-   */
-  private List<Dot> cut;
-  /**
    * The row is the unpacked parsing table's row that identifies the state
    */
   private int row[];
@@ -200,16 +202,40 @@ public class State {
   }
 
   /**
-   * For closure, we mark the list of dots.  With this method we retract it
-   * and return the result.
-   * @return
+   * Combine the dots if necessary.
    */
-  public List<Dot> getOriginalDots() {
-    if (mark == dots.size()) {
-      return dots;
-    } else {
-      return dots.subList(0, mark);
+  private void computeEffectiveDots() {
+    if (effectiveDots == null) {
+      effectiveDots = new LinkedList<Dot>();
     }
+    if (dirtyList) {
+      effectiveDots.clear();
+      effectiveDots.addAll(kernelDots);
+      effectiveDots.addAll(closureDots);
+      dirtyList = false;
+    }
+  }
+  
+  /**
+   * @return only the kernel dots
+   */
+  public List<Dot> getKernelDots() {
+    return kernelDots;
+  }
+
+  /**
+   * @return only the kernel dots
+   */
+  public List<Dot> getClosureDots() {
+    return closureDots;
+  }
+
+  /**
+   * @return only the kernel dots
+   */
+  public List<Dot> getAllDots() {
+    computeEffectiveDots();
+    return effectiveDots;
   }
 
   /**
@@ -217,65 +243,56 @@ public class State {
    * @return a dot in with the given index
    */
   public Dot getDot(int i) {
-    Dot marker = null;
-    if (dots != null && i < dots.size()) {
-      marker = dots.get(i);
+    Dot dot = null;
+    computeEffectiveDots();
+    if (effectiveDots != null && i < effectiveDots.size()) {
+      dot = effectiveDots.get(i);
     }
-    return marker;
+    return dot;
   }
 
   /**
-   * Add a dot to the dot set
+   * Add a dot to the kernel dot set
    * @param dot the dot to be added
    */
-  public void addDot(Dot dot) {
-    if (!dots.contains(dot)) {
-      dots.add(dot);
+  public void addKernelDot(Dot dot) {
+    if (!kernelDots.contains(dot)) {
+      kernelDots.add(dot);
+      dirtyList = true;
     }
   }
 
   /**
-   * Merge all dots into this objects marker dots.
+   * Add a dot to the closure dot set
+   * @param dot the dot to be added
+   */
+  public void addClosureDot(Dot dot) {
+    if (!closureDots.contains(dot)) {
+      closureDots.add(dot);
+      dirtyList = true;
+    }
+  }
+
+  /**
+   * Merge all dots into this objects kernel dots.
    * @param dots is the list of dots to merge from
    */
-  public void addAllDots(List<Dot> dots) {
+  public void addAllKernelDots(List<Dot> dots) {
     for (Dot dot : dots) {
-      addDot(dot);
+      addKernelDot(dot);
     }
   }
 
   /**
-   * Place a mark on the dots (before closure computation)
+   * Merge all dots into this objects closure dots.
+   * @param dots is the list of dots to merge from
    */
-  public void mark() {
-    mark = dots.size();
-  }
-
-  /**
-   * Retract markers to the original size, and "cut" them in a safe place
-   */
-  public void cutToMark() {
-    if (mark == dots.size()) {
-      cut = null;
-    } else {
-      cut = dots.subList(mark, dots.size());
-      dots = dots.subList(0, mark);
+  public void addAllClosureDots(List<Dot> dots) {
+    for (Dot dot : dots) {
+      addClosureDot(dot);
     }
   }
 
-  /**
-   * Restore from a cut mark
-   */
-  public void restore() {
-    if (cut != null) {
-      List<Dot> currentMarkers = dots;
-      dots = new LinkedList<Dot>();
-      dots.addAll(currentMarkers);
-      dots.addAll(cut);
-      cut = null;
-    }
-  }
-  
   /* Getters and setters */
 
   /**
@@ -332,20 +349,6 @@ public class State {
    */
   public void setSymbol(Symbol symbol) {
     this.symbol = symbol;
-  }
-
-  /**
-   * @return the markers
-   */
-  public List<Dot> getDots() {
-    return dots;
-  }
-
-  /**
-   * @param markers the markers to set
-   */
-  public void setDots(List<Dot> markers) {
-    this.dots = markers;
   }
 
   /**
@@ -412,20 +415,6 @@ public class State {
   }
 
   /**
-   * @return the mark
-   */
-  public int getMark() {
-    return mark;
-  }
-
-  /**
-   * @param mark the mark to set
-   */
-  public void setMark(int mark) {
-    this.mark = mark;
-  }
-
-  /**
    * @return the row
    */
   public int[] getRow() {
@@ -456,10 +445,7 @@ public class State {
       // skipping defaultValue, actions since they may be transitional (i.e.
       // about to be calculated and this is why I am comparing in the first
       // place)
-      return from == s.from && symbol.equals(s.symbol) && dots.equals(s.dots) && // maybe
-                                                                                       // not
-               position == s.position;
-
+      return from == s.from && symbol.equals(s.symbol) && kernelDots.equals(s.kernelDots); // && position == s.position;
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {
@@ -478,7 +464,13 @@ public class State {
   public String toString() {
     String sym = symbol != null ? symbol.toString() : "(no symbol)";
     String s = "" + id + ". " + (from == -1 ? "starting state" : ("from " + from + " with " + sym)) + "\n";
-    for (Dot dot : dots) {
+    for (Dot dot : kernelDots) {
+      s = s + dot.getRule().getLeftHand() + " -> " + dot.toString();
+    }
+    if (closureDots.size() > 0) {
+      s = s + "...............................................................\n";
+    }
+    for (Dot dot : closureDots) {
       s = s + dot.getRule().getLeftHand() + " -> " + dot.toString();
     }
     return s;

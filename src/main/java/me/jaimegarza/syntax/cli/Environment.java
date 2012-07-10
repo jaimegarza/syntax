@@ -37,7 +37,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import me.jaimegarza.syntax.algorithm.Algorithm;
+import me.jaimegarza.syntax.algorithm.AlgorithmicSupport;
+import me.jaimegarza.syntax.algorithm.LalrAlgorithmicSupport;
+import me.jaimegarza.syntax.algorithm.SlrAlgorithmicSupport;
 import me.jaimegarza.syntax.code.Fragments;
+import me.jaimegarza.syntax.generator.RuntimeData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -78,7 +83,7 @@ public class Environment extends Options {
   private Language language;
   private boolean verbose;
   private boolean debug;
-  private Algorithm algorithm;
+  private Algorithm algorithmEnum;
   private boolean emitLine;
   private int margin;
   private int indent;
@@ -90,19 +95,23 @@ public class Environment extends Options {
   private File outputFile;
   private File includeFile;
   private File reportFile;
+  private RuntimeData runtimeData = new RuntimeData();
 
   public BufferedReader source = null;
   public PrintStream output = null;
   public PrintStream include = null;
   public PrintStream report = null;
+  public AlgorithmicSupport algorithm = null;
 
   private int parsedLine;
   private Locale locale;
-  ResourceBundle fragmentBundle;
+  private ResourceBundle fragmentBundle;
+
 
   /**
    * Construct an environment with the given arguments
    * @param args command line arguments
+   * @param runtimeData is the data used during generation
    */
   public Environment(final String args[]) {
     this("", args);
@@ -274,9 +283,11 @@ public class Environment extends Options {
   private void setAlgorithm() throws ParseException {
     String value = get("a", "l");
     if (value.equalsIgnoreCase("s") || value.equalsIgnoreCase("slr")) {
-      this.algorithm = Algorithm.SLR;
+      this.algorithmEnum = Algorithm.SLR;
+      this.algorithm = new SlrAlgorithmicSupport(this);
     } else if (value.equalsIgnoreCase("l") || value.equalsIgnoreCase("lalr")) {
-      this.algorithm = Algorithm.LALR;
+      this.algorithmEnum = Algorithm.LALR;
+      this.algorithm = new LalrAlgorithmicSupport(this);
     } else {
       throw new ParseException("Option -a|--algorithm is not valid :" + value);
     }
@@ -545,8 +556,8 @@ public class Environment extends Options {
   /**
    * @return the algorithm
    */
-  public Algorithm getAlgorithm() {
-    return algorithm;
+  public Algorithm getAlgorithmType() {
+    return algorithmEnum;
   }
 
   /**
@@ -627,6 +638,20 @@ public class Environment extends Options {
   }
 
   /**
+   * @return the runtimeData
+   */
+  public RuntimeData getRuntimeData() {
+    return runtimeData;
+  }
+
+  /**
+   * @param runtimeData the runtimeData to set
+   */
+  public void setRuntimeData(RuntimeData runtimeData) {
+    this.runtimeData = runtimeData;
+  }
+
+  /**
    * @see java.lang.Object#toString()
    */
   @Override
@@ -640,7 +665,7 @@ public class Environment extends Options {
              language +
              "\n" +
              "  algorithm: " +
-             algorithm +
+             algorithmEnum +
              "\n" +
              "  emit #line: " +
              emitLine +
