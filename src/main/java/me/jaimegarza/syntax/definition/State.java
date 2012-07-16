@@ -35,58 +35,58 @@ import java.util.List;
 /**
  * <i>~pojo class</i><br><br>
  *
- * A grammar G is defined as a set {<b>N</b>, <b>T</b>, <b>&Sigma;</b> &epsilon; <b>N</b>, <b>R</b>}
+ * A grammar G is defined as a set {<b>N</b>, <b>T</b>, <b>&Sigma;</b> &isin; <b>N</b>, <b>R</b>}
  * <ul>
- *   <li>n&#7522; &epsilon; <b>N</b> is the set of {@link NonTerminal} symbols
- *   <li>t&#7522; &epsilon; <b>T</b> is the set of {@link Terminal} symbols
- *   <li><b>&Sigma;</b> &epsilon; <b>N</b>, is the "distinguished symbol", or
+ *   <li>n&#7522; &isin; <b>N</b> is the set of {@link NonTerminal} symbols
+ *   <li>t&#7522; &isin; <b>T</b> is the set of {@link Terminal} symbols
+ *   <li><b>&Sigma;</b> &isin; <b>N</b>, is the "distinguished symbol", or
  *    the root of the grammar
  *   <li><b>R</b> is the set of {@link Rule}s of the form<pre>
  *    &alpha; &rarr; &beta;</pre>
  *    where:<br>
- *    &alpha; &epsilon; <b>N</b><br>
- *    &beta; is a repetition of zero or many symbols s&#7522;; &epsilon; <b>N</b> &cup; <b>T</b>
+ *    &alpha; &isin; <b>N</b><br>
+ *    &beta; is a repetition of zero or many symbols s&#7522;; &isin; <b>N</b> &cup; <b>T</b>
  * </ul>
  * 
  * A parser P is defined as a set {<b>I</b>, <b>A</b>, <b>&Gamma;</b>, <b>E</b>}<pre>
  *   <b>P</b> = (<b>N</b> &cup; <b>T</b>) &times; <b>I</b></pre>
  * <ul>
- *   <li>i&#7522; &epsilon; <b>I</b> is the mapping set of states that identify 
+ *   <li>i&#7522; &isin; <b>I</b> is the mapping set of states that identify 
  *   the FSA of the parser.<br><br>
  *   A state i&#7522; contains a set <b>A<super>'</super>
  *   </b> &sube; <b>A</b> and a set <b>&Gamma;<super>'</super></b> &sube; <b>&Gamma;</b>
  *   for its particular set of actions and gotos.  It also contains <b>e</b>&#7522; or 
  *   <i>&empty;</i> as the error that this state reports on an error.<br><br>
- *   <li>a&#7522; &epsilon; <b>A</b> is the subset &sube; <b>T</b> &times; <b>I</b> of 
+ *   <li>a&#7522; &isin; <b>A</b> is the subset &sube; <b>T</b> &times; <b>I</b> of 
  *   all a {@link Action}s or
- *   state transitions.<br>  An action a&#7522; is a pair (<b>t</b> &epsilon; <b>T</b>, 
- *   <b>i</b> &epsilon; <b>I</b>) that maps a state to another via terminal <b>t</b> on a 
+ *   state transitions.<br>  An action a&#7522; is a pair (<b>t</b> &isin; <b>T</b>, 
+ *   <b>i</b> &isin; <b>I</b>) that maps a state to another via terminal <b>t</b> on a 
  *   <b>Shift</b> action.<pre>
  *   s<sub>j</sub> = A(<b>t</b>, s<sub>i</sub>)</pre>
- *   <li>&gamma;&#7522; &epsilon; <b>&Gamma;</b> is the subset &sube; <b>N</b> &times; 
+ *   <li>&gamma;&#7522; &isin; <b>&Gamma;</b> is the subset &sube; <b>N</b> &times; 
  *   <b>I</b> of {@link GoTo}s.<br>
- *   A GoTo &gamma;&#7522; is a pair (<b>n</b> &epsilon; <b>N</b>, <b>i</b> &epsilon; <b>I</b>) that
+ *   A GoTo &gamma;&#7522; is a pair (<b>n</b> &isin; <b>N</b>, <b>i</b> &isin; <b>I</b>) that
  *   maps a state to another state via non-terminal <b>n</b> on the final state of a 
  *   <b>Reduce</b> action.<pre>
  *   s<sub>j</sub> = &Gamma;(n, s<sub>i</sub>)</pre>
- *   <li>e&#7522; &epsilon; <b>E</b> is the set of errors that can be emitted by the grammar
+ *   <li>e&#7522; &isin; <b>E</b> is the set of errors that can be emitted by the grammar
  * </ul>
  * 
- * Additionally, the closure of a dot -- where &chi; &epsilon; <b>N</b> &cup; <b>T</b> and &beta; 
- * &epsilon; (<b>N</b> &cup;
+ * Additionally, the closure of a dot -- where &chi; &isin; <b>N</b> &cup; <b>T</b> and &beta; 
+ * &isin; (<b>N</b> &cup;
  * <b>T</b>)* -- is defined as <pre>
  * <i>closure</i>(<b>n</b>&#7522; &rarr; &alpha; . &chi;&beta;) =
  * 
- *   1. &empty; if &chi; &epsilon; T or &not;&exist;&chi;&beta;; or
- *   2. {&chi; &rarr; . &delta;; &forall; &chi; &epsilon; N} | &chi; &rarr; <b>&delta;</b> &epsilon; <b>R</b>
+ *   1. &empty; if &chi; &isin; T or &not;&exist;&chi;&beta;; or
+ *   2. {&chi; &rarr; . &delta;; &forall; &chi; &isin; N} | &chi; &rarr; <b>&delta;</b> &isin; <b>R</b>
  * </pre>
  * <p>
  * For generation purposes <b>i</b>&#7522; is augmented with<br>
- * <b>from</b> &epsilon; <b>I</b><br>
- * <b>symbol</b> &epsilon; <b>N</b> &cup; <b>T</b><br>
- * <b>default</b> &epsilon; <b>A</b><br>
- * <b>review</b> &epsilon; {<i>true</i>, <i>false</i>}<br>
- * <b>dot</b>&#7522; is a pair (<b>r</b>&#7522; &epsilon; <b>R</b>, <b>pos</b> &epsilon; 
+ * <b>from</b> &isin; <b>I</b><br>
+ * <b>symbol</b> &isin; <b>N</b> &cup; <b>T</b><br>
+ * <b>default</b> &isin; <b>A</b><br>
+ * <b>review</b> &isin; {<i>true</i>, <i>false</i>}<br>
+ * <b>dot</b>&#7522; is a pair (<b>r</b>&#7522; &isin; <b>R</b>, <b>pos</b> &isin; 
  * <b>Int</b> &le; |<b>r</b>&#7522;|), where |<b>r</b>&#7522;| is the number of items in a rule <b>r</b>&#7522;
  * <p>
  * @author jaimegarza@gmail.com
@@ -98,14 +98,14 @@ public class State {
    */
   int id;
   /**
-   * The from is the state i&#7522; &epsilon; <b>I</b> from which this state originates.<p>
+   * The from is the state i&#7522; &isin; <b>I</b> from which this state originates.<p>
    * A state transition is identified as a map i<sub>j</sub> = A(symbol, i&#7522;) U 
    * &Gamma;(symbol, i&#7522;).
    * In this context, i<sub>j</sub> is this state and from is i&#7522;
    */
   int from;
   /**
-   * The symbol &epsilon; <b>T</b>is the grammar symbol that caused the transition
+   * The symbol &isin; <b>T</b>is the grammar symbol that caused the transition
    * to this state.<p>
    * A state transition is identified as a map i<sub>j</sub> = A(symbol, i&#7522;) U 
    * &Gamma;(symbol, i&#7522;).
@@ -147,18 +147,18 @@ public class State {
   /**
    * The starting position into the packed action table <b>A</b><pre><code>
    * State Pos #           Actions
-   * i<sub>0</sub>      0 4 --------> a<sub>0</sub>=(i<sub>0</sub>, t<sub>0</sub> &epsilon; T) 
-   * i<sub>1</sub>      4 6----+     a<sub>1</sub>=(i<sub>1</sub>, t<sub>1</sub> &epsilon; T)
-   * i<sub>2</sub>     10 2     |     a<sub>2</sub>=(i<sub>2</sub>, t<sub>2</sub> &epsilon; T)
-   *  |              |     a<sub>3</sub>=(i<sub>3</sub>, t<sub>3</sub> &epsilon; T)
-   *  |              +---> a<sub>4</sub>=(i<sub>4</sub>, t<sub>4</sub> &epsilon; T)
-   *  |                    a<sub>5</sub>=(i<sub>5</sub>, t<sub>5</sub> &epsilon; T)
-   *  |                    a<sub>6</sub>=(i<sub>6</sub>, t<sub>6</sub> &epsilon; T)
-   *  |                    a<sub>7</sub>=(i<sub>7</sub>, t<sub>7</sub> &epsilon; T)
-   *  |                    a<sub>8</sub>=(i<sub>8</sub>, t<sub>8</sub> &epsilon; T)
-   *  |                    a<sub>9</sub>=(i<sub>9</sub>, t<sub>9</sub> &epsilon; T)
-   *  +------------------> a<sub>10</sub>=(i<sub>10</sub>, t<sub>10</sub> &epsilon; T)
-   *                       a<sub>11</sub>=(i<sub>11</sub>, t<sub>11</sub> &epsilon; T)
+   * i<sub>0</sub>      0 4 --------> a<sub>0</sub>=(i<sub>0</sub>, t<sub>0</sub> &isin; T) 
+   * i<sub>1</sub>      4 6----+     a<sub>1</sub>=(i<sub>1</sub>, t<sub>1</sub> &isin; T)
+   * i<sub>2</sub>     10 2     |     a<sub>2</sub>=(i<sub>2</sub>, t<sub>2</sub> &isin; T)
+   *  |              |     a<sub>3</sub>=(i<sub>3</sub>, t<sub>3</sub> &isin; T)
+   *  |              +---> a<sub>4</sub>=(i<sub>4</sub>, t<sub>4</sub> &isin; T)
+   *  |                    a<sub>5</sub>=(i<sub>5</sub>, t<sub>5</sub> &isin; T)
+   *  |                    a<sub>6</sub>=(i<sub>6</sub>, t<sub>6</sub> &isin; T)
+   *  |                    a<sub>7</sub>=(i<sub>7</sub>, t<sub>7</sub> &isin; T)
+   *  |                    a<sub>8</sub>=(i<sub>8</sub>, t<sub>8</sub> &isin; T)
+   *  |                    a<sub>9</sub>=(i<sub>9</sub>, t<sub>9</sub> &isin; T)
+   *  +------------------> a<sub>10</sub>=(i<sub>10</sub>, t<sub>10</sub> &isin; T)
+   *                       a<sub>11</sub>=(i<sub>11</sub>, t<sub>11</sub> &isin; T)
    *</code></pre> 
    */
   int position;
@@ -303,7 +303,7 @@ public class State {
   }
 
   /**
-   * @param id the id to set
+   * @param id the id to set 
    */
   public void setId(int id) {
     this.id = id;

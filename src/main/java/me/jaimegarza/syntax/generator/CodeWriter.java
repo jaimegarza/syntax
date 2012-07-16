@@ -43,12 +43,32 @@ import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.State;
 
+/**
+ * Phases:
+ * 
+ * <ol>
+ *   <li>Code Parser
+ *   <li>Structural Analysis
+ *   <li>Table Generation
+ *   <li><b>Writing Code</b> (This Phase)
+ * </ol>
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class CodeWriter extends AbstractPhase {
 
+  /**
+   * Construct a code writer out of the shared environment
+   * @param environment is the global environment
+   */
   public CodeWriter(Environment environment) {
     super(environment);
   }
 
+  /**
+   * Open code with the declarations
+   */
   private void printHeader() {
     switch (environment.getLanguage()) {
       case pascal:
@@ -121,6 +141,10 @@ public class CodeWriter extends AbstractPhase {
     }
   }
 
+  /**
+   * prints the code for an unpacked table row 
+   * @param state is the state to print
+   */
   private void printTableRow(State state) {
     int parserLine[] = state.getRow();
     int stateNumber = state.getId();
@@ -175,172 +199,9 @@ public class CodeWriter extends AbstractPhase {
     }
   }
 
-  private void printFooter() {
-    int numberOfRules;
-    int index;
-    int itemSize;
-    int i;
-
-    if (environment.isPacked()) {
-      printTables();
-    }
-
-    switch (environment.getLanguage()) {
-      case pascal:
-        environment.output.printf("\n");
-        numberOfRules = runtimeData.getRules().size();
-        environment.output.printf("  StxGrammarTable : Array [0..%d] of GRAMMAR = (\n", numberOfRules - 1);
-        index = 0;
-        for (Rule stx : runtimeData.getRules()) {
-          itemSize = stx.getItems().size();
-          environment.output.printf("    (symbol:%d; reductions:%d)", environment.isPacked() ? stx.getLeftHand()
-              .getToken() : stx.getLeftHandId(), itemSize);
-          if (++index == numberOfRules) {
-            environment.output.printf(");\n");
-          } else {
-            environment.output.printf(",\n");
-          }
-        }
-        if (environment.isPacked()) {
-          environment.output.printf("\nConst\n  NON_TERMINALS = %d;\n", runtimeData.getNonTerminals().size() - 1);
-          environment.output.printf("\n  StxNonTerminals : array [0..NON_TERMINALS] of INTEGER = (\n");
-          i = 1;
-          for (NonTerminal id : runtimeData.getNonTerminals()) {
-            if (i == runtimeData.getNonTerminals().size()) {
-              environment.output.printf("  %d, (* %s *));\n\n", id.getToken(), id.getName());
-            } else {
-              environment.output.printf("  %d, (* %s *)\n", id.getToken(), id.getName());
-            }
-            i++;
-          }
-        }
-        break;
-      case C:
-        environment.output.printf("\n"
-                                  + "/* symbols y reductions table */\n"
-                                    + "typedef struct {\n"
-                                    + "\tshort\tsymbol;\n"
-                                    + "\tshort\treductions;\n"
-                                    + "} GRAMMAR, *PGRAMMAR;\n"
-                                    + "\n");
-        numberOfRules = runtimeData.getRules().size();
-        environment.output.printf("GRAMMAR StxGrammarTable[%d]={\n", numberOfRules);
-        index = 0;
-        for (Rule stx : runtimeData.getRules()) {
-          itemSize = stx.getItems().size();
-          environment.output.printf("\t{%d, %d}",
-              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), itemSize);
-          if (++index == numberOfRules) {
-            environment.output.printf("\n};\n\n");
-          } else {
-            environment.output.printf(",\n");
-          }
-        }
-        if (environment.isPacked()) {
-          environment.output.printf("\n#define NON_TERMINALS %d\n", runtimeData.getNonTerminals().size());
-          environment.output.printf("\nint StxNonTerminals[NON_TERMINALS] = {\n");
-          i = 1;
-          for (NonTerminal id : runtimeData.getNonTerminals()) {
-            if (i == runtimeData.getNonTerminals().size()) {
-              environment.output.printf("\t%d /* %s */\n};\n\n", id.getToken(), id.getName());
-            } else {
-              environment.output.printf("\t%d, /* %s */\n", id.getToken(), id.getName());
-            }
-            i++;
-          }
-        }
-        break;
-      case java:
-        environment.output.printf("\n");
-        indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("// symbols and reductions table\n");
-        indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("private class Grammar {\n");
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("int symbol;\n");
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("int reductions;\n\n");
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("Grammar(int symbol, int reductions) {\n");
-        indent(environment.output, environment.getIndent() + 1);
-        environment.output.printf("this.symbol = symbol;\n");
-        indent(environment.output, environment.getIndent() + 1);
-        environment.output.printf("this.reductions = reductions;\n");
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("}\n");
-        indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("}\n\n");
-        numberOfRules = runtimeData.getRules().size();
-        indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("private Grammar grammarTable[]={\n");
-        index = 0;
-        for (Rule stx : runtimeData.getRules()) {
-          itemSize = stx.getItems().size();
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("new Grammar(%d, %d)",
-              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), itemSize);
-          if (++index == numberOfRules) {
-            environment.output.printf("\n");
-            indent(environment.output, environment.getIndent() - 1);
-            environment.output.printf("};\n\n");
-          } else {
-            environment.output.printf(",\n");
-          }
-        }
-        if (environment.isPacked()) {
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("private final int NON_TERMINALS=%d;\n", runtimeData.getNonTerminals().size());
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("private final int nonTerminals[] = {\n");
-          i = 1;
-          for (NonTerminal id : runtimeData.getNonTerminals()) {
-            indent(environment.output, environment.getIndent());
-            if (i == runtimeData.getNonTerminals().size()) {
-              environment.output.printf("\n");
-              indent(environment.output, environment.getIndent());
-              environment.output.printf("%d // %s\n", id.getToken(), id.getName());
-              indent(environment.output, environment.getIndent() - 1);
-              environment.output.printf("};\n\n");
-            } else {
-              environment.output.printf("%d // %s,", id.getToken(), id.getName());
-            }
-            i++;
-          }
-        }
-        if (!runtimeData.isStackTypeDefined()) {
-          environment.output.printf("\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("private class LexicalValue {\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("}\n\n");
-        }
-        if (runtimeData.getRules().size() == 0) {
-          /* header */
-          switch (environment.getLanguage()) {
-
-            case java:
-              environment.output.printf("\n");
-              indent(environment.output, environment.getIndent());
-              environment.output.printf("// Code Generator\n");
-              indent(environment.output, environment.getIndent());
-              environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
-              indent(environment.output, environment.getIndent());
-              environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
-              indent(environment.output, environment.getIndent());
-              environment.output.printf("int stackTop;\n\n");
-              indent(environment.output, environment.getIndent());
-              environment.output.printf("int generateCode(int rule) {\n");
-              indent(environment.output, environment.getIndent() + 1);
-              environment.output.printf("return 1;\n");
-              indent(environment.output, environment.getIndent());
-              environment.output.printf("}\n\n");
-              break;
-          }
-        }
-        break;
-    }
-  }
-
+  /**
+   * print packed tables
+   */
   private void printTables() {
     int stateNumber, action, numGotos, error;
 
@@ -647,8 +508,178 @@ public class CodeWriter extends AbstractPhase {
   }
 
   /**
+   * Close the printing of code
+   */
+  private void printFooter() {
+    int numberOfRules;
+    int index;
+    int itemSize;
+    int i;
+
+    if (environment.isPacked()) {
+      printTables();
+    }
+
+    switch (environment.getLanguage()) {
+      case pascal:
+        environment.output.printf("\n");
+        numberOfRules = runtimeData.getRules().size();
+        environment.output.printf("  StxGrammarTable : Array [0..%d] of GRAMMAR = (\n", numberOfRules - 1);
+        index = 0;
+        for (Rule stx : runtimeData.getRules()) {
+          itemSize = stx.getItems().size();
+          environment.output.printf("    (symbol:%d; reductions:%d)", environment.isPacked() ? stx.getLeftHand()
+              .getToken() : stx.getLeftHandId(), itemSize);
+          if (++index == numberOfRules) {
+            environment.output.printf(");\n");
+          } else {
+            environment.output.printf(",\n");
+          }
+        }
+        if (environment.isPacked()) {
+          environment.output.printf("\nConst\n  NON_TERMINALS = %d;\n", runtimeData.getNonTerminals().size() - 1);
+          environment.output.printf("\n  StxNonTerminals : array [0..NON_TERMINALS] of INTEGER = (\n");
+          i = 1;
+          for (NonTerminal id : runtimeData.getNonTerminals()) {
+            if (i == runtimeData.getNonTerminals().size()) {
+              environment.output.printf("  %d, (* %s *));\n\n", id.getToken(), id.getName());
+            } else {
+              environment.output.printf("  %d, (* %s *)\n", id.getToken(), id.getName());
+            }
+            i++;
+          }
+        }
+        break;
+      case C:
+        environment.output.printf("\n"
+                                  + "/* symbols y reductions table */\n"
+                                    + "typedef struct {\n"
+                                    + "\tshort\tsymbol;\n"
+                                    + "\tshort\treductions;\n"
+                                    + "} GRAMMAR, *PGRAMMAR;\n"
+                                    + "\n");
+        numberOfRules = runtimeData.getRules().size();
+        environment.output.printf("GRAMMAR StxGrammarTable[%d]={\n", numberOfRules);
+        index = 0;
+        for (Rule stx : runtimeData.getRules()) {
+          itemSize = stx.getItems().size();
+          environment.output.printf("\t{%d, %d}",
+              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), itemSize);
+          if (++index == numberOfRules) {
+            environment.output.printf("\n};\n\n");
+          } else {
+            environment.output.printf(",\n");
+          }
+        }
+        if (environment.isPacked()) {
+          environment.output.printf("\n#define NON_TERMINALS %d\n", runtimeData.getNonTerminals().size());
+          environment.output.printf("\nint StxNonTerminals[NON_TERMINALS] = {\n");
+          i = 1;
+          for (NonTerminal id : runtimeData.getNonTerminals()) {
+            if (i == runtimeData.getNonTerminals().size()) {
+              environment.output.printf("\t%d /* %s */\n};\n\n", id.getToken(), id.getName());
+            } else {
+              environment.output.printf("\t%d, /* %s */\n", id.getToken(), id.getName());
+            }
+            i++;
+          }
+        }
+        break;
+      case java:
+        environment.output.printf("\n");
+        indent(environment.output, environment.getIndent() - 1);
+        environment.output.printf("// symbols and reductions table\n");
+        indent(environment.output, environment.getIndent() - 1);
+        environment.output.printf("private class Grammar {\n");
+        indent(environment.output, environment.getIndent());
+        environment.output.printf("int symbol;\n");
+        indent(environment.output, environment.getIndent());
+        environment.output.printf("int reductions;\n\n");
+        indent(environment.output, environment.getIndent());
+        environment.output.printf("Grammar(int symbol, int reductions) {\n");
+        indent(environment.output, environment.getIndent() + 1);
+        environment.output.printf("this.symbol = symbol;\n");
+        indent(environment.output, environment.getIndent() + 1);
+        environment.output.printf("this.reductions = reductions;\n");
+        indent(environment.output, environment.getIndent());
+        environment.output.printf("}\n");
+        indent(environment.output, environment.getIndent() - 1);
+        environment.output.printf("}\n\n");
+        numberOfRules = runtimeData.getRules().size();
+        indent(environment.output, environment.getIndent() - 1);
+        environment.output.printf("private Grammar grammarTable[]={\n");
+        index = 0;
+        for (Rule stx : runtimeData.getRules()) {
+          itemSize = stx.getItems().size();
+          indent(environment.output, environment.getIndent());
+          environment.output.printf("new Grammar(%d, %d)",
+              environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), itemSize);
+          if (++index == numberOfRules) {
+            environment.output.printf("\n");
+            indent(environment.output, environment.getIndent() - 1);
+            environment.output.printf("};\n\n");
+          } else {
+            environment.output.printf(",\n");
+          }
+        }
+        if (environment.isPacked()) {
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("private final int NON_TERMINALS=%d;\n", runtimeData.getNonTerminals().size());
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("private final int nonTerminals[] = {\n");
+          i = 1;
+          for (NonTerminal id : runtimeData.getNonTerminals()) {
+            indent(environment.output, environment.getIndent());
+            if (i == runtimeData.getNonTerminals().size()) {
+              environment.output.printf("\n");
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("%d // %s\n", id.getToken(), id.getName());
+              indent(environment.output, environment.getIndent() - 1);
+              environment.output.printf("};\n\n");
+            } else {
+              environment.output.printf("%d // %s,", id.getToken(), id.getName());
+            }
+            i++;
+          }
+        }
+        if (!runtimeData.isStackTypeDefined()) {
+          environment.output.printf("\n");
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("private class LexicalValue {\n");
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("}\n\n");
+        }
+        if (runtimeData.getRules().size() == 0) {
+          /* header */
+          switch (environment.getLanguage()) {
+
+            case java:
+              environment.output.printf("\n");
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("// Code Generator\n");
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("int stackTop;\n\n");
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("int generateCode(int rule) {\n");
+              indent(environment.output, environment.getIndent() + 1);
+              environment.output.printf("return 1;\n");
+              indent(environment.output, environment.getIndent());
+              environment.output.printf("}\n\n");
+              break;
+          }
+        }
+        break;
+    }
+  }
+
+  /**
+   * Close the output by putting the remaining of the grammar file and the skeleton parser
    * TODO - add all the parser skeletons in a nice way.
-   * TODO - make sure we have lexic driven parsers together with the run-once parsers
+   * TODO - make sure we have lexical driven parsers together with the run-once parsers
    * @throws IOException
    */
   private void finishOutput() throws IOException {
@@ -710,6 +741,10 @@ public class CodeWriter extends AbstractPhase {
     }
   }
 
+  /**
+   * Execute all the elements of this phase
+   * @throws OutputException on error
+   */
   public void execute() throws OutputException {
     try {
       printHeader();
