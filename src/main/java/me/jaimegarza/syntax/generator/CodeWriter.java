@@ -36,7 +36,7 @@ import java.io.InputStreamReader;
 
 import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.cli.Environment;
-import me.jaimegarza.syntax.cli.Language;
+import me.jaimegarza.syntax.code.Language;
 import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;

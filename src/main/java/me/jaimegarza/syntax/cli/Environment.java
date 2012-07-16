@@ -42,6 +42,7 @@ import me.jaimegarza.syntax.algorithm.AlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.LalrAlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.SlrAlgorithmicSupport;
 import me.jaimegarza.syntax.code.Fragments;
+import me.jaimegarza.syntax.code.Language;
 import me.jaimegarza.syntax.generator.RuntimeData;
 
 import org.apache.commons.cli.CommandLine;

@@ -36,7 +36,7 @@ import java.util.Stack;
 
 import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.cli.Environment;
-import me.jaimegarza.syntax.cli.Language;
+import me.jaimegarza.syntax.code.Language;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.NonTerminal;
@@ -46,6 +46,14 @@ import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
 
+/**
+ * Parser for a grammar.<p>
+ * TODO: This parser will be replaced for a generated one (which
+ * probably will be created from this one)
+ *
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class CodeParser extends AbstractPhase {
   private static final String DISTINGUISHED_SYMBOL_NAME = "$start";
   private static final int TOK_MARCA = 256;
@@ -218,7 +226,7 @@ public class CodeParser extends AbstractPhase {
     super(environment);
   }
 
-  /*
+  /**
    * This routine maps a state and a token to a new state on the action table
    */
   private int StxAction(int state, int sym) {
@@ -235,7 +243,7 @@ public class CodeParser extends AbstractPhase {
     return StxParsingTable[state].defa;
   }
 
-  /*
+  /**
    * This routine maps a origin state to a destination state using the symbol
    * position
    */
@@ -250,7 +258,7 @@ public class CodeParser extends AbstractPhase {
     return StxGotoTable[position].destination;
   }
 
-  /*
+  /**
    * This routine prints the contents of the parsing stack
    */
 
@@ -266,7 +274,7 @@ public class CodeParser extends AbstractPhase {
     System.out.printf("]\n");
   }
 
-  /*
+  /**
    * Does a shift operation. Puts a new state on the top of the stack
    */
   int StxShift(int sym, int state) {
@@ -284,7 +292,7 @@ public class CodeParser extends AbstractPhase {
     return 1;
   }
 
-  /*
+  /**
    * Recognizes a rule an removes all its elements from the stack
    */
   int StxReduce(int sym, int rule) throws IOException {
@@ -304,30 +312,28 @@ public class CodeParser extends AbstractPhase {
     return 1;
   }
 
+  /**
+   * Generation of code
+   */
   private boolean StxCode(int rule) throws IOException {
     int i;
     switch (rule) {
 
       case 1:
-        tokenEndAction();
+        generateLexerFooter();
         break;
       case 3:
-        tokenEndAction();
+        generateLexerFooter();
         break;
       case 5:
         {
-          if (!ruleEndAction()) {
-            return false;
-          }
-
+          generateCodeGeneratorFooter();
           finalActions = false;
         }
         break;
       case 6:
         {
-          if (!ruleEndAction()) {
-            return false;
-          }
+          generateCodeGeneratorFooter();
           finalActions = true;
         }
         break;
@@ -354,7 +360,7 @@ public class CodeParser extends AbstractPhase {
         }
         break;
       case 14:
-        if (!declareUnion()) {
+        if (!generateStructure()) {
           return false;
         }
         break;
@@ -362,7 +368,7 @@ public class CodeParser extends AbstractPhase {
         currentType = null;
         break;
       case 16:
-        if (!declareAction()) {
+        if (!generateDeclaration()) {
           return false;
         }
         break;
@@ -507,7 +513,7 @@ public class CodeParser extends AbstractPhase {
         // AnyNode();
         break;
       case 52:
-        tokenAction();
+        generateLexerCode();
         break;
       case 53:
         currentType = new Type(StxStack[pStxStack].id);
@@ -521,9 +527,9 @@ public class CodeParser extends AbstractPhase {
         currentType = null;
         break;
       case 55:
-        return declareRules(StxStack[pStxStack - 3].id);
+        return setLeftHandOfLastRule(StxStack[pStxStack - 3].id);
       case 56:
-        return declareRules(StxStack[pStxStack - 3].id);
+        return setLeftHandOfLastRule(StxStack[pStxStack - 3].id);
       case 57:
         newRule();
         bActionDone = false;
@@ -631,7 +637,7 @@ public class CodeParser extends AbstractPhase {
     return true; /* OK */
   }
 
-  /*
+  /**
    * Recover from a syntax error removing stack states/symbols, and removing
    * input tokens. The array StxRecover contains the tokens that bound the error
    */
@@ -682,7 +688,7 @@ public class CodeParser extends AbstractPhase {
     return 0;
   }
 
-  /*
+  /**
    * Main parser routine, uses Shift, Reduce and Recover
    */
   private boolean StxParse() throws IOException {
@@ -730,19 +736,24 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
-  private boolean declareOneNonTerminal(String idnt, String tkn) {
-    if (runtimeData.findTerminalByName(tkn) != null) {
-      environment.error(-1, "Token \'%s\' cannot appear on a %%type clause.", tkn);
+  /**
+   * Declare one non terminal in the symbol table
+   * @param typeName the desired type
+   * @param name the name of the symbol
+   */
+  private boolean declareOneNonTerminal(String typeName, String name) {
+    if (runtimeData.findTerminalByName(name) != null) {
+      environment.error(-1, "Token \'%s\' cannot appear on a %%type clause.", name);
       return false;
     }
-    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(tkn);
+    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(name);
     if (nonTerminal == null) {
-      nonTerminal = new NonTerminal(tkn);
+      nonTerminal = new NonTerminal(name);
       runtimeData.getNonTerminals().add(nonTerminal);
     } else {
       nonTerminal.setCount(nonTerminal.getCount() - 1);
     }
-    Type type = new Type(idnt);
+    Type type = new Type(typeName);
     if (runtimeData.getTypes().contains(type)) {
       type = runtimeData.getTypes().get(runtimeData.getTypes().indexOf(type));
     } else {
@@ -753,22 +764,33 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private boolean nameOneNonTerminal(String ntr, String name) {
-    if (runtimeData.findTerminalByName(ntr) != null) {
-      environment.error(-1, "Token \'%s\' cannot appear on a %%name clause.", ntr);
+  /**
+   * Change the display name of a non terminal
+   * @param name
+   * @param fullName
+   * @return
+   */
+  private boolean nameOneNonTerminal(String name, String fullName) {
+    if (runtimeData.findTerminalByName(name) != null) {
+      environment.error(-1, "Token \'%s\' cannot appear on a %%name clause.", name);
       return false;
     }
-    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(ntr);
+    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(name);
     if (nonTerminal == null) {
-      runtimeData.getNonTerminals().add(new NonTerminal(ntr));
+      runtimeData.getNonTerminals().add(new NonTerminal(name));
     } else {
       nonTerminal.setCount(nonTerminal.getCount() - 1);
     }
-    nonTerminal.setFullName(name);
+    nonTerminal.setFullName(fullName);
     return true;
   }
 
-  private boolean declareRules(String name) {
+  /**
+   * This routine places the non terminal left hand of a rule
+   * @param name is the non terminal's name
+   * @return
+   */
+  private boolean setLeftHandOfLastRule(String name) {
     if (runtimeData.findTerminalByName(name) != null) {
       environment.error(-1, "The token \'%s\' cannot appear to the right of a rule.", name);
       return false;
@@ -790,6 +812,10 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
+  /**
+   * lexer basic routine to obtain a character
+   * @return the next character
+   */
   private char getCharacter() throws IOException {
     if (inputChars.size() > 0) {
       return inputChars.pop();
@@ -814,10 +840,19 @@ public class CodeParser extends AbstractPhase {
     return currentCharacter;
   }
 
+  /**
+   * Return one character to the stream
+   * @param c
+   */
   private void ungetCharacter(char c) {
     inputChars.push(c);
   }
 
+  /**
+   * Use the character stream to decode one character from octal<p>
+   * for instance '\017'
+   * @return the octal entered character
+   */
   private char decodeOctal() throws IOException {
     int iCount = 3;
     char c2 = 0;
@@ -840,6 +875,11 @@ public class CodeParser extends AbstractPhase {
     return c2;
   }
 
+  /**
+   * Use the character stream to decode a control char<p>
+   * \a - \z
+   * @return the control char
+   */
   private char decodeControlChar() throws IOException {
     char c2;
     currentCharacter = getCharacter();
@@ -861,6 +901,11 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
+  /**
+   * Use the character stream to decode a character entered with hex codes<P>
+   * for instance \x1f
+   * @return the character
+   */
   private char decodeHex() throws IOException {
     int iCount = 2;
     char c2 = 0;
@@ -888,6 +933,12 @@ public class CodeParser extends AbstractPhase {
     return c2;
   }
 
+  /**
+   * Use the character stream to decode the next escaped character
+   * (i.e. hex, octal, control)
+   * @return the encoded character
+   * @throws IOException
+   */
   private char decodeEscape() throws IOException {
     char c2;
     switch (currentCharacter) {
@@ -937,6 +988,13 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
+  /**
+   * Recognize the next token when in regex mode<p>
+   * TODO: Implement regex mode
+   * 
+   * @return the next token
+   * @throws IOException
+   */
   private int getRegexSymbol() throws IOException {
     char c2;
 
@@ -999,6 +1057,12 @@ public class CodeParser extends AbstractPhase {
     return TOK_CHARS;
   }
 
+  /**
+   * Get the next token when in normal mode
+   * 
+   * @return the token.  In addition StxValue may be set as needed.
+   * @throws IOException
+   */
   private int getNormalSymbol() throws IOException {
     char c2;
     String s2;
@@ -1239,37 +1303,11 @@ public class CodeParser extends AbstractPhase {
     return TOK_TOKEN;
   }
 
-  /*
-   * int GetRegexSym() { char c2;
+  /**
+   * Get next token
    * 
-   * if(bEqual){ bEqual = 0; s[0] = 0; return TOK_TOKEN; }
-   * 
-   * if (c == '|') {c = GetCar(); return TOK_RX_PIPE;} if (c == '(') {c =
-   * GetCar(); return TOK_RX_LPAR;} if (c == ')') {c = GetCar(); return
-   * TOK_RX_RPAR;} if (c == '*') {c = GetCar(); return TOK_RX_STAR;} if (c ==
-   * '+') {c = GetCar(); return TOK_RX_PLUS;} if (c == '?') {c = GetCar();
-   * return TOK_RX_HUH;} if (c == '.') {c = GetCar(); return TOK_RX_ANY;} if (c
-   * == '/') { bRegEx = 0; bEqual = 1; c = GetCar(); return '/'; }
-   * 
-   * if (c == '\\') { c = GetCar(); c2 = DecodeEscape(); if (c2 == 0) { return
-   * EOS; } StxValue.regex = malloc(sizeof(REGEXNODE)); StxValue.regex.parent =
-   * null; StxValue.regex.child1 = null; StxValue.regex.child2 = null;
-   * StxValue.regex.regexType = NODE_LEX; StxValue.regex.ranges =
-   * malloc(sizeof(REGEXRANGE)); StxValue.regex.ranges.next = null;
-   * StxValue.regex.ranges.prev = null; StxValue.regex.ranges.charStart = c2;
-   * StxValue.regex.ranges.charEnd = c2; return TOK_CHARS; }
-   * 
-   * if (c != '\0') { StxValue.regex = malloc(sizeof(REGEXNODE));
-   * StxValue.regex.parent = null; StxValue.regex.child1 = null;
-   * StxValue.regex.child2 = null; StxValue.regex.regexType = NODE_LEX;
-   * StxValue.regex.ranges = malloc(sizeof(REGEXRANGE));
-   * StxValue.regex.ranges.next = null; StxValue.regex.ranges.prev = null;
-   * StxValue.regex.ranges.charStart = c; StxValue.regex.ranges.charEnd = c; c =
-   * GetCar(); return TOK_CHARS; }
-   * 
-   * return EOS; }
+   * @return the next token, changing mode as needed
    */
-
   int StxScan() throws IOException {
     int rc;
 
@@ -1290,6 +1328,14 @@ public class CodeParser extends AbstractPhase {
     return rc;
   }
 
+  /**
+   * report an error
+   * 
+   * @param StxState state of the error
+   * @param StxSym causing token
+   * @param pStxStack the position in the stack when the error happened
+   * @return
+   */
   int StxError(int StxState, int StxSym, int pStxStack) {
     int msg = StxParsingTable[StxState].msg;
     if (msg >= 0) {
@@ -1305,7 +1351,13 @@ public class CodeParser extends AbstractPhase {
                */
   }
 
-  private boolean ruleAction(int regla, int elems, String id) throws IOException {
+  /**
+   * Found a rule action.  Copy it to the output stream as-is
+   * @param ruleNumber the rule index
+   * @param elementCount the elements in the rule
+   * @param nonTerminalId the left hand symbol of the rule
+   */
+  private boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalId) throws IOException {
     int nBracks = 0;
     boolean end = false;
     boolean bBreak;
@@ -1317,87 +1369,9 @@ public class CodeParser extends AbstractPhase {
     int sign;
     int i;
     String stackExpression;
-    ;
 
-    if (ruleActionCount == 0) {
-      /* header */
-      switch (environment.getLanguage()) {
-        case C:
-          environment.output.printf("\n"
-                                    + "/* Code Generator */\n"
-                                      + "\n"
-                                      + "#ifndef TSTACK\n"
-                                      + "#define TSTACK int\n"
-                                      + "#endif\n"
-                                      + "\n"
-                                      + "TSTACK StxStack[150];\n"
-                                      + "\n"
-                                      + "int pStxStack;\n"
-                                      + "\n"
-                                      + "#define STXCODE_DEFINED\n"
-                                      + "\n"
-                                      + "int StxCode(int rule)\n"
-                                      + "{\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("switch(rule){\n");
-          environment.output.println();
-          break;
-
-        case java:
-          environment.output.printf("\n");
-          indent(environment.output, 1);
-          environment.output.printf("// Code Generator\n");
-          indent(environment.output, 1);
-          environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
-          indent(environment.output, 1);
-          environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
-          indent(environment.output, 1);
-          environment.output.printf("int stackTop;\n\n");
-          indent(environment.output, 1);
-          environment.output.printf("int generateCode(int rule) {\n");
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("switch(rule){\n");
-          environment.output.println();
-          break;
-
-        case pascal:
-          environment.output.printf("\n"
-                                    + "{ Code generator }\n"
-                                      + "\n"
-                                      + "Var\n"
-                                      + "  {$define STXCODE_DEFINED}\n"
-                                      + "  StxStack : Array [0..512] of TStack;\n"
-                                      + "  pStxStack: Integer;\n"
-                                      + "\n"
-                                      + "function StxCode(rule:integer):boolean;\n"
-                                      + "begin\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("Case rule Of\n");
-          break;
-      }
-    }
-    switch (environment.getLanguage()) {
-      case C:
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("case %d:\n", regla + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        if (environment.isEmitLine()) {
-          environment.output.printf("#line %d \"%s\"\n", lineNumber + 1, environment.getSourceFile().toString());
-          indent(environment.output, environment.getIndent() + 1);
-        }
-        break;
-      case java:
-        indent(environment.output, environment.getIndent() + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        environment.output.printf("case %d: ", regla + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        break;
-      case pascal:
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("%d: Begin\n", regla + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        break;
-    }
+    generateCodeGeneratorHeader();
+    generateCaseStatement(ruleNumber);
 
     while (!end) {
       switch (currentCharacter) {
@@ -1427,7 +1401,7 @@ public class CodeParser extends AbstractPhase {
           break;
 
         case '%':
-        case '\\': /* finact in PAS y ASM */
+        case '\\': /* finact in PAS and ASM */
           if (environment.getLanguage() != Language.C && environment.getLanguage() != Language.java) {
             end = true;
             currentCharacter = getCharacter();
@@ -1525,16 +1499,16 @@ public class CodeParser extends AbstractPhase {
             stackExpression = "StxStack[pStxStack";
           }
           if (currentCharacter == '$') {
-            if (elems == 1) {
+            if (elementCount == 1) {
               environment.output.printf("%s]", stackExpression);
-            } else if (elems != 0) {
-              environment.output.printf("%s-%d]", stackExpression, elems - 1);
+            } else if (elementCount != 0) {
+              environment.output.printf("%s-%d]", stackExpression, elementCount - 1);
             } else {
               environment.output.printf("%s+1]", stackExpression);
             }
             if (runtimeData.getTypes().size() != 0) {
               if (type == null) {
-                NonTerminal idp = runtimeData.findNonTerminalByName(id);
+                NonTerminal idp = runtimeData.findNonTerminalByName(nonTerminalId);
                 if (idp != null) {
                   idp.setCount(idp.getCount() - 1);
                   type = idp.getType();
@@ -1562,9 +1536,9 @@ public class CodeParser extends AbstractPhase {
               num = num * base + currentCharacter - '0';
               currentCharacter = getCharacter();
             }
-            num = num * sign - elems;
+            num = num * sign - elementCount;
             if (num > 0) {
-              environment.error(-1, "Incorrect value of \'$%d\'. Bigger than the number of elements.", num + elems);
+              environment.error(-1, "Incorrect value of \'$%d\'. Bigger than the number of elements.", num + elementCount);
               return false;
             }
             if (num == 0) {
@@ -1573,14 +1547,14 @@ public class CodeParser extends AbstractPhase {
               environment.output.printf("%s%+d]", stackExpression, num);
             }
             if (runtimeData.getTypes().size() != 0) {
-              if (num + elems <= 0 && type == null) {
-                environment.error(-1, "Cannot determine the type for \'$%d\'.", num + elems);
+              if (num + elementCount <= 0 && type == null) {
+                environment.error(-1, "Cannot determine the type for \'$%d\'.", num + elementCount);
                 return false;
               }
               if (type == null) {
                 int j = 0;
                 RuleItem rule = null;
-                for (i = 1; i < num + elems && j < currentRuleItems.size(); j++, i++) {
+                for (i = 1; i < num + elementCount && j < currentRuleItems.size(); j++, i++) {
                   rule = currentRuleItems.get(j);
                 }
                 if (rule != null) {
@@ -1612,6 +1586,15 @@ public class CodeParser extends AbstractPhase {
       environment.output.print(currentCharacter);
       currentCharacter = getCharacter();
     }
+    generateCaseEnd();
+    ruleActionCount++;
+    return true;
+  }
+
+  /**
+   * A statement for code generation was found.  Finish it.
+   */
+  private void generateCaseEnd() {
     switch (environment.getLanguage()) {
       case C:
         environment.output.println();
@@ -1629,14 +1612,104 @@ public class CodeParser extends AbstractPhase {
         environment.output.printf("end; (* StxCode *)\n");
         break;
     }
-    ruleActionCount++;
-    return true;
+  }
+
+  /**
+   * Output the case for a given rule
+   * @param ruleNumber is the rule number to be emitted in the case statement
+   */
+  private void generateCaseStatement(int ruleNumber) {
+    switch (environment.getLanguage()) {
+      case C:
+        indent(environment.output, environment.getIndent());
+        environment.output.printf("case %d:\n", ruleNumber + 1);
+        indent(environment.output, environment.getIndent() + 1);
+        if (environment.isEmitLine()) {
+          environment.output.printf("#line %d \"%s\"\n", lineNumber + 1, environment.getSourceFile().toString());
+          indent(environment.output, environment.getIndent() + 1);
+        }
+        break;
+      case java:
+        indent(environment.output, environment.getIndent() + 1);
+        indent(environment.output, environment.getIndent() + 1);
+        environment.output.printf("case %d: ", ruleNumber + 1);
+        indent(environment.output, environment.getIndent() + 1);
+        break;
+      case pascal:
+        indent(environment.output, environment.getIndent());
+        environment.output.printf("%d: Begin\n", ruleNumber + 1);
+        indent(environment.output, environment.getIndent() + 1);
+        break;
+    }
+  }
+
+  /**
+   * Output the top of the rules if needed
+   */
+  private void generateCodeGeneratorHeader() {
+    if (ruleActionCount == 0) {
+      /* header */
+      switch (environment.getLanguage()) {
+        case C:
+          environment.output.printf("\n"
+                                    + "/* Code Generator */\n"
+                                      + "\n"
+                                      + "#ifndef TSTACK\n"
+                                      + "#define TSTACK int\n"
+                                      + "#endif\n"
+                                      + "\n"
+                                      + "TSTACK StxStack[150];\n"
+                                      + "\n"
+                                      + "int pStxStack;\n"
+                                      + "\n"
+                                      + "#define STXCODE_DEFINED\n"
+                                      + "\n"
+                                      + "int StxCode(int rule)\n"
+                                      + "{\n");
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("switch(rule){\n");
+          environment.output.println();
+          break;
+
+        case java:
+          environment.output.printf("\n");
+          indent(environment.output, 1);
+          environment.output.printf("// Code Generator\n");
+          indent(environment.output, 1);
+          environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
+          indent(environment.output, 1);
+          environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
+          indent(environment.output, 1);
+          environment.output.printf("int stackTop;\n\n");
+          indent(environment.output, 1);
+          environment.output.printf("int generateCode(int rule) {\n");
+          indent(environment.output, environment.getIndent());
+          environment.output.printf("switch(rule){\n");
+          environment.output.println();
+          break;
+
+        case pascal:
+          environment.output.printf("\n"
+                                    + "{ Code generator }\n"
+                                      + "\n"
+                                      + "Var\n"
+                                      + "  {$define STXCODE_DEFINED}\n"
+                                      + "  StxStack : Array [0..512] of TStack;\n"
+                                      + "  pStxStack: Integer;\n"
+                                      + "\n"
+                                      + "function StxCode(rule:integer):boolean;\n"
+                                      + "begin\n");
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("Case rule Of\n");
+          break;
+      }
+    }
   }
 
   /**
    * copy action until the next ';' or '}' that actually closes
    */
-  private boolean tokenAction() throws IOException 
+  private boolean generateLexerCode() throws IOException 
   {
     int nBracks = 0;
     boolean end = false;
@@ -1645,42 +1718,7 @@ public class CodeParser extends AbstractPhase {
     boolean bStart = true;
     boolean bSkip = false;
 
-    if (tokenActionCount == 0) {
-      /* encabezado */
-      switch (environment.getLanguage()) {
-        case C:
-          environment.output.printf("\n"
-                                    + "/* Lexical Recognizer */\n"
-                                      + "\n"
-                                      + "char StxChar;"
-                                      + "\n"
-                                      + "int StxLexer()\n"
-                                      + "{\n");
-          break;
-
-        case java:
-          environment.output.printf("\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("// LexicalRecognizer\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("private char currentChar;\n\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("int parserElement(boolean initialize) {\n");
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("lexicalValue = new LexicalValue();\n\n");
-          break;
-
-        case pascal:
-          environment.output.printf("\n"
-                                    + "{ Lexical Analyzer }\n"
-                                      + "\n"
-                                      + "VAR StxChar:char;\n"
-                                      + "\n"
-                                      + "function StxLexer():int;\n"
-                                      + "begin\n");
-          break;
-      }
-    }
+    generateLexerHeader();
     switch (environment.getLanguage()) {
       case C:
         indent(environment.output, environment.getIndent() + 1);
@@ -1851,7 +1889,52 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
-  private boolean ruleEndAction() {
+  /**
+   * Emit the header of the lexer as needed.
+   */
+  private void generateLexerHeader() {
+    if (tokenActionCount == 0) {
+      /* encabezado */
+      switch (environment.getLanguage()) {
+        case C:
+          environment.output.printf("\n"
+                                    + "/* Lexical Recognizer */\n"
+                                      + "\n"
+                                      + "char StxChar;"
+                                      + "\n"
+                                      + "int StxLexer()\n"
+                                      + "{\n");
+          break;
+
+        case java:
+          environment.output.printf("\n");
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("// LexicalRecognizer\n");
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("private char currentChar;\n\n");
+          indent(environment.output, environment.getIndent() - 1);
+          environment.output.printf("int parserElement(boolean initialize) {\n");
+          indent(environment.output, environment.getIndent());
+          environment.output.printf("lexicalValue = new LexicalValue();\n\n");
+          break;
+
+        case pascal:
+          environment.output.printf("\n"
+                                    + "{ Lexical Analyzer }\n"
+                                      + "\n"
+                                      + "VAR StxChar:char;\n"
+                                      + "\n"
+                                      + "function StxLexer():int;\n"
+                                      + "begin\n");
+          break;
+      }
+    }
+  }
+
+  /**
+   * Generate the ending portion of the code generation
+   */
+  private void generateCodeGeneratorFooter() {
     if (ruleActionCount != 0) {
       environment.output.println();
       switch (environment.getLanguage()) {
@@ -1882,10 +1965,12 @@ public class CodeParser extends AbstractPhase {
 
       }
     }
-    return true;
   }
 
-  private boolean tokenEndAction() {
+  /**
+   * Generate the bottom of the lexer
+   */
+  private void generateLexerFooter() {
     if (tokenActionCount != 0) {
       environment.output.println();
       switch (environment.getLanguage()) {
@@ -1910,11 +1995,12 @@ public class CodeParser extends AbstractPhase {
 
       }
     }
-    // ComputeDFA();
-    return true;
   }
 
-  private boolean declareAction() throws IOException {
+  /**
+   * During a declaration, emit the accompanying code
+   */
+  private boolean generateDeclaration() throws IOException {
     while (Character.isWhitespace(currentCharacter)) {
       currentCharacter = getCharacter();
     }
@@ -1945,7 +2031,11 @@ public class CodeParser extends AbstractPhase {
     return false;
   }
 
-  private boolean declareUnion() throws IOException {
+  /**
+   * For yacc compatibility this is called the union, but it is
+   * really a structure
+   */
+  private boolean generateStructure() throws IOException {
     int level;
     boolean hasCharacters;
 
@@ -2046,6 +2136,11 @@ public class CodeParser extends AbstractPhase {
     return true;
   }
 
+  /**
+   * new rule item with the given symbol
+   * @param elem is the symbol associated to the rule
+   * @return the new rule item
+   */
   private RuleItem newItem(Symbol elem) {
     RuleItem item;
 
@@ -2057,6 +2152,10 @@ public class CodeParser extends AbstractPhase {
     return item;
   }
 
+  /**
+   * new rule with no elements
+   * @return the new rule
+   */
   private Rule newEmptyRule() {
     Rule rule;
 
@@ -2065,6 +2164,10 @@ public class CodeParser extends AbstractPhase {
     return rule;
   }
 
+  /**
+   * new rule with the currently recognized items
+   * @return a new rule
+   */
   private Rule newRule() {
     Rule rule;
 
@@ -2082,6 +2185,12 @@ public class CodeParser extends AbstractPhase {
     return rule;
   }
 
+  /**
+   * Starting rule.  Add it at the top.
+   * 
+   * @param root is the root symbol
+   * @return the new rule
+   */
   private Rule newRootRule(NonTerminal root) {
     Rule rule;
 
@@ -2115,6 +2224,9 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
+  /**
+   * Find out my root symbol
+   */
   private void computeRootSymbol() {
     runtimeData.setRoot(null);
     boolean bError = false;
@@ -2174,6 +2286,10 @@ public class CodeParser extends AbstractPhase {
     newRootRule(runtimeData.getRoot());
   }
 
+  /**
+   * The recovery table deals with tokens that can be used to recognize
+   * syntax context and can recover from errors.
+   */
   private void generateTopRecoveryTable() {
     for (Terminal id : runtimeData.getTerminals()) {
       if (id instanceof ErrorToken) {
@@ -2216,6 +2332,9 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
+  /**
+   * Assign ids, numbers, and print them.
+   */
   private void finalizeSymbols() {
     environment.report
         .printf("## Token                                    Name                                     Value Err  Refs  Prec Assc  Type\n");
@@ -2353,6 +2472,9 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
+  /**
+   * set rule numbers and print
+   */
   private void finalizeRules() {
     environment.report.printf("\n");
     environment.report.printf("Prec Rule  Grammar\n");
@@ -2369,7 +2491,10 @@ public class CodeParser extends AbstractPhase {
     }
   }
 
-  private void defineTokens() {
+  /**
+   * token definitions are declared as static or #define
+   */
+  private void generateTokenDefinitions() {
     boolean first = true;
     for (Terminal id : runtimeData.getTerminals()) {
       id.computeVariable();
@@ -2405,6 +2530,11 @@ public class CodeParser extends AbstractPhase {
     environment.include.printf("\n");
   }
 
+  /**
+   * Locate a rule whose left hand if is the given id
+   * @param id is the id of the non terminal on the left hand side
+   * @return
+   */
   private Rule locateRuleWithId(int id) {
     Rule rule = null;
     for (int i = 0; i < runtimeData.getRules().size(); i++) {
@@ -2416,10 +2546,18 @@ public class CodeParser extends AbstractPhase {
     return rule;
   }
 
+  /**
+   * @param rule is the rule's line number
+   * @return the line number of a given rule
+   */
   private int lineNumber(Rule rule) {
     return rule != null ? rule.getLineNumber() - 1 : -1;
   }
 
+  /**
+   * Execute this phase
+   * @throws ParsingException on error.  Check cause and message.
+   */
   public void execute() throws ParsingException {
     if (environment.isVerbose()) {
       System.out.println("Parse");
@@ -2440,7 +2578,7 @@ public class CodeParser extends AbstractPhase {
       generateTopRecoveryTable();
       finalizeSymbols();
       finalizeRules();
-      defineTokens();
+      generateTokenDefinitions();
       runtimeData.setNumberOfErrors(StxErrors);
       runtimeData.setFinalActions(finalActions);
     } catch (IOException e) {
@@ -2524,6 +2662,10 @@ public class CodeParser extends AbstractPhase {
       this.regex = regex;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
       return "state:" + stateNumber + ", value:" + value + ", mustClose:" + mustClose + ", id:" + id;
