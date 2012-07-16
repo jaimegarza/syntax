@@ -40,9 +40,27 @@ import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.Terminal;
 
+/**
+ * Phases:
+ * 
+ * <ol>
+ *   <li>Code Parser
+ *   <li><b>Structural Analysis</b> (This Phase)
+ *   <li>Table Generation
+ *   <li>Writing Code
+ * </ol>
+ * This phase computes the first & follow sets for symbols
+ * @author jaimegarza@gmail.com
+ *
+ */
 public class StructuralAnalyzer extends AbstractPhase {
   private Set<Integer> searchItems = new HashSet<Integer>();
 
+  /**
+   * Construct an analizer given an environment
+   * 
+   * @param environment the {@link Environment}, shared between phases.
+   */
   public StructuralAnalyzer(Environment environment) {
     super(environment);
   }
@@ -54,53 +72,105 @@ public class StructuralAnalyzer extends AbstractPhase {
    * Look at the left side of all rules and, if the rule left hand matches the
    * desired symbol, find the non-terminals that the symbol can start with. This
    * is recursive. In addition, empty non-terminals appearing at the beginning
-   * of the rule require the review of the second one, etc.
+   * of the rule require the review of the second one, etc.<p>
+   * given<pre><code>
+   * r<sub>i</sub>: &alpha; &rarr; &beta; 
+   * </code></pre>
+   * First(&alpha;) = &cup; First(&beta;)<br>
+   * &nbsp;&nbsp;&nbsp;&forall; &alpha; &isin; N &and; r<sub>i</sub> &isin; (<b>R</b> &isin; <b>G</b>)<p>
+   * In addition, for &beta; = &lambda;&delta;<p>
+   * First (&beta;):
+   * <ol>
+   *   <li> if &lambda; &isin; <b>N</b> then First (&beta;) = First(&lambda;)<p>
+   *        if &exist; r<sub>j</sub>: &lambda; &rarr; &empty; then 
+   *          First(&beta;) = First(&lambda;) &cup; First(&delta;)
+   *   <li> if &lambda; &isin; T then First(&lambda;) = { &lambda; }
+   * </ol>
+   * @param nonTerminalId is the non terminal to compute
+   * @return the set of first for a given symbol, traversing all rules left hand symbol.
    */
-  public Set<Integer> getFirst(int ntId) {
+  public Set<Integer> getFirst(int nonTerminalId) {
     Set<Integer> first = new HashSet<Integer>();
 
     for (Rule rule : runtimeData.getRules()) {
-      getFirstForAllRules(ntId, first, rule);
+      getFirstForAllRules(nonTerminalId, first, rule);
     }
     return first;
   }
 
-  Set<Integer> getFollow(int ntId) {
+  /**
+   * The follow is the set of terminal symbols that can appear after a given non-terminal.  
+   * This is useful to simplify grammar production (via SLR) which generalizes the symbols
+   * that can appear to the right of a symbol.
+   * 
+   * given<pre><code>
+   * r<sub>i</sub>: &alpha; &rarr; &mu; &beta; &gamma;
+   * </code></pre>
+   * Follow(&beta;) = First(&gamma;)<br>&nbsp;&nbsp;&nbsp; &forall; &beta; &isin; <b>N</b> &and; r<sub>i</sub> &isin; (<b>R</b> &isin; <b>G</b>)<p>
+   * In addition, <i>if</i> &exist; r<sub>j</sub>: &gamma; &rarr; &empty;; &gamma; &isin; <b>N</b> &and; &forall; r<sub>j</sub> &isin; (<b>R</b> &isin; <b>G</b>) then<p>
+   * Follow(&beta;) = First(&gamma;) &cup; Follow(&alpha;) <p>
+   * Please note that to compute follows we analyze each non terminal in the <b>right
+   * side</b> context of all rules.
+   * 
+   * @param nonTerminalId is the non terminal to compute (id of &beta;)
+   * @return
+   */
+  Set<Integer> getFollow(int nonTerminalId) {
     Set<Integer> follow = new HashSet<Integer>();
 
     // the follow of the root is always the empty terminal
-    if (ntId == runtimeData.getRoot().getId()) {
+    if (nonTerminalId == runtimeData.getRoot().getId()) {
       follow.add(0);
       return follow;
     }
 
     for (Rule rule : runtimeData.getRules()) {
-      getFollowFromARule(ntId, follow, rule);
+      getFollowFromARule(nonTerminalId, follow, rule);
     }
     return follow;
   }
 
-  private void getFollowFromARule(int ntId, Set<Integer> follow, Rule rule) {
+  /**
+   * Compute the follow of a rule<p>
+   * see {@link #getFollow(int)} for additional description on what a follow is<p>
+   * This routine finds all &beta; elements from a rule r<sub>i</sub>: &alpha; &rarr; &mu; &beta; &gamma;
+   * @param nonTerminalId is the id of &beta;
+   * @param follow is where to keep adding the follow
+   * @param rule is the {@link Rule} to analyze
+   */
+  private void getFollowFromARule(int nonTerminalId, Set<Integer> follow, Rule rule) {
     List<RuleItem> items = rule.getItems();
     int itemCount = items.size();
     for (int itemIndex = 0; itemIndex < itemCount; itemIndex++) {
       RuleItem item = items.get(itemIndex);
-      if (item.getSymbolId() == ntId) {
-        getFollowFromAnItem(ntId, follow, rule, items, itemCount, itemIndex);
+      if (item.getSymbolId() == nonTerminalId) {
+        getFollowInRuleContext(nonTerminalId, follow, rule, items, itemCount, itemIndex);
       }
     }
   }
 
-  private void getFollowFromAnItem(int ntId, Set<Integer> follow, Rule rule, List<RuleItem> items, int itemCount,
+  /**
+   * Get the follows for a given item.
+   * see {@link #getFollow(int)} for additional description on what a follow is<p>
+   * 
+   * 
+   * @param nonTerminalId is the id of &beta;
+   * @param follow is the set where to add all non terminals that constitute the follow
+   * @param rule the {@link Rule} where &beta; can appear
+   * @param items is the contex of {@link RuleItem}s that can be around &beta;
+   * @param itemCount number of items in the rule r<subi</sub>
+   * @param itemIndex the index in the items where &beta; appears
+   */
+  private void getFollowInRuleContext(int nonTerminalId, Set<Integer> follow, Rule rule, List<RuleItem> items, int itemCount,
       int itemIndex) {
     for (int j = itemIndex; j < itemCount; j++) {
       if (j == itemCount - 1) { // is the index pointing to the last item?
-        if (rule.getLeftHandId() != ntId) {
+        if (rule.getLeftHandId() != nonTerminalId) {
           if (rule.getLeftHand().getFollow() == null) {
-            if (!searchItems.contains(ntId)) {
-              searchItems.add(ntId);
+            if (!searchItems.contains(nonTerminalId)) {
+              searchItems.add(nonTerminalId);
               Set<Integer> faux = getFollow(rule.getLeftHandId());
-              searchItems.remove(ntId);
+              searchItems.remove(nonTerminalId);
               follow.addAll(faux);
             }
           } else {
@@ -115,18 +185,28 @@ public class StructuralAnalyzer extends AbstractPhase {
     }
   }
 
+  /**
+   * Get the follow for item<p>
+   * see {@link #getFollow(int)} for additional description on what a follow is<p>
+   * 
+   * @param nextItemIndex is the index in the rules items for &gamma;
+   * @param follow is the set where to add all non terminals that constitute the follow
+   * @param items is the contex of {@link RuleItem}s that can be around &beta;
+   * @return true if symbol &gamma
+   */
   private boolean getFollowForItem(int nextItemIndex, Set<Integer> follow, List<RuleItem> items) {
     if (items.get(nextItemIndex).getSymbol() instanceof NonTerminal) {
       NonTerminal nonTerminal = (NonTerminal) items.get(nextItemIndex).getSymbol();
       follow.addAll(nonTerminal.getFirst());
       if (runtimeData.symbolCanBeEmpty(nonTerminal.getId()) == false) {
         return false;
+      } else {
+        return true;
       }
     } else {
       follow.add(items.get(nextItemIndex).getSymbol().getId());
       return false;
     }
-    return true;
   }
 
   /**
@@ -201,6 +281,9 @@ public class StructuralAnalyzer extends AbstractPhase {
     }
   }
 
+  /**
+   * Print first and follow to the report.
+   */
   private void print() {
     for (NonTerminal itm : runtimeData.getNonTerminals()) {
       environment.report.printf("\n");
@@ -227,6 +310,9 @@ public class StructuralAnalyzer extends AbstractPhase {
     }
   }
 
+  /*
+   * Execute this phase
+   */
   public void execute() throws AnalysisException {
     if (environment.isVerbose()) {
       System.out.println("First & Follow");
