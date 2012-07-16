@@ -51,6 +51,14 @@ import me.jaimegarza.syntax.definition.Type;
  * TODO: This parser will be replaced for a generated one (which
  * probably will be created from this one)
  *
+ * Phases:
+ * 
+ * <ol>
+ *   <li><b>Code Parser</b> (This Phase)
+ *   <li>Structural Analysis
+ *   <li>Table Generation
+ *   <li>Writing Code
+ * </ol>
  * @author jaimegarza@gmail.com
  *
  */
