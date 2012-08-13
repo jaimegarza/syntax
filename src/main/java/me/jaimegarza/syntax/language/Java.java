@@ -221,8 +221,6 @@ public class Java extends BaseLanguageSupport {
 
   @Override
   public void printTableRow(int symbolCounter, int[] parserLine, int stateNumber) {
-    // TODO Auto-generated method stub
-    
   }
 
   @Override
