@@ -159,4 +159,13 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
     dot.addLookahead(0); // empty set
   }
 
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#hasFollows()
+   */
+  @Override
+  public boolean hasFollows() {
+    return false;
+  }
+
 }

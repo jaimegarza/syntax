@@ -24,7 +24,11 @@ public class Fragments_java extends ListResourceBundle {
    * The fragments
    */
   Object[] contents [] = {
-      {"hello","Jello Jorld"} // keep, for unit testing
+      {"hello","Jello Jorld"}, // keep, for unit testing
+      {"stxstack", "stack[stackTop{0}]"},
+      {"currentChar", "currentChar"},
+      {"lexicalValue", "lexicalValue"},
+      {"getc", "currentChar = getNextChar(false)"},
   };
 
 }

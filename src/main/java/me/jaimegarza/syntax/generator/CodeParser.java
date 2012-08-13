@@ -31,12 +31,12 @@ package me.jaimegarza.syntax.generator;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Stack;
 
+import me.jaimegarza.syntax.EmbeddedCodeProcessor;
+import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.cli.Environment;
-import me.jaimegarza.syntax.code.Language;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.NonTerminal;
@@ -62,7 +62,7 @@ import me.jaimegarza.syntax.definition.Type;
  * @author jaimegarza@gmail.com
  *
  */
-public class CodeParser extends AbstractPhase {
+public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProcessor {
   private static final String DISTINGUISHED_SYMBOL_NAME = "$start";
   private static final int TOK_MARCA = 256;
   private static final int TOK_START = 257;
@@ -194,6 +194,10 @@ public class CodeParser extends AbstractPhase {
 
   private static int MIN_STACK = 150;
   private static int INCR_STACK = 150;
+  
+  // Lexer
+  private Stack<Character> inputChars = new Stack<Character>();
+
 
   private StackElement StxValue = null;
   private int sStxStack[] = new int[MIN_STACK];
@@ -204,17 +208,12 @@ public class CodeParser extends AbstractPhase {
   private int StxErrors = 0;
   private int StxErrorFlag = 0;
   private boolean bActionDone = false;
-  private char currentCharacter;
   private int currentRuleIndex;
-  private List<RuleItem> currentRuleItems = null;
-  private String currentStringValue;
   private Type currentType;
 
-  private int lineNumber = 0;
   private int markers = 0;
   private boolean isCurlyBrace;
   private boolean isEqual;
-  private Stack<Character> inputChars = new Stack<Character>();
   private boolean isError;
   private boolean isRegex;
   private int tokenNumber;
@@ -225,10 +224,9 @@ public class CodeParser extends AbstractPhase {
   private Associativity ruleAssociativity;
   private int rulePrecedence;
   private int tokenActionCount;
-  private int ruleActionCount;
   private int actLine;
   private boolean isFirstToken = true;
-  private int numberOfRecoveries;
+  private int numberOfErrorTokens;
 
   public CodeParser(Environment environment) {
     super(environment);
@@ -633,7 +631,7 @@ public class CodeParser extends AbstractPhase {
         break;
       case 65:
         {
-          i = currentRuleItems != null ? currentRuleItems.size() : 0;
+          i = runtimeData.currentRuleItems != null ? runtimeData.currentRuleItems.size() : 0;
           if (!ruleAction(runtimeData.getRules().size(), i, currentNonTerminalName)) {
             return false;
           }
@@ -821,42 +819,6 @@ public class CodeParser extends AbstractPhase {
   }
 
   /**
-   * lexer basic routine to obtain a character
-   * @return the next character
-   */
-  private char getCharacter() throws IOException {
-    if (inputChars.size() > 0) {
-      return inputChars.pop();
-    }
-
-    currentCharacter = (char) environment.source.read();
-    if (currentCharacter == -1) {
-      return 0;
-    }
-
-    if (currentCharacter == '\n') {
-      lineNumber++;
-      // if (environment.isVerbose()) {
-      // System.out.printf("Lines : %05d\r", lineNumber);
-      // }
-    }
-
-    if (currentCharacter == 26) {
-      return 0;
-    }
-
-    return currentCharacter;
-  }
-
-  /**
-   * Return one character to the stream
-   * @param c
-   */
-  private void ungetCharacter(char c) {
-    inputChars.push(c);
-  }
-
-  /**
    * Use the character stream to decode one character from octal<p>
    * for instance '\017'
    * @return the octal entered character
@@ -868,10 +830,10 @@ public class CodeParser extends AbstractPhase {
     while (iCount != 0) {
       c2 *= 8;
 
-      if (currentCharacter >= '0' && currentCharacter <= '7') {
-        c2 += currentCharacter - '0';
-        currentCharacter = getCharacter();
-      } else if (currentCharacter == '\0') {
+      if (runtimeData.currentCharacter >= '0' && runtimeData.currentCharacter <= '7') {
+        c2 += runtimeData.currentCharacter - '0';
+        getCharacter();
+      } else if (runtimeData.currentCharacter == '\0') {
         return c2;
       } else {
         break;
@@ -890,19 +852,19 @@ public class CodeParser extends AbstractPhase {
    */
   private char decodeControlChar() throws IOException {
     char c2;
-    currentCharacter = getCharacter();
+    getCharacter();
 
-    if (currentCharacter == '\0') {
+    if (runtimeData.currentCharacter == '\0') {
       return '\0';
     }
 
-    if (currentCharacter >= 'a' && currentCharacter <= 'z') {
-      c2 = currentCharacter;
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter >= 'a' && runtimeData.currentCharacter <= 'z') {
+      c2 = runtimeData.currentCharacter;
+      getCharacter();
       return (char) (c2 - ('a' - 1));
-    } else if (currentCharacter >= 'A' && currentCharacter <= 'Z') {
-      c2 = currentCharacter;
-      currentCharacter = getCharacter();
+    } else if (runtimeData.currentCharacter >= 'A' && runtimeData.currentCharacter <= 'Z') {
+      c2 = runtimeData.currentCharacter;
+      getCharacter();
       return (char) (c2 - ('A' - 1));
     } else {
       return 'c' - 'a';
@@ -918,18 +880,18 @@ public class CodeParser extends AbstractPhase {
     int iCount = 2;
     char c2 = 0;
 
-    currentCharacter = getCharacter();
+    getCharacter();
 
     while (iCount != 0) {
       c2 *= 16;
 
-      if (currentCharacter >= '0' && currentCharacter <= '9') {
-        c2 += currentCharacter - '0';
-      } else if (currentCharacter >= 'a' && currentCharacter <= 'f') {
-        c2 += 10 + (currentCharacter - 'a');
-      } else if (currentCharacter >= 'A' && currentCharacter <= 'F') {
-        c2 += 10 + (currentCharacter - 'A');
-      } else if (currentCharacter == '\0') {
+      if (runtimeData.currentCharacter >= '0' && runtimeData.currentCharacter <= '9') {
+        c2 += runtimeData.currentCharacter - '0';
+      } else if (runtimeData.currentCharacter >= 'a' && runtimeData.currentCharacter <= 'f') {
+        c2 += 10 + (runtimeData.currentCharacter - 'a');
+      } else if (runtimeData.currentCharacter >= 'A' && runtimeData.currentCharacter <= 'F') {
+        c2 += 10 + (runtimeData.currentCharacter - 'A');
+      } else if (runtimeData.currentCharacter == '\0') {
         return '\0';
       } else {
         return 'x' - 'a';
@@ -949,7 +911,7 @@ public class CodeParser extends AbstractPhase {
    */
   private char decodeEscape() throws IOException {
     char c2;
-    switch (currentCharacter) {
+    switch (runtimeData.currentCharacter) {
       case '0':
       case '1':
       case '2':
@@ -960,95 +922,133 @@ public class CodeParser extends AbstractPhase {
       case '7':
         return decodeOctal();
       case 'a':
-        currentCharacter = getCharacter();
+        getCharacter();
         return 7;
       case 'b':
-        currentCharacter = getCharacter();
+        getCharacter();
         return '\b';
       case 'c':
-        currentCharacter = getCharacter();
+        getCharacter();
         return decodeControlChar();
       case 'e':
-        currentCharacter = getCharacter();
+        getCharacter();
         return '\\';
       case 'f':
-        currentCharacter = getCharacter();
+        getCharacter();
         return '\f';
       case 'n':
-        currentCharacter = getCharacter();
+        getCharacter();
         return '\n';
       case 'r':
-        currentCharacter = getCharacter();
+        getCharacter();
         return '\r';
       case 't':
-        currentCharacter = getCharacter();
+        getCharacter();
         return '\t';
       case 'v':
-        currentCharacter = getCharacter();
+        getCharacter();
         return 11;
       case 'x':
-        currentCharacter = getCharacter();
+        getCharacter();
         return decodeHex();
       default:
-        c2 = currentCharacter;
-        currentCharacter = getCharacter();
+        c2 = runtimeData.currentCharacter;
+        getCharacter();
         return c2;
     }
   }
 
-  /**
-   * Recognize the next token when in regex mode<p>
-   * TODO: Implement regex mode
-   * 
-   * @return the next token
-   * @throws IOException
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.Lexer#getCharacter()
    */
-  private int getRegexSymbol() throws IOException {
+  @Override
+  public char getCharacter() throws IOException {
+    if (inputChars.size() > 0) {
+      runtimeData.currentCharacter = inputChars.pop();
+      return runtimeData.currentCharacter;
+    }
+
+    // Get one char from stream
+    runtimeData.currentCharacter = (char) environment.source.read();
+    // EOF?
+    if (runtimeData.currentCharacter == -1) {
+      return 0;
+    }
+
+    // EOL?
+    if (runtimeData.currentCharacter == '\n') {
+      runtimeData.lineNumber++;
+    }
+
+    // CTRL-Z?  <-- suspect code
+    if (runtimeData.currentCharacter == 26) {
+      return 0;
+    }
+
+    return runtimeData.currentCharacter;
+  }
+  
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.Lexer#ungetCharacter(char)
+   */
+  @Override
+  public void ungetCharacter(char c) {
+    inputChars.push(c);
+  }
+
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.Lexer#getRegexSymbol()
+   */
+  @Override
+  public int getRegexSymbol() throws IOException {
     char c2;
 
     if (isEqual) {
       isEqual = false;
-      currentStringValue = "";
+      runtimeData.currentStringValue = "";
       return TOK_TOKEN;
     }
 
-    if (currentCharacter == '|') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '|') {
+      getCharacter();
       return TOK_RX_PIPE;
     }
-    if (currentCharacter == '(') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '(') {
+      getCharacter();
       return TOK_RX_LPAR;
     }
-    if (currentCharacter == ')') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == ')') {
+      getCharacter();
       return TOK_RX_RPAR;
     }
-    if (currentCharacter == '*') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '*') {
+      getCharacter();
       return TOK_RX_STAR;
     }
-    if (currentCharacter == '+') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '+') {
+      getCharacter();
       return TOK_RX_PLUS;
     }
-    if (currentCharacter == '?') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '?') {
+      getCharacter();
       return TOK_RX_HUH;
     }
-    if (currentCharacter == '.') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '.') {
+      getCharacter();
       return TOK_RX_ANY;
     }
-    if (currentCharacter == '/') {
+    if (runtimeData.currentCharacter == '/') {
       isRegex = false;
       isEqual = true;
-      currentCharacter = getCharacter();
+      getCharacter();
       return '/';
     }
 
-    if (currentCharacter == '\\') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '\\') {
+      getCharacter();
       c2 = decodeEscape();
       if (c2 == 0) {
         return '\0';
@@ -1065,19 +1065,18 @@ public class CodeParser extends AbstractPhase {
     return TOK_CHARS;
   }
 
-  /**
-   * Get the next token when in normal mode
-   * 
-   * @return the token.  In addition StxValue may be set as needed.
-   * @throws IOException
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.Lexer#getNormalSymbol()
    */
-  private int getNormalSymbol() throws IOException {
+  @Override
+  public int getNormalSymbol() throws IOException {
     char c2;
     String s2;
     boolean end;
 
-    s2 = currentStringValue;
-    currentStringValue = "";
+    s2 = runtimeData.currentStringValue;
+    runtimeData.currentStringValue = "";
 
     if (markers >= 2) {
       return 0;
@@ -1090,29 +1089,29 @@ public class CodeParser extends AbstractPhase {
 
     if (isEqual) {
       isEqual = false;
-      currentStringValue = "";
+      runtimeData.currentStringValue = "";
       return TOK_TOKEN;
     }
 
     while (2 > 1) {
-      while (Character.isWhitespace(currentCharacter)) {
-        currentCharacter = getCharacter();
+      while (Character.isWhitespace(runtimeData.currentCharacter)) {
+        getCharacter();
       }
-      if (currentCharacter == '/') {
-        if ((currentCharacter = getCharacter()) == '*') {
-          currentCharacter = getCharacter();
+      if (runtimeData.currentCharacter == '/') {
+        if ((getCharacter()) == '*') {
+          getCharacter();
           end = false;
           while (!end) {
-            while (currentCharacter == '*') {
-              if ((currentCharacter = getCharacter()) == '/') {
+            while (runtimeData.currentCharacter == '*') {
+              if ((getCharacter()) == '/') {
                 end = true;
               }
             }
-            currentCharacter = getCharacter();
+            getCharacter();
           }
         } else {
-          ungetCharacter(currentCharacter);
-          currentCharacter = '/';
+          ungetCharacter(runtimeData.currentCharacter);
+          runtimeData.currentCharacter = '/';
           break;
         }
       } else {
@@ -1120,50 +1119,50 @@ public class CodeParser extends AbstractPhase {
       }
     }
 
-    if (currentCharacter == '\0') {
+    if (runtimeData.currentCharacter == '\0') {
       return 0;
     }
 
-    if (currentCharacter == '%' || currentCharacter == '\\') {
-      currentCharacter = getCharacter();
-      switch (currentCharacter) {
+    if (runtimeData.currentCharacter == '%' || runtimeData.currentCharacter == '\\') {
+      getCharacter();
+      switch (runtimeData.currentCharacter) {
         case '0':
-          currentCharacter = getCharacter();
+          getCharacter();
           return TOK_TERM;
         case '<':
-          currentCharacter = getCharacter();
+          getCharacter();
           return TOK_LEFT;
         case '2':
-          currentCharacter = getCharacter();
+          getCharacter();
           return TOK_BINARY;
         case '>':
-          currentCharacter = getCharacter();
+          getCharacter();
           return TOK_RIGHT;
         case '%':
         case '\\':
-          currentCharacter = getCharacter();
+          getCharacter();
           markers++;
           return TOK_MARCA;
         case '=':
-          currentCharacter = getCharacter();
+          getCharacter();
           return TOK_PREC;
         case '@':
-          currentCharacter = getCharacter();
+          getCharacter();
           return TOK_NAME;
         case '{':
-          currentCharacter = getCharacter();
+          getCharacter();
           isCurlyBrace = true;
           return '{';
         case '!':
-          currentCharacter = getCharacter();
+          getCharacter();
           return TOK_ERRDEF;
       }
-      while (Character.isLetterOrDigit(currentCharacter)) {
-        currentStringValue += currentCharacter;
-        currentCharacter = getCharacter();
+      while (Character.isLetterOrDigit(runtimeData.currentCharacter)) {
+        runtimeData.currentStringValue += runtimeData.currentCharacter;
+        getCharacter();
       }
       for (ReservedWord rw : RWord) {
-        if (currentStringValue.equals(rw.word)) {
+        if (runtimeData.currentStringValue.equals(rw.word)) {
           if (rw.token == TOK_UNION) {
             isCurlyBrace = true;
           }
@@ -1171,140 +1170,140 @@ public class CodeParser extends AbstractPhase {
         }
       }
       isError = true;
-      environment.error(-1, "Reserved word \'%s\' is incorrect.", currentStringValue);
+      environment.error(-1, "Reserved word \'%s\' is incorrect.", runtimeData.currentStringValue);
       return TOK_ERROR;
     }
 
-    if (currentCharacter == ';') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == ';') {
+      getCharacter();
       return ';';
     }
 
-    if (currentCharacter == ',') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == ',') {
+      getCharacter();
       return ',';
     }
 
-    if (currentCharacter == ':') {
+    if (runtimeData.currentCharacter == ':') {
       currentNonTerminalName = s2;
-      currentCharacter = getCharacter();
+      getCharacter();
       return ':';
     }
 
-    if (currentCharacter == '|') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '|') {
+      getCharacter();
       return '|';
     }
 
-    if (currentCharacter == '=') {
-      currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '=') {
+      getCharacter();
       isEqual = true;
       return '=';
     }
 
-    if (currentCharacter == '{') {
+    if (runtimeData.currentCharacter == '{') {
       isEqual = true;
       return '=';
     }
 
-    if (currentCharacter == '<') {
-      currentCharacter = getCharacter();
-      currentStringValue = "";
-      while (currentCharacter != '\0' && currentCharacter != '>' && currentCharacter != '\n') {
-        currentStringValue += currentCharacter;
-        currentCharacter = getCharacter();
+    if (runtimeData.currentCharacter == '<') {
+      getCharacter();
+      runtimeData.currentStringValue = "";
+      while (runtimeData.currentCharacter != '\0' && runtimeData.currentCharacter != '>' && runtimeData.currentCharacter != '\n') {
+        runtimeData.currentStringValue += runtimeData.currentCharacter;
+        getCharacter();
       }
-      if (currentCharacter != '>') {
+      if (runtimeData.currentCharacter != '>') {
         isError = true;
         environment.error(-1, "Statement < .. > not ended.");
         return TOK_ERROR;
       }
-      currentCharacter = getCharacter();
+      getCharacter();
       return TOK_TYPENAME;
     }
 
-    if (currentCharacter == '/') {
+    if (runtimeData.currentCharacter == '/') {
       isRegex = true;
       isEqual = true;
-      currentCharacter = getCharacter();
+      getCharacter();
       return '/';
     }
 
-    if (Character.isDigit(currentCharacter)) {
-      currentStringValue = "";
-      while (Character.isDigit(currentCharacter)) {
-        currentStringValue += currentCharacter;
-        currentCharacter = getCharacter();
+    if (Character.isDigit(runtimeData.currentCharacter)) {
+      runtimeData.currentStringValue = "";
+      while (Character.isDigit(runtimeData.currentCharacter)) {
+        runtimeData.currentStringValue += runtimeData.currentCharacter;
+        getCharacter();
       }
-      tokenNumber = Integer.parseInt(currentStringValue);
+      tokenNumber = Integer.parseInt(runtimeData.currentStringValue);
       return TOK_NUM;
     }
 
     mustClose = false;
-    if (currentCharacter == '\'' || currentCharacter == '"') {
-      c2 = currentCharacter;
+    if (runtimeData.currentCharacter == '\'' || runtimeData.currentCharacter == '"') {
+      c2 = runtimeData.currentCharacter;
       mustClose = true;
-      currentCharacter = getCharacter();
+      getCharacter();
     } else {
       c2 = ':';
     }
 
-    currentStringValue = "";
+    runtimeData.currentStringValue = "";
     do { /* TOKEN */
-      currentStringValue += currentCharacter;
-      currentCharacter = getCharacter();
-      if (currentCharacter == '\0') {
+      runtimeData.currentStringValue += runtimeData.currentCharacter;
+      getCharacter();
+      if (runtimeData.currentCharacter == '\0') {
         break;
       }
-      if (!mustClose && "%\\;,:|={< \r\t\n".indexOf(currentCharacter) >= 0) {
+      if (!mustClose && "%\\;,:|={< \r\t\n".indexOf(runtimeData.currentCharacter) >= 0) {
         break;
       }
-    } while (currentCharacter != c2);
+    } while (runtimeData.currentCharacter != c2);
 
-    if (mustClose && currentCharacter != c2) {
+    if (mustClose && runtimeData.currentCharacter != c2) {
       isError = true;
       environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
       return TOK_ERROR;
     }
     tokenNumber = -1;
-    if (currentStringValue.equals("\\a")) {
+    if (runtimeData.currentStringValue.equals("\\a")) {
       tokenNumber = 7;
-    } else if (currentStringValue.equals("\\b")) {
+    } else if (runtimeData.currentStringValue.equals("\\b")) {
       tokenNumber = '\b';
-    } else if (currentStringValue.equals("\\n")) {
+    } else if (runtimeData.currentStringValue.equals("\\n")) {
       tokenNumber = '\n';
-    } else if (currentStringValue.equals("\\t")) {
+    } else if (runtimeData.currentStringValue.equals("\\t")) {
       tokenNumber = '\t';
-    } else if (currentStringValue.equals("\\f")) {
+    } else if (runtimeData.currentStringValue.equals("\\f")) {
       tokenNumber = '\f';
-    } else if (currentStringValue.equals("\\r")) {
+    } else if (runtimeData.currentStringValue.equals("\\r")) {
       tokenNumber = '\r';
-    } else if (currentStringValue.length() >= 2 && currentStringValue.substring(0, 2).equals("\\x")) {
+    } else if (runtimeData.currentStringValue.length() >= 2 && runtimeData.currentStringValue.substring(0, 2).equals("\\x")) {
       int p = 2;
       tokenNumber = 0;
       while (2 > 1) {
-        if (currentStringValue.charAt(p) >= '0' && currentStringValue.charAt(p) <= '9') {
-          tokenNumber = tokenNumber * 16 + currentStringValue.charAt(p++) - '0';
-        } else if (currentStringValue.charAt(p) >= 'A' && currentStringValue.charAt(p) <= 'F') {
-          tokenNumber = tokenNumber * 16 + currentStringValue.charAt(p++) - 'A' + 10;
-        } else if (currentStringValue.charAt(p) >= 'a' && currentStringValue.charAt(p) <= 'f') {
-          tokenNumber = tokenNumber * 16 + currentStringValue.charAt(p++) - 'a' + 10;
+        if (runtimeData.currentStringValue.charAt(p) >= '0' && runtimeData.currentStringValue.charAt(p) <= '9') {
+          tokenNumber = tokenNumber * 16 + runtimeData.currentStringValue.charAt(p++) - '0';
+        } else if (runtimeData.currentStringValue.charAt(p) >= 'A' && runtimeData.currentStringValue.charAt(p) <= 'F') {
+          tokenNumber = tokenNumber * 16 + runtimeData.currentStringValue.charAt(p++) - 'A' + 10;
+        } else if (runtimeData.currentStringValue.charAt(p) >= 'a' && runtimeData.currentStringValue.charAt(p) <= 'f') {
+          tokenNumber = tokenNumber * 16 + runtimeData.currentStringValue.charAt(p++) - 'a' + 10;
         } else {
           break;
         }
       }
-    } else if (currentStringValue.length() >= 2 && currentStringValue.substring(0, 2).equals("\\0")) {
+    } else if (runtimeData.currentStringValue.length() >= 2 && runtimeData.currentStringValue.substring(0, 2).equals("\\0")) {
       int p = 2;
       tokenNumber = 0;
-      while (currentStringValue.charAt(p) >= '0' && currentStringValue.charAt(p) <= '7') {
-        tokenNumber = tokenNumber * 8 + currentStringValue.charAt(p++) - '0';
+      while (runtimeData.currentStringValue.charAt(p) >= '0' && runtimeData.currentStringValue.charAt(p) <= '7') {
+        tokenNumber = tokenNumber * 8 + runtimeData.currentStringValue.charAt(p++) - '0';
       }
     }
 
     if (mustClose) {
-      currentCharacter = getCharacter();
-      if (currentStringValue.length() == 1) {
-        tokenNumber = currentStringValue.charAt(0);
+      getCharacter();
+      if (runtimeData.currentStringValue.length() == 1) {
+        tokenNumber = runtimeData.currentStringValue.charAt(0);
       }
     }
 
@@ -1326,7 +1325,7 @@ public class CodeParser extends AbstractPhase {
       }
     } else {
       rc = getNormalSymbol();
-      StxValue = new StackElement(-1, tokenNumber, mustClose, currentStringValue, null);
+      StxValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null);
       if (environment.isDebug()) {
         System.out.printf("* StdScanner: %s(%d) {%s}\n",
             (rc >= 256 ? tokenNames[rc - 256] : "\"" + Character.toString((char) rc) + "\""), rc,
@@ -1350,7 +1349,7 @@ public class CodeParser extends AbstractPhase {
       environment.error(-1, "Syntax error %d :\'%s\'.", StxState, StxErrorTable[msg]);
     } else {
       System.err.printf("%s(%05d) : Unknown error on state %d\n", environment.getSourceFile().toString(),
-          lineNumber + 1, StxState);
+          runtimeData.lineNumber + 1, StxState);
     }
     isError = true;
     return 0; /*
@@ -1359,6 +1358,170 @@ public class CodeParser extends AbstractPhase {
                */
   }
 
+  /****************************EMBEDDED CODE PROCESSOR **************************/
+
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#getTypeFromStream(me.jaimegarza.syntax.Lexer)
+   */
+  @Override
+  public Type getTypeFromStream(Lexer lexer) throws IOException {
+    Type type;
+    String s2;
+    s2 = runtimeData.currentStringValue;
+    lexer.getNormalSymbol();
+    type = runtimeData.findType(runtimeData.currentStringValue);
+    if (type == null) {
+      environment.error(-1, "Cannot find type '%s'.", runtimeData.currentStringValue);
+      return null;
+    }
+    runtimeData.currentStringValue = s2;
+    return type;
+  }
+
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#generateDollarNumber(me.jaimegarza.syntax.Lexer, int, me.jaimegarza.syntax.definition.Type, int)
+   */
+  @Override
+  public boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign) throws IOException {
+    int num;
+    int base;
+    num = 0;
+    if (runtimeData.currentCharacter == '0') {
+      base = 8;
+    } else {
+      base = 10;
+    }
+    while (Character.isDigit(runtimeData.currentCharacter)) {
+      num = num * base + runtimeData.currentCharacter - '0';
+      lexer.getCharacter();
+    }
+    num = num * sign - elementCount;
+    if (num > 0) {
+      environment.error(-1, "Incorrect value of \'$%d\'. Bigger than the number of elements.", num + elementCount);
+      return false;
+    }
+    if (num == 0) {
+      environment.output.printFragment("stxstack", "");
+    } else {
+      environment.output.printFragment("stxstack", String.format("%+d", num));
+    }
+    if (runtimeData.getTypes().size() != 0) {
+      if (num + elementCount <= 0 && type == null) {
+        environment.error(-1, "Cannot determine the type for \'$%d\'.", num + elementCount);
+        return false;
+      }
+      if (type == null) {
+        int j = 0;
+        RuleItem rule = null;
+        for (int i = 1; i < num + elementCount && j < runtimeData.currentRuleItems.size(); j++, i++) {
+          rule = runtimeData.currentRuleItems.get(j);
+        }
+        if (rule != null) {
+          Terminal terminal = runtimeData.findTerminalByName(rule.getSymbol().getName());
+          if (terminal != null) {
+            terminal.setCount(terminal.getCount() - 1);
+            type = terminal.getType();
+          } else {
+            NonTerminal nonTerminal = runtimeData.findNonTerminalByName(rule.getSymbol().getName());
+            if (nonTerminal != null) {
+              nonTerminal.setCount(nonTerminal.getCount() - 1);
+              type = nonTerminal.getType();
+            }
+          }
+        }
+      }
+      if (type != null) {
+        environment.output.printf(".%s", type.getName());
+      }
+    }
+    return true;
+  }
+  
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#generateDollarDollar(me.jaimegarza.syntax.Lexer, int, java.lang.String, me.jaimegarza.syntax.definition.Type)
+   */
+  @Override
+  public boolean generateDollarDollar(Lexer lexer, int elementCount, String nonTerminalId, Type type) throws IOException {
+    if (elementCount == 1) {
+      environment.output.printFragment("stxstack", "");
+    } else if (elementCount != 0) {
+      environment.output.printFragment("stxstack", Integer.toString(1-elementCount - 1));
+    } else {
+      environment.output.printFragment("stxstack", "+1");
+    }
+    if (runtimeData.getTypes().size() != 0) {
+      if (type == null) {
+        NonTerminal idp = runtimeData.findNonTerminalByName(nonTerminalId);
+        if (idp != null) {
+          idp.setCount(idp.getCount() - 1);
+          type = idp.getType();
+        }
+      }
+      if (type != null) {
+        environment.output.printf(".%s", type.getName());
+      }
+    }
+    lexer.getCharacter();
+    return true;
+  }
+
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#generateConstant(me.jaimegarza.syntax.Lexer)
+   */
+  @Override
+  public boolean generateConstant(Lexer lexer, char characterType) throws IOException {
+    environment.output.print(runtimeData.currentCharacter);
+    while ((lexer.getCharacter()) != characterType) {
+      if (runtimeData.currentCharacter == '\0') {
+        environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
+        return false;
+      }
+      if (runtimeData.currentCharacter == '\n') {
+        environment.error(-1, "End of line reached on string literal.");
+        return false;
+      }
+      if (runtimeData.currentCharacter == '\\') {
+        environment.output.print(runtimeData.currentCharacter);
+        lexer.getCharacter();
+      }
+      environment.output.print(runtimeData.currentCharacter);
+    }
+    return true;
+  }
+
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#skipAndOutputCompositeComment(me.jaimegarza.syntax.Lexer, char, char)
+   */
+  @Override
+  public boolean skipAndOutputCompositeComment(Lexer lexer, char secondaryCharacter, char characterToFind) throws IOException {
+    boolean bBreak;
+    
+    environment.output.print(runtimeData.currentCharacter);
+    lexer.getCharacter();
+    bBreak = false;
+    while (!bBreak) {
+      if (runtimeData.currentCharacter == '\0') {
+        environment.error(-1, "Unfinished comment.");
+        return false;
+      }
+      while (runtimeData.currentCharacter == secondaryCharacter) {
+        environment.output.print(runtimeData.currentCharacter);
+        if ((lexer.getCharacter()) == characterToFind) {
+          bBreak = true;
+        }
+      }
+      environment.output.print(runtimeData.currentCharacter);
+      lexer.getCharacter();
+    }
+    return true;
+  }
+  
+  
   /**
    * Found a rule action.  Copy it to the output stream as-is
    * @param ruleNumber the rule index
@@ -1366,236 +1529,16 @@ public class CodeParser extends AbstractPhase {
    * @param nonTerminalId the left hand symbol of the rule
    */
   private boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalId) throws IOException {
-    int nBracks = 0;
-    boolean end = false;
-    boolean bBreak;
-    int num;
-    int base;
-    char characterToFind;
-    Type type;
-    String s2;
-    int sign;
-    int i;
-    String stackExpression;
-
     generateCodeGeneratorHeader();
     generateCaseStatement(ruleNumber);
-
-    while (!end) {
-      switch (currentCharacter) {
-        case ';': /* final action in C & comment in ASM */
-          if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks == 0) {
-            end = true;
-          }
-          break;
-
-        case '{': /* level++ in C & COMMENT in PAS */
-          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
-            nBracks++;
-          } else if (environment.getLanguage() == Language.pascal) {
-            environment.output.print(currentCharacter);
-            while ((currentCharacter = getCharacter()) != '}') {
-              environment.output.print(currentCharacter);
-            }
-          }
-          break;
-
-        case '}': /* level -- in C */
-          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
-            if (--nBracks <= 0) {
-              end = true;
-            }
-          }
-          break;
-
-        case '%':
-        case '\\': /* finact in PAS and ASM */
-          if (environment.getLanguage() != Language.C && environment.getLanguage() != Language.java) {
-            end = true;
-            currentCharacter = getCharacter();
-            continue;
-          }
-          break;
-
-        case '(': /* possible comment in PAS */
-        case '/': /* possible comment in C */
-          if (currentCharacter == '(' && environment.getLanguage() != Language.pascal) {
-            break;
-          } else {
-            characterToFind = ')';
-          }
-          if (currentCharacter == '/' &&
-              environment.getLanguage() != Language.C &&
-                environment.getLanguage() == Language.java) {
-            break;
-          } else {
-            characterToFind = '/';
-          }
-          environment.output.print(currentCharacter);
-          currentCharacter = getCharacter();
-          if (currentCharacter != '*') {
-            continue;
-          }
-
-          environment.output.print(currentCharacter);
-          currentCharacter = getCharacter();
-          bBreak = false;
-          while (!bBreak) {
-            if (currentCharacter == '\0') {
-              environment.error(-1, "Unfinished comment.");
-              return false;
-            }
-            while (currentCharacter == '*') {
-              environment.output.print(currentCharacter);
-              if ((currentCharacter = getCharacter()) == characterToFind) {
-                bBreak = true;
-              }
-            }
-            environment.output.print(currentCharacter);
-            currentCharacter = getCharacter();
-          }
-          continue;
-
-        case '\'': /* constant */
-        case '"': /* string */
-          characterToFind = currentCharacter;
-          environment.output.print(currentCharacter);
-          while ((currentCharacter = getCharacter()) != characterToFind) {
-            if (currentCharacter == '\0') {
-              environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
-              return false;
-            }
-            if (currentCharacter == '\n') {
-              environment.error(-1, "End of line reached on string literal.");
-              break;
-            }
-            if (currentCharacter == '\\') {
-              environment.output.print(currentCharacter);
-              currentCharacter = getCharacter();
-            }
-            environment.output.print(currentCharacter);
-          }
-          break;
-
-        case '\n':
-          environment.output.print(currentCharacter);
-          currentCharacter = getCharacter();
-          indent(environment.output, environment.getIndent() + 1);
-          continue;
-
-        case 0:
-          environment.error(-1, "Unfinished action detected.");
-          return false;
-
-        case '$':
-          currentCharacter = getCharacter();
-          type = null;
-          sign = 1;
-          if (currentCharacter == '<') { /* type */
-            s2 = currentStringValue;
-            getNormalSymbol();
-            type = runtimeData.findType(currentStringValue);
-            if (type == null) {
-              environment.error(-1, "Cannot find type '%s'.", currentStringValue);
-              return false;
-            }
-            currentStringValue = s2;
-          }
-          if (environment.getLanguage() == Language.java) {
-            stackExpression = "stack[stackTop";
-          } else {
-            stackExpression = "StxStack[pStxStack";
-          }
-          if (currentCharacter == '$') {
-            if (elementCount == 1) {
-              environment.output.printf("%s]", stackExpression);
-            } else if (elementCount != 0) {
-              environment.output.printf("%s-%d]", stackExpression, elementCount - 1);
-            } else {
-              environment.output.printf("%s+1]", stackExpression);
-            }
-            if (runtimeData.getTypes().size() != 0) {
-              if (type == null) {
-                NonTerminal idp = runtimeData.findNonTerminalByName(nonTerminalId);
-                if (idp != null) {
-                  idp.setCount(idp.getCount() - 1);
-                  type = idp.getType();
-                }
-              }
-              if (type != null) {
-                environment.output.printf(".%s", type.getName());
-              }
-            }
-            currentCharacter = getCharacter();
-            continue;
-          }
-          if (currentCharacter == '-') {
-            sign = -sign;
-            currentCharacter = getCharacter();
-          }
-          if (Character.isDigit(currentCharacter)) {
-            num = 0;
-            if (currentCharacter == '0') {
-              base = 8;
-            } else {
-              base = 10;
-            }
-            while (Character.isDigit(currentCharacter)) {
-              num = num * base + currentCharacter - '0';
-              currentCharacter = getCharacter();
-            }
-            num = num * sign - elementCount;
-            if (num > 0) {
-              environment.error(-1, "Incorrect value of \'$%d\'. Bigger than the number of elements.", num + elementCount);
-              return false;
-            }
-            if (num == 0) {
-              environment.output.printf("%s]", stackExpression);
-            } else {
-              environment.output.printf("%s%+d]", stackExpression, num);
-            }
-            if (runtimeData.getTypes().size() != 0) {
-              if (num + elementCount <= 0 && type == null) {
-                environment.error(-1, "Cannot determine the type for \'$%d\'.", num + elementCount);
-                return false;
-              }
-              if (type == null) {
-                int j = 0;
-                RuleItem rule = null;
-                for (i = 1; i < num + elementCount && j < currentRuleItems.size(); j++, i++) {
-                  rule = currentRuleItems.get(j);
-                }
-                if (rule != null) {
-                  Terminal terminal = runtimeData.findTerminalByName(rule.getSymbol().getName());
-                  if (terminal != null) {
-                    terminal.setCount(terminal.getCount() - 1);
-                    type = terminal.getType();
-                  } else {
-                    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(rule.getSymbol().getName());
-                    if (nonTerminal != null) {
-                      nonTerminal.setCount(nonTerminal.getCount() - 1);
-                      type = nonTerminal.getType();
-                    }
-                  }
-                }
-              }
-              if (type != null) {
-                environment.output.printf(".%s", type.getName());
-              }
-            }
-            continue;
-          }
-          environment.output.print('$');
-          if (sign < 0) {
-            environment.output.print('-');
-          }
-          break;
-      }
-      environment.output.print(currentCharacter);
-      currentCharacter = getCharacter();
+    
+    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalId)) {
+      return false;
     }
+    
     generateCaseEnd();
-    ruleActionCount++;
+    runtimeData.ruleActionCount++;
+    
     return true;
   }
 
@@ -1603,23 +1546,7 @@ public class CodeParser extends AbstractPhase {
    * A statement for code generation was found.  Finish it.
    */
   private void generateCaseEnd() {
-    switch (environment.getLanguage()) {
-      case C:
-        environment.output.println();
-        indent(environment.output, environment.getIndent() + 1);
-        environment.output.printf("break;\n");
-        break;
-      case java:
-        environment.output.println();
-        indent(environment.output, environment.getIndent() + 2);
-        environment.output.printf("break;\n");
-        break;
-      case pascal:
-        environment.output.println();
-        indent(environment.output, environment.getIndent() + 1);
-        environment.output.printf("end; (* StxCode *)\n");
-        break;
-    }
+    environment.language.generateCaseEnd();
   }
 
   /**
@@ -1627,351 +1554,39 @@ public class CodeParser extends AbstractPhase {
    * @param ruleNumber is the rule number to be emitted in the case statement
    */
   private void generateCaseStatement(int ruleNumber) {
-    switch (environment.getLanguage()) {
-      case C:
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("case %d:\n", ruleNumber + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        if (environment.isEmitLine()) {
-          environment.output.printf("#line %d \"%s\"\n", lineNumber + 1, environment.getSourceFile().toString());
-          indent(environment.output, environment.getIndent() + 1);
-        }
-        break;
-      case java:
-        indent(environment.output, environment.getIndent() + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        environment.output.printf("case %d: ", ruleNumber + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        break;
-      case pascal:
-        indent(environment.output, environment.getIndent());
-        environment.output.printf("%d: Begin\n", ruleNumber + 1);
-        indent(environment.output, environment.getIndent() + 1);
-        break;
-    }
+    environment.language.generateCaseStart(ruleNumber, Integer.toString(ruleNumber + 1));
   }
 
   /**
    * Output the top of the rules if needed
    */
   private void generateCodeGeneratorHeader() {
-    if (ruleActionCount == 0) {
-      /* header */
-      switch (environment.getLanguage()) {
-        case C:
-          environment.output.printf("\n"
-                                    + "/* Code Generator */\n"
-                                      + "\n"
-                                      + "#ifndef TSTACK\n"
-                                      + "#define TSTACK int\n"
-                                      + "#endif\n"
-                                      + "\n"
-                                      + "TSTACK StxStack[150];\n"
-                                      + "\n"
-                                      + "int pStxStack;\n"
-                                      + "\n"
-                                      + "#define STXCODE_DEFINED\n"
-                                      + "\n"
-                                      + "int StxCode(int rule)\n"
-                                      + "{\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("switch(rule){\n");
-          environment.output.println();
-          break;
-
-        case java:
-          environment.output.printf("\n");
-          indent(environment.output, 1);
-          environment.output.printf("// Code Generator\n");
-          indent(environment.output, 1);
-          environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
-          indent(environment.output, 1);
-          environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
-          indent(environment.output, 1);
-          environment.output.printf("int stackTop;\n\n");
-          indent(environment.output, 1);
-          environment.output.printf("int generateCode(int rule) {\n");
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("switch(rule){\n");
-          environment.output.println();
-          break;
-
-        case pascal:
-          environment.output.printf("\n"
-                                    + "{ Code generator }\n"
-                                      + "\n"
-                                      + "Var\n"
-                                      + "  {$define STXCODE_DEFINED}\n"
-                                      + "  StxStack : Array [0..512] of TStack;\n"
-                                      + "  pStxStack: Integer;\n"
-                                      + "\n"
-                                      + "function StxCode(rule:integer):boolean;\n"
-                                      + "begin\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("Case rule Of\n");
-          break;
-      }
+    if (runtimeData.ruleActionCount == 0) {
+      environment.language.generateCodeGeneratorHeader();
     }
   }
 
   /**
    * copy action until the next ';' or '}' that actually closes
    */
-  private boolean generateLexerCode() throws IOException 
-  {
-    int nBracks = 0;
-    boolean end = false;
-    boolean bBreak;
-    char characterToFind;
-    boolean bStart = true;
-    boolean bSkip = false;
-
-    generateLexerHeader();
-    switch (environment.getLanguage()) {
-      case C:
-        indent(environment.output, environment.getIndent() + 1);
-        if (environment.isEmitLine()) {
-          environment.output.printf("#line %d \"%s\"\n", lineNumber + 1, environment.getSourceFile().toString());
-          indent(environment.output, environment.getIndent() + 1);
-        }
-        break;
-      case java:
-        indent(environment.output, environment.getIndent() + 1);
-        break;
-      case pascal:
-        indent(environment.output, environment.getIndent() + 1);
-        break;
+  private boolean generateLexerCode() throws IOException {
+    if (tokenActionCount == 0) {
+      environment.language.generateLexerHeader();
     }
-
-    while (!end) {
-      switch (currentCharacter) {
-        case '$':
-          currentCharacter = getCharacter();
-          if (currentCharacter == '+') {
-            currentCharacter = getCharacter();
-            switch (environment.getLanguage()) {
-              case C:
-                environment.output.printf("StxChar = StxNextChar()");
-                break;
-              case java:
-                environment.output.printf("currentChar = getNextChar(false)");
-                break;
-              case pascal:
-                environment.output.printf("StxChar := StxNextChar()");
-                break;
-            }
-            continue;
-          } else if (currentCharacter == 'c') {
-            currentCharacter = getCharacter();
-            environment.output.printf((environment.getLanguage() == Language.java) ? "currentChar" : "StxChar");
-            continue;
-          } else if (currentCharacter == 'v') {
-            currentCharacter = getCharacter();
-            environment.output.printf((environment.getLanguage() == Language.java) ? "lexicalValue" : "StxValue");
-            continue;
-          }
-          environment.output.print('$');
-          break;
-
-        case ';': /* finact in C y comment in ASM */
-          if ((environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) && nBracks <= 0) {
-            end = true;
-          }
-          break;
-
-        case '{': /* level++ in C y COMMENT in PAS */
-          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
-            nBracks++;
-          } else if (environment.getLanguage() == Language.pascal) {
-            environment.output.print(currentCharacter);
-            while ((currentCharacter = getCharacter()) != '}') {
-              environment.output.print(currentCharacter);
-            }
-          }
-          break;
-
-        case '}': /* level -- in C */
-          if (environment.getLanguage() == Language.C || environment.getLanguage() == Language.java) {
-            if (--nBracks <= 0 && bSkip) {
-              end = true;
-            }
-          }
-          if (end && bSkip) {
-            currentCharacter = getCharacter();
-            continue;
-          }
-          break;
-
-        case '%':
-        case '\\': /* finact in PAS y ASM */
-          if (environment.getLanguage() != Language.C && environment.getLanguage() != Language.java) {
-            end = true;
-            currentCharacter = getCharacter();
-            continue;
-          }
-          break;
-
-        case '(': /* possible comment in PAS */
-        case '/': /* possible comment in C */
-          if (currentCharacter == '(' && environment.getLanguage() != Language.pascal) {
-            break;
-          } else {
-            characterToFind = ')';
-          }
-          if (currentCharacter == '/' &&
-              environment.getLanguage() != Language.C &&
-                environment.getLanguage() == Language.java) {
-            break;
-          } else {
-            characterToFind = '/';
-          }
-          environment.output.print(currentCharacter);
-          currentCharacter = getCharacter();
-          if (currentCharacter != '*') {
-            continue;
-          }
-
-          environment.output.print(currentCharacter);
-          currentCharacter = getCharacter();
-          bBreak = false;
-          while (!bBreak) {
-            if (currentCharacter == '\0') {
-              environment.error(-1, "Unfinished comment.");
-              return false;
-            }
-            while (currentCharacter == '*') {
-              environment.output.print(currentCharacter);
-              if ((currentCharacter = getCharacter()) == characterToFind) {
-                bBreak = true;
-              }
-            }
-            environment.output.print(currentCharacter);
-            currentCharacter = getCharacter();
-          }
-          continue;
-
-        case '\'': /* constant */
-        case '"': /* string */
-          characterToFind = currentCharacter;
-          environment.output.print(currentCharacter);
-          while ((currentCharacter = getCharacter()) != characterToFind) {
-            if (currentCharacter == '\0') {
-              environment.error(-1, "Statement ' .. ' or \" .. \" not ended");
-              return false;
-            }
-            if (currentCharacter == '\n') {
-              environment.error(-1, "End of line reached on string literal.");
-              break;
-            }
-            if (currentCharacter == '\\') {
-              environment.output.print(currentCharacter);
-              currentCharacter = getCharacter();
-            }
-            environment.output.print(currentCharacter);
-          }
-          break;
-
-        case '\n':
-          environment.output.print(currentCharacter);
-          currentCharacter = getCharacter();
-          indent(environment.output, environment.getIndent() + 1);
-          continue;
-
-        case 0:
-          environment.error(-1, "Unfinished action detected.");
-          return false;
-
-      }
-      if (!bStart || currentCharacter != '{') {
-        environment.output.print(currentCharacter);
-      } else {
-        bSkip = true;
-      }
-      if (currentCharacter > ' ') {
-        bStart = false;
-      }
-      currentCharacter = getCharacter();
-    }
+    environment.language.emitLine(runtimeData.lineNumber + 1);
+    indent(environment.output, environment.getIndent() + 1);
+    environment.language.generateLexerCode(this);
     environment.output.println();
     tokenActionCount++;
     return true;
   }
 
   /**
-   * Emit the header of the lexer as needed.
-   */
-  private void generateLexerHeader() {
-    if (tokenActionCount == 0) {
-      /* encabezado */
-      switch (environment.getLanguage()) {
-        case C:
-          environment.output.printf("\n"
-                                    + "/* Lexical Recognizer */\n"
-                                      + "\n"
-                                      + "char StxChar;"
-                                      + "\n"
-                                      + "int StxLexer()\n"
-                                      + "{\n");
-          break;
-
-        case java:
-          environment.output.printf("\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("// LexicalRecognizer\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("private char currentChar;\n\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("int parserElement(boolean initialize) {\n");
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("lexicalValue = new LexicalValue();\n\n");
-          break;
-
-        case pascal:
-          environment.output.printf("\n"
-                                    + "{ Lexical Analyzer }\n"
-                                      + "\n"
-                                      + "VAR StxChar:char;\n"
-                                      + "\n"
-                                      + "function StxLexer():int;\n"
-                                      + "begin\n");
-          break;
-      }
-    }
-  }
-
-  /**
    * Generate the ending portion of the code generation
    */
   private void generateCodeGeneratorFooter() {
-    if (ruleActionCount != 0) {
-      environment.output.println();
-      switch (environment.getLanguage()) {
-        case C:
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("}/* End of switch */\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("return 1; /* OK */\n");
-          environment.output.printf("}/* End of StxCode */\n");
-          break;
-
-        case java:
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("}\n");
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("return 1; // OK\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("}\n");
-          break;
-
-        case pascal:
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("END;(* CASE *)\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("StxCode := true;\n");
-          environment.output.printf("END;(* StxCode *)\n");
-          break;
-
-      }
+    if (runtimeData.ruleActionCount != 0) {
+      environment.language.generateCodeGeneratorFooter();
     }
   }
 
@@ -1980,28 +1595,7 @@ public class CodeParser extends AbstractPhase {
    */
   private void generateLexerFooter() {
     if (tokenActionCount != 0) {
-      environment.output.println();
-      switch (environment.getLanguage()) {
-        case C:
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("return 0; /* UNKNOWN */\n");
-          environment.output.printf("}/* End of StxLexer */\n");
-          break;
-
-        case java:
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("return 0; // UNKNOWN\n");
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("}\n");
-          break;
-
-        case pascal:
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("StxLexer := 0;\n");
-          environment.output.printf("END;(* StxLexer *)\n");
-          break;
-
-      }
+      environment.language.generateLexerFooter();
     }
   }
 
@@ -2009,33 +1603,31 @@ public class CodeParser extends AbstractPhase {
    * During a declaration, emit the accompanying code
    */
   private boolean generateDeclaration() throws IOException {
-    while (Character.isWhitespace(currentCharacter)) {
-      currentCharacter = getCharacter();
+    while (Character.isWhitespace(runtimeData.currentCharacter)) {
+      getCharacter();
     }
-    if (environment.getLanguage() == Language.C && environment.isEmitLine()) {
-      environment.output.printf("\n#line %d \"%s\"\n", lineNumber, environment.getSourceFile().toString());
-    }
-    while (currentCharacter != '\0') {
-      if (currentCharacter == '\\') {
-        if ((currentCharacter = getCharacter()) == '}') {
-          currentCharacter = getCharacter();
+    environment.language.emitLine(runtimeData.lineNumber);
+    while (runtimeData.currentCharacter != '\0') {
+      if (runtimeData.currentCharacter == '\\') {
+        if ((getCharacter()) == '}') {
+          getCharacter();
           return true;
         } else {
           environment.output.print('\\');
         }
       }
-      if (currentCharacter == '%') {
-        if ((currentCharacter = getCharacter()) == '}') {
-          currentCharacter = getCharacter();
+      if (runtimeData.currentCharacter == '%') {
+        if ((getCharacter()) == '}') {
+          getCharacter();
           return true;
         } else {
           environment.output.print('%');
         }
       }
-      environment.output.print(currentCharacter);
-      currentCharacter = getCharacter();
+      environment.output.print(runtimeData.currentCharacter);
+      getCharacter();
     }
-    environment.error(-1, "End of file before \'%%}\'.");
+    environment.error(-1, "End of file before \'\\}\' or \'%%}\'.");
     return false;
   }
 
@@ -2044,104 +1636,9 @@ public class CodeParser extends AbstractPhase {
    * really a structure
    */
   private boolean generateStructure() throws IOException {
-    int level;
-    boolean hasCharacters;
-
-    if (environment.getLanguage() == Language.C && environment.isEmitLine()) {
-      environment.include.printf("\n#line %d \"%s\"\n", lineNumber, environment.getSourceFile().toString());
-    }
-
+    environment.language.emitLine(runtimeData.lineNumber);
     runtimeData.setStackTypeDefined(true);
-    switch (environment.getLanguage()) {
-      case C:
-        environment.include.printf("typedef union");
-        level = 0;
-        while (2 > 1) {
-          if (currentCharacter == '\0') {
-            environment.error(-1, "End of file processing \'%%union\'.");
-            return false;
-          }
-
-          environment.include.print(currentCharacter);
-          switch (currentCharacter) {
-            case '{':
-              ++level;
-              break;
-
-            case '}':
-              --level;
-              if (level == 0) {
-                environment.include.printf(" tstack, *ptstack;\n\n");
-                environment.include.printf("#define TSTACK tstack\n" + "#define PTSTACK ptstack\n\n");
-                currentCharacter = getCharacter();
-                return true;
-              }
-          }
-          currentCharacter = getCharacter();
-        }
-        // break;
-
-      case java:
-        indent(environment.include, 1);
-        environment.include.printf("private class LexicalValue");
-        level = 0;
-        while (2 > 1) {
-          if (currentCharacter == '\0') {
-            environment.error(-1, "End of file processing \'%%union\'.");
-            return false;
-          }
-
-          environment.include.print(currentCharacter);
-          switch (currentCharacter) {
-            case '{':
-              ++level;
-              break;
-
-            case '}':
-              --level;
-              if (level == 0) {
-                environment.include.printf("\n\n");
-                currentCharacter = getCharacter();
-                return true;
-              }
-            case '\n':
-              indent(environment.include, 1);
-              break;
-          }
-          currentCharacter = getCharacter();
-        }
-        // break;
-
-      case pascal:
-        environment.output.printf("Type\n"
-                                  + "  {$define TSTACK_DEFINED}\n"
-                                    + "  PTStack = ^TStack;\n"
-                                    + "  TStack = Record\n"
-                                    + "    case integer of");
-        level = 0;
-        hasCharacters = false;
-        while (currentCharacter != '%' && currentCharacter != '\\') {
-          if (currentCharacter == '\n') {
-            if (hasCharacters) {
-              environment.output.printf(");");
-            }
-            hasCharacters = false;
-          } else {
-            if (hasCharacters == false) {
-              environment.output.printf("      %d:(", level);
-              level++;
-            }
-            hasCharacters = true;
-          }
-          environment.output.print(currentCharacter);
-          currentCharacter = getCharacter();
-        }
-        currentCharacter = getCharacter();
-        environment.output.printf("  end;\n");
-        break;
-    }
-
-    return true;
+    return environment.language.generateStructure(this);
   }
 
   /**
@@ -2153,10 +1650,10 @@ public class CodeParser extends AbstractPhase {
     RuleItem item;
 
     item = new RuleItem(elem);
-    if (currentRuleItems == null) {
-      currentRuleItems = new LinkedList<RuleItem>();
+    if (runtimeData.currentRuleItems == null) {
+      runtimeData.currentRuleItems = new LinkedList<RuleItem>();
     }
-    currentRuleItems.add(item);
+    runtimeData.currentRuleItems.add(item);
     return item;
   }
 
@@ -2180,12 +1677,12 @@ public class CodeParser extends AbstractPhase {
     Rule rule;
 
     rule = new Rule(0, actLine, rulePrecedence, null);
-    if (currentRuleItems != null) {
-      rule.getItems().addAll(currentRuleItems);
-      for (RuleItem item : currentRuleItems) {
+    if (runtimeData.currentRuleItems != null) {
+      rule.getItems().addAll(runtimeData.currentRuleItems);
+      for (RuleItem item : runtimeData.currentRuleItems) {
         item.setRule(rule);
       }
-      currentRuleItems = null;
+      runtimeData.currentRuleItems = null;
     }
     runtimeData.getRules().add(rule);
     rulePrecedence = 0;
@@ -2203,12 +1700,12 @@ public class CodeParser extends AbstractPhase {
     Rule rule;
 
     rule = new Rule(0, actLine, rulePrecedence, root);
-    if (currentRuleItems != null) {
-      rule.getItems().addAll(currentRuleItems);
-      for (RuleItem item : currentRuleItems) {
+    if (runtimeData.currentRuleItems != null) {
+      rule.getItems().addAll(runtimeData.currentRuleItems);
+      for (RuleItem item : runtimeData.currentRuleItems) {
         item.setRule(rule);
       }
-      currentRuleItems = null;
+      runtimeData.currentRuleItems = null;
     }
     runtimeData.getRules().add(0, rule);
     rulePrecedence = 0;
@@ -2299,45 +1796,13 @@ public class CodeParser extends AbstractPhase {
    * syntax context and can recover from errors.
    */
   private void generateTopRecoveryTable() {
+    numberOfErrorTokens = 0;
     for (Terminal id : runtimeData.getTerminals()) {
       if (id instanceof ErrorToken) {
-        numberOfRecoveries++;
+        numberOfErrorTokens++;
       }
     }
-    switch (environment.getLanguage()) {
-      case C:
-        environment.output.printf("\n#define RECOVERS %d\n\n"
-                                  + "/* Contains tokens in compact mode, and column in matrix */", numberOfRecoveries);
-        if (numberOfRecoveries != 0) {
-          environment.output.printf("\nint StxRecoverTable[RECOVERS] = {\n");
-        } else {
-          environment.output.printf("\nint StxRecoverTable[1] = {0};\n\n");
-        }
-        break;
-      case java:
-        environment.output.printf("\n");
-        indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("private static final int RECOVERS=%d;\n\n", numberOfRecoveries);
-        indent(environment.output, environment.getIndent() - 1);
-
-        environment.output.printf("// Contains tokens in compact mode, and column in matrix\n");
-        indent(environment.output, environment.getIndent() - 1);
-        if (numberOfRecoveries != 0) {
-          environment.output.printf("int recoverTable[] = {\n");
-        } else {
-          environment.output.printf("int recoverTable[] = {0};\n\n");
-        }
-        break;
-      case pascal:
-        environment.output.printf("\nConst\n  RECOVERS = %d;\n"
-                                  + "{ Contains tokens in compact mode, and column in matrix }", numberOfRecoveries - 1);
-        if (numberOfRecoveries != 0) {
-          environment.output.printf("\n  StxRecoverTable : array [0..RECOVERS] of INTEGER = (\n");
-        } else {
-          environment.output.printf("\n  StxRecoverTable : array [0..0] of INTEGER = (0);\n\n");
-        }
-        break;
-    }
+    environment.language.generateRecoveryTableHeader(numberOfErrorTokens);
   }
 
   /**
@@ -2349,7 +1814,7 @@ public class CodeParser extends AbstractPhase {
     environment.report
         .printf("________________________________________________________________________________________________________________________\n");
 
-    int whichRecoveries = 0;
+    int recoveries = 0;
     int terminals = 0;
     for (Terminal id : runtimeData.getTerminals()) {
       // Look for the default token for a non assigned terminal symbol
@@ -2373,81 +1838,16 @@ public class CodeParser extends AbstractPhase {
       environment.report.printf("\n");
       if (id instanceof ErrorToken) {
         int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
-        switch (environment.getLanguage()) {
-          case C:
-            if (++whichRecoveries < numberOfRecoveries) {
-              environment.output.printf("\t%d /* %s */,\n", recoveryToken, id.getName());
-            } else {
-              environment.output.printf("\t%d /* %s */\n};\n\n", recoveryToken, id.getName());
-            }
-            break;
-          case java:
-            indent(environment.output, environment.getIndent());
-            if (++whichRecoveries < numberOfRecoveries) {
-              environment.output.printf("%d, // %s\n", recoveryToken, id.getName());
-            } else {
-              environment.output.printf("%d // %s\n", recoveryToken, id.getName());
-              indent(environment.output, environment.getIndent() - 1);
-              environment.output.printf("};\n\n");
-            }
-            break;
-          case pascal:
-            if (++whichRecoveries < numberOfRecoveries) {
-              environment.output.printf("\t%d, (* %s *)\n", recoveryToken, id.getName());
-            } else {
-              environment.output.printf("\t%d (* %s *) );\n\n", recoveryToken, id.getName());
-            }
-            break;
-        }
+        ++recoveries;
+        environment.language.generateErrorToken(recoveryToken, (ErrorToken) id, recoveries >= numberOfErrorTokens);
       }
     }
-
-    switch (environment.getLanguage()) {
-      case C:
-        environment.output.printf("\n#define TOKENS %d\n", terminals);
-        environment.output.printf("\nint StxTokens[TOKENS] = {\n");
-        break;
-      case java:
-        indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("private static int TOKENS=%d;\n", terminals);
-        indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("private static int tokens[] = {\n");
-        break;
-      case pascal:
-        environment.output.printf("\nConst\n  TOKENS = %d;\n", terminals - 1);
-        environment.output.printf("\n  StxTokens : array [0..TOKENS] of Integer = (\n");
-        break;
-    }
+    
+    environment.language.generateTokensHeader(terminals);
 
     int i = 1;
     for (Terminal id : runtimeData.getTerminals()) {
-      switch (environment.getLanguage()) {
-        case C:
-          if (i == terminals) {
-            environment.output.printf("\t%d /* %s (%s)*/\n};\n\n", id.getToken(), id.getName(), id.getFullName());
-          } else {
-            environment.output.printf("\t%d, /* %s (%s) */\n", id.getToken(), id.getName(), id.getFullName());
-          }
-          break;
-        case java:
-          indent(environment.output, environment.getIndent());
-          if (i == terminals) {
-            environment.output.printf("%d // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
-            indent(environment.output, environment.getIndent() - 1);
-            environment.output.printf("};\n\n");
-
-          } else {
-            environment.output.printf("%d, // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
-          }
-          break;
-        case pascal:
-          if (i == terminals) {
-            environment.output.printf("    %d\n (* %s (%s) *) );\n", id.getToken(), id.getName(), id.getFullName());
-          } else {
-            environment.output.printf("    %d,\n (* %s (%s) *)", id.getToken(), id.getName(), id.getFullName());
-          }
-          break;
-      }
+      environment.language.generateToken(id, i == terminals);
       i++;
     }
     environment.report.printf("\n");
@@ -2503,39 +1903,7 @@ public class CodeParser extends AbstractPhase {
    * token definitions are declared as static or #define
    */
   private void generateTokenDefinitions() {
-    boolean first = true;
-    for (Terminal id : runtimeData.getTerminals()) {
-      id.computeVariable();
-      if (id.getVariable().equals("_")) {
-        switch (environment.getLanguage()) {
-          case C:
-            if (first) {
-              environment.include.printf("\n/* Token definitions */\n");
-              first = false;
-            }
-            environment.include.printf("#define %s %d\n", id.getVariable(), id.getToken());
-            break;
-          case java:
-            if (first) {
-              indent(environment.include, environment.getIndent() - 1);
-              environment.include.printf("// Token definitions\n");
-              first = false;
-            }
-            indent(environment.include, environment.getIndent() - 1);
-            environment.include.printf("private static final int %s=%d;\n", id.getVariable(), id.getToken());
-            break;
-          case pascal:
-            if (first) {
-              environment.include.printf("\n(* Token definitions *)\n");
-              environment.include.printf("\nConst\n");
-              first = false;
-            }
-            environment.include.printf("  %s = %d;\n", id.getVariable(), id.getToken());
-            break;
-        }
-      }
-    }
-    environment.include.printf("\n");
+    environment.language.generateTokenDefinitions();
   }
 
   /**
@@ -2571,8 +1939,8 @@ public class CodeParser extends AbstractPhase {
       System.out.println("Parse");
     }
     try {
-      currentCharacter = getCharacter();
-      lineNumber = 0;
+      getCharacter();
+      runtimeData.lineNumber = 0;
       markers = 0;
       Terminal terminal = new Terminal("$");
       runtimeData.getTerminals().add(terminal);

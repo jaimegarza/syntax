@@ -25,7 +25,8 @@ public class Fragments extends ListResourceBundle{
   }
 
   private Object[] contents [] = {
-      {"hello","Hola Mundo"} // keep, for unit testing
+      {"hello","Hola Mundo"}, // keep, for unit testing
+      {"stxstack", "StxStack[{0}]"}
   };
 
 }

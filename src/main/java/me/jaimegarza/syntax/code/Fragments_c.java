@@ -24,7 +24,11 @@ public class Fragments_c extends ListResourceBundle {
    * The fragments
    */
   Object[] contents [] = {
-      {"hello","Cello Corld"} // keep, for unit testing
+      {"hello","Cello Corld"}, // keep, for unit testing
+      {"stxstack", "StxStack[pStxStack{0}]"},
+      {"currentChar", "StxChar"},
+      {"lexicalValue", "StxValue"},
+      {"getc", "StxChar = StxNextChar()"},
   };
 
 }
