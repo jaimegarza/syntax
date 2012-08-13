@@ -31,8 +31,10 @@ package me.jaimegarza.syntax.generator;
 import java.util.LinkedList;
 import java.util.List;
 
+import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
+import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
@@ -106,7 +108,31 @@ public class RuntimeData {
    * Did the stack structure get defined?
    */
   private boolean stackTypeDefined;
-  
+  /**
+   * Keep the current character here
+   */
+  public char currentCharacter;
+  /**
+   * Current source line number
+   */
+  public int lineNumber = 0;
+  /**
+   * The token's value
+   */
+  public String currentStringValue;
+  /**
+   * Temporary space for rule items before assignment
+   */
+  public List<RuleItem> currentRuleItems = null;
+  /**
+   * How many actions do I have?
+   */
+  public int ruleActionCount;
+  /**
+   * The environment
+   */
+  private Environment environment;
+
   /**
    * Check to see if a rule identified by nonTerminalId is empty, i.e. it has no
    * rule items.
@@ -445,6 +471,20 @@ public class RuntimeData {
    */
   public void setStackTypeDefined(boolean stackTypeDefined) {
     this.stackTypeDefined = stackTypeDefined;
+  }
+
+  /**
+   * @return the environment
+   */
+  public Environment getEnvironment() {
+    return environment;
+  }
+
+  /**
+   * @param environment the environment to set
+   */
+  public void setEnvironment(Environment environment) {
+    this.environment = environment;
   }
 
 }

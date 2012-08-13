@@ -80,18 +80,6 @@ public abstract class AbstractPhase {
    * @param n is the number of indentations.
    */
   protected void indent(PrintStream out, int n) {
-    int i;
-
-    for (i = 0; i < n; i++) {
-      switch (environment.getLanguage()) {
-        case C:
-          out.print("    ");
-          break;
-        case java:
-        case pascal:
-          out.print("  ");
-          break;
-      }
-    }
+    environment.language.indent(out, n);
   }
 }

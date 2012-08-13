@@ -24,7 +24,11 @@ public class Fragments_pascal extends ListResourceBundle {
    * The fragments
    */
   Object[] contents [] = {
-      {"hello","Pello Porld"} // keep, for unit testing
+      {"hello","Pello Porld"}, // keep, for unit testing
+      {"stxstack", "StxStack[pStxStack{0}]"},
+      {"currentChar", "StxChar"},
+      {"lexicalValue", "StxValue"},
+      {"getc", "StxChar := StxNextChar()"},
   };
 
 }

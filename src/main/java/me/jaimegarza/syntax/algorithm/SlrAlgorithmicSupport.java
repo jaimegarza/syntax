@@ -90,4 +90,13 @@ public class SlrAlgorithmicSupport extends BaseAlgorithmicSupport{
     
   }
 
+  /*
+   * (non-Javadoc)
+   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#hasFollows()
+   */
+  @Override
+  public boolean hasFollows() {
+    return true;
+  }
+
 }

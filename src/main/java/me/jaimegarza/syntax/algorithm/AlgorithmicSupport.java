@@ -70,5 +70,11 @@ public interface AlgorithmicSupport {
    */
   void initializeDot(Dot dot);
 
+  /**
+   * Does this algorithm support follow sets?
+   * @return
+   */
+  boolean hasFollows();
+
 
 }

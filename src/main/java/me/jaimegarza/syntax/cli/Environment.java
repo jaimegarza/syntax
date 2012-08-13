@@ -32,7 +32,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -42,8 +42,11 @@ import me.jaimegarza.syntax.algorithm.AlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.LalrAlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.SlrAlgorithmicSupport;
 import me.jaimegarza.syntax.code.Fragments;
-import me.jaimegarza.syntax.code.Language;
 import me.jaimegarza.syntax.generator.RuntimeData;
+import me.jaimegarza.syntax.language.BaseLanguageSupport;
+import me.jaimegarza.syntax.language.Language;
+import me.jaimegarza.syntax.language.LanguageSupport;
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -81,10 +84,10 @@ public class Environment extends Options {
   private String relatedTitle;
   private String[] args;
   private CommandLine cmd = null;
-  private Language language;
+  private Language languageEnum;
+  private Algorithm algorithmEnum;
   private boolean verbose;
   private boolean debug;
-  private Algorithm algorithmEnum;
   private boolean emitLine;
   private int margin;
   private int indent;
@@ -99,14 +102,16 @@ public class Environment extends Options {
   private RuntimeData runtimeData = new RuntimeData();
 
   public BufferedReader source = null;
-  public PrintStream output = null;
-  public PrintStream include = null;
-  public PrintStream report = null;
+  public FormattingPrintStream output = null;
+  public FormattingPrintStream include = null;
+  public FormattingPrintStream report = null;
   public AlgorithmicSupport algorithm = null;
-
+  public LanguageSupport language = null;
+  
+  private ResourceBundle fragments;
   private int parsedLine;
   private Locale locale;
-  private ResourceBundle fragmentBundle;
+
 
 
   /**
@@ -127,6 +132,7 @@ public class Environment extends Options {
     super();
     this.relatedTitle = title;
     this.args = args;
+    this.runtimeData.setEnvironment(this);
     init();
     parse();
   }
@@ -147,6 +153,15 @@ public class Environment extends Options {
     if (report != null) {
       IOUtils.closeQuietly(report);
     }
+  }
+  
+  public String getFragment(String key) {
+    return fragments.getString(key);
+  }
+  
+  public String formatFragment(String key, Object...objects) {
+    String fragment = fragments.getString(key);
+    return MessageFormat.format(fragment, objects);
   }
 
   /**
@@ -263,18 +278,24 @@ public class Environment extends Options {
    */
   private void setLanguage() throws ParseException {
     String value = get("l", "c");
-    if (value.equalsIgnoreCase("c")) {
-      this.language = Language.C;
-    } else if (value.equalsIgnoreCase("j") || value.equalsIgnoreCase("java")) {
-      this.language = Language.java;
-    } else if (value.equalsIgnoreCase("p") || value.equalsIgnoreCase("pascal")) {
-      this.language = Language.pascal;
-    } else {
+    for (Language l: Language.values()) {
+      if (l.support().getId().equalsIgnoreCase(value) ||
+          l.support().getLanguageCode().equalsIgnoreCase(value)) {
+        this.languageEnum = l;
+        break;
+      }
+    }
+    if (this.languageEnum == null) {
       throw new ParseException("Option -a|--algorithm is not valid :" + value);
     }
-    this.locale = new Locale(/*this.language.bundle()*/"c");
-    fragmentBundle = ResourceBundle.getBundle(Fragments.class.getCanonicalName(), locale);
-
+    this.language = this.languageEnum.support();
+    if (this.language == null) {
+      throw new ParseException("language " + value + " was no instantiated.");
+    }
+    ((BaseLanguageSupport) this.language).setEnvironment(this);
+    this.locale = new Locale(language.getLanguageCode());
+    fragments = ResourceBundle.getBundle(Fragments.class.getCanonicalName(), locale);
+    
   }
 
   /**
@@ -444,9 +465,9 @@ public class Environment extends Options {
     File sourceFile = getFile(0, true, "source file");
     this.sourceFile = sourceFile;
     if (sourceFile != null) {
-      this.outputFile = new File(replaceExtension(sourceFile.getPath(), language.extension()));
+      this.outputFile = new File(replaceExtension(sourceFile.getPath(), language.getExtensionSuffix()));
       if (externalInclude) {
-        this.includeFile = new File(replaceExtension(sourceFile.getPath(), language.includeExtension()));
+        this.includeFile = new File(replaceExtension(sourceFile.getPath(), language.getIncludeExtensionSuffix()));
       }
       this.reportFile = new File(replaceExtension(sourceFile.getPath(), ".txt"));
     }
@@ -470,7 +491,7 @@ public class Environment extends Options {
       this.reportFile = reportFile;
     }
     try {
-      this.report = new PrintStream(FileUtils.openOutputStream(this.reportFile));
+      this.report = new FormattingPrintStream(FileUtils.openOutputStream(this.reportFile));
     } catch (IOException e) {
       throw new ParseException("Cannot open file " + reportFile);
     }
@@ -483,15 +504,15 @@ public class Environment extends Options {
   private void setOutputFile() throws ParseException {
     File outputFile = getFile(1, false, "output file");
     if (outputFile == null) {
-      outputFile = new File(replaceExtension(sourceFile.getAbsolutePath(), language.extension()));
+      outputFile = new File(replaceExtension(sourceFile.getAbsolutePath(), language.getExtensionSuffix()));
     }
     if (outputFile != null) {
       this.outputFile = outputFile;
       try {
-        output = new PrintStream(FileUtils.openOutputStream(outputFile));
+        output = new FormattingPrintStream(FileUtils.openOutputStream(outputFile));
         if (externalInclude) {
-          this.includeFile = new File(replaceExtension(outputFile.getPath(), language.includeExtension()));
-          this.include = new PrintStream(FileUtils.openOutputStream(this.includeFile));
+          this.includeFile = new File(replaceExtension(outputFile.getPath(), language.getIncludeExtensionSuffix()));
+          this.include = new FormattingPrintStream(FileUtils.openOutputStream(this.includeFile));
         }
       } catch (IOException e) {
         throw new ParseException("Cannot open file " + outputFile);
@@ -536,8 +557,8 @@ public class Environment extends Options {
   /**
    * @return the language
    */
-  public Language getLanguage() {
-    return language;
+  public Language getLanguageEnum() {
+    return languageEnum;
   }
 
   /**
@@ -650,6 +671,7 @@ public class Environment extends Options {
    */
   public void setRuntimeData(RuntimeData runtimeData) {
     this.runtimeData = runtimeData;
+    this.runtimeData.setEnvironment(this);
   }
 
   /**
@@ -663,7 +685,7 @@ public class Environment extends Options {
              verbose +
              "\n" +
              "  language: " +
-             language +
+             languageEnum +
              "\n" +
              "  algorithm: " +
              algorithmEnum +
