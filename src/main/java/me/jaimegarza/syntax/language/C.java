@@ -311,10 +311,6 @@ public class C extends BaseLanguageSupport {
   }
 
   @Override
-  public void printConstants() {
-  }
-
-  @Override
   public void printActionHeader() {
     environment.output.printf("\n"
         + "/* Acction table */\n"

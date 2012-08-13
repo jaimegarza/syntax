@@ -18,6 +18,12 @@ import java.util.ListResourceBundle;
  *
  */
 public class Fragments extends ListResourceBundle{
+  
+  public static final String HELLO = "hello";
+  public static final String STXSTACK = "stxstack";
+  public static final String GETC = "getc";
+  public static final String LEXICAL_VALUE = "lexicalValue";
+  public static final String CURRENT_CHAR = "currentChar";
 
   @Override
   protected Object[][] getContents() {
@@ -25,8 +31,8 @@ public class Fragments extends ListResourceBundle{
   }
 
   private Object[] contents [] = {
-      {"hello","Hola Mundo"}, // keep, for unit testing
-      {"stxstack", "StxStack[{0}]"}
+      {HELLO,"Hola Mundo"}, // keep, for unit testing
+      {STXSTACK, "StxStack[{0}]"}
   };
 
 }

@@ -413,10 +413,6 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  public void printConstants() {
-  }
-
-  @Override
   public void printActionHeader() {
     environment.output.printf("Const\n"
         + "  NUM_GOTOS = %d;\n"
