@@ -95,6 +95,14 @@ public interface LanguageSupport {
   String indent(PrintStream out, int n);
   
   /**
+   * Indents a number of separators, returning the string
+   * @param n is the number of indentations
+   * 
+   * @return the string with all the indents
+   */
+  String indent(int n);
+  
+  /**
    * emit a case start
    * @param lineNumber the line number on the source
    * @param label the label of the case statement
@@ -216,17 +224,38 @@ public interface LanguageSupport {
    */
   void printErrorEntry(int error);
 
-  void printConstants();
-
+  /**
+   * emit the header of the action table
+   */
   void printActionHeader();
-
+  
+  /**
+   * Emit one action
+   * @param action the action id
+   * @param anAction the actual action
+   */
   void printAction(int action, Action anAction);
 
+  /**
+   * emit the goto table header
+   */
   void printGoToTableHeader();
 
+  /**
+   * Emit one go to
+   * @param numGotos the number of gotos
+   * @param pGoto the actual goto
+   */
   void printGoTo(int numGotos, GoTo pGoto);
 
+  /**
+   * The skeleton was not found,  say so.
+   * @param filename the missing skeleton
+   */
   void printMissingSkeleton(String filename);
 
+  /**
+   * Output the whole grammar table
+   */
   void printGrammarTable();
 }

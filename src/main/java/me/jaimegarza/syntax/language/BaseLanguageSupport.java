@@ -39,7 +39,9 @@ import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.generator.RuntimeData;
 
 /**
- *
+ * Class that contains routines common to all language drivers
+ * TODO Move some code as fragments.
+ * 
  * @author jaimegarza@gmail.com
  *
  */
@@ -48,45 +50,39 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   protected Environment environment;
   protected RuntimeData runtime;
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.language.LanguageSupport#emitLine(int)
-   */
+  @Override
   public void emitLine(int lineNumber) {
   }
   
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.language.LanguageSupport#emitLine(int)
-   */
+  @Override
   public void emitLine(int lineNumber, String filename) {
   }
-  
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.language.LanguageSupport#getNumberOfSpacesPerIndent()
-   */
+
+  @Override
   public int getNumberOfSpacesPerIndent() {
     return 2;
   }
-  
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.language.LanguageSupport#indent(java.io.PrintStream, int)
-   */
+
+  @Override
   public String indent(PrintStream out, int n) {
     StringBuilder b = new StringBuilder();
     int spaces = n * getNumberOfSpacesPerIndent();
     for (int i = 0; i < spaces; i++) {
       b.append(' ');
     }
+    String indentString = b.toString();
     if (out != null) {
-      out.print(b.toString());
+      out.print(indentString);
     }
-    return b.toString();
+    return indentString;
   }
   
-  /**
+  @Override
+  public String indent(int n) {
+    return indent(null, n);
+  }
+  
+  /*
    * Getters and setters
    */
 
@@ -364,6 +360,4 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     }
     return true;
   }
-
-
 }

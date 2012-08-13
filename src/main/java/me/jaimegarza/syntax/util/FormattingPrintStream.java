@@ -1,10 +1,7 @@
 package me.jaimegarza.syntax.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 
 import me.jaimegarza.syntax.cli.Environment;
 
@@ -18,36 +15,30 @@ public class FormattingPrintStream extends PrintStream {
   }
 
   public void printlnFragment(String key, Object... objects) {
-    String fragment = environment.formatFragment(key, objects);
-    println(fragment);
+    printFragment(key, objects);
+    println();
   }
 
-  public FormattingPrintStream(File file, String csn) throws FileNotFoundException, UnsupportedEncodingException {
-    super(file, csn);
+  public void printIndentedFragment(String key, int indent, Object... objects) {
+    Object newObjects[] = new Object[objects.length+1];
+    for (int i = 0; i < objects.length; i++) {
+      newObjects[i+1] = objects[i];
+    }
+    newObjects[0] = environment.language.indent(indent);
+    printFragment(key, newObjects);
   }
 
-  public FormattingPrintStream(File file) throws FileNotFoundException {
-    super(file);
+  public void printlnIndentedFragment(String key, int indent, Object... objects) {
+    printIndentedFragment(key, indent, objects);
+    println();
   }
 
-  public FormattingPrintStream(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException {
-    super(out, autoFlush, encoding);
-  }
-
-  public FormattingPrintStream(OutputStream out, boolean autoFlush) {
-    super(out, autoFlush);
-  }
-
+  /**
+   * Construct a formatting print stream from an output stream
+   * @param out the output stream
+   */
   public FormattingPrintStream(OutputStream out) {
     super(out);
-  }
-
-  public FormattingPrintStream(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException {
-    super(fileName, csn);
-  }
-
-  public FormattingPrintStream(String fileName) throws FileNotFoundException {
-    super(fileName);
   }
 
   /**
