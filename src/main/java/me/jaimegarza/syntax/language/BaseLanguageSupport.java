@@ -40,7 +40,6 @@ import me.jaimegarza.syntax.generator.RuntimeData;
 
 /**
  * Class that contains routines common to all language drivers
- * TODO Move some code as fragments.
  * 
  * @author jaimegarza@gmail.com
  *

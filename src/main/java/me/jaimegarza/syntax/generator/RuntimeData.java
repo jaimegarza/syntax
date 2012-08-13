@@ -93,7 +93,7 @@ public class RuntimeData {
   private int numberOfRecoveries;
   /**
    * List of error messages as computed
-   * TODO: allow assignment of errors per rule?
+   * TODO: allow assignment of error messages per rule?
    */
   private List<String> errorMessages;
   /**
