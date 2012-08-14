@@ -1,0 +1,17 @@
+Jaime Garza's Syntax Compiler-Compiler
+Copyright (c) 1985, 2012 Jaime Garza
+
+This product includes software developed by
+Jaime Garza (http://jaimegarza.me).
+
+This product may include a number of subcomponents with separate
+copyright notices and license terms. Your use of the source code for
+these subcomponents is subject to the terms and conditions of the
+subcomponent's license, as noted in the license.txt file.
+
+=======================================================================
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+=======================================================================
+
