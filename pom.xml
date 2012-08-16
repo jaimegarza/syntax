@@ -4,6 +4,20 @@
   <groupId>me.jaimegarza</groupId>
   <artifactId>syntax</artifactId>
   <version>4.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <!-- needed for Sonatype OSS repository https://oss.sonatype.org -->
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
+  <name>Syntax Compiler-Compiler</name>
+  <description>
+    Syntax is a compiler compiler that handles LALR and SLR grammars.  It can generate C, Java and Delphi Pascal artifacts
+  </description>
+  <url>https://github.com/jaimegarza/syntax/wiki</url>
 
   <licenses>
     <license>
@@ -13,20 +27,12 @@
     </license>
   </licenses>
 
-  <name>Syntax Compiler-Compiler</name>
-  <url>https://github.com/jaimegarza/syntax/wiki</url>
-  <description>
-    Syntax is a compiler compiler that handles LALR and SLR grammars.  It can generate C, Java and Delphi Pascal artifacts
-  </description>
   <scm>
     <developerConnection>scm:git:git@github.com:jaimegarza/syntax.git</developerConnection>
     <connection>scm:git:git@github.com:jaimegarza/syntax.git</connection>
     <url>git@github.com:jaimegarza/syntax.git</url>
   </scm>
-  <organization>
-    <name>Jaime C. Garza</name>
-    <url>http://jaimegarza.me</url>
-  </organization>
+
   <developers>
     <developer>
       <id>jaimegarza</id>
@@ -110,6 +116,38 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.4</version>
+            <configuration>
+              <keyname>E03F5040</keyname>
+            </configuration>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
   <dependencies>
     <dependency>
       <groupId>commons-cli</groupId>
