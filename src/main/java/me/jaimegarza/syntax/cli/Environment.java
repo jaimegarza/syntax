@@ -32,6 +32,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Locale;
@@ -70,6 +72,8 @@ import org.apache.commons.logging.LogFactory;
  */
 @SuppressWarnings("unused")
 public class Environment extends Options {
+  private static final String CLASSPATH_PREFIX = "classpath:";
+
   private static final long serialVersionUID = -4212115971332112220L;
 
   private static final boolean NO_ARG = false;
@@ -427,7 +431,12 @@ public class Environment extends Options {
   }
 
   /**
-   * Obtain the file by index
+   * Obtain the file by index.  I keep a list of filenames where:
+   * <ul>
+   * <li>0. Source file
+   * <li>1. Output file
+   * <li>2. Report file
+   * </ul>
    * @param index the index of the filename
    * @param isRequired if it has to be there
    * @param argumentName the name of the option
@@ -441,7 +450,18 @@ public class Environment extends Options {
       }
       return null;
     }
-    return new File((String) fileNames.get(index));
+    
+    String fileName = (String) fileNames.get(index);
+    File file;
+    if (fileName.startsWith(CLASSPATH_PREFIX)) {
+      // testing cases
+      fileName = fileName.substring(CLASSPATH_PREFIX.length());
+      URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
+      file = new File(URI.create(url.toString()));
+    } else {
+      file = new File(fileName);
+    }
+    return file;
   }
 
   /**
@@ -462,8 +482,7 @@ public class Environment extends Options {
    * @throws ParseException if the source file cannot be computed
    */
   private void setSourceFile() throws ParseException {
-    File sourceFile = getFile(0, true, "source file");
-    this.sourceFile = sourceFile;
+    this.sourceFile = getFile(0, true, "source file");
     if (sourceFile != null) {
       this.outputFile = new File(replaceExtension(sourceFile.getPath(), language.getExtensionSuffix()));
       if (externalInclude) {
@@ -491,7 +510,7 @@ public class Environment extends Options {
       this.reportFile = reportFile;
     }
     try {
-      this.report = new FormattingPrintStream(FileUtils.openOutputStream(this.reportFile));
+      this.report = new FormattingPrintStream(this, FileUtils.openOutputStream(this.reportFile));
     } catch (IOException e) {
       throw new ParseException("Cannot open file " + reportFile);
     }
@@ -509,10 +528,10 @@ public class Environment extends Options {
     if (outputFile != null) {
       this.outputFile = outputFile;
       try {
-        output = new FormattingPrintStream(FileUtils.openOutputStream(outputFile));
+        output = new FormattingPrintStream(this, FileUtils.openOutputStream(outputFile));
         if (externalInclude) {
           this.includeFile = new File(replaceExtension(outputFile.getPath(), language.getIncludeExtensionSuffix()));
-          this.include = new FormattingPrintStream(FileUtils.openOutputStream(this.includeFile));
+          this.include = new FormattingPrintStream(this, FileUtils.openOutputStream(this.includeFile));
         }
       } catch (IOException e) {
         throw new ParseException("Cannot open file " + outputFile);

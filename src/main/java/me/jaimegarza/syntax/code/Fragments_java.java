@@ -56,7 +56,7 @@ public class Fragments_java extends ListResourceBundle {
       {Fragments.STXSTACK, "stack[stackTop{0}]"},
       {Fragments.CURRENT_CHAR, "currentChar"},
       {Fragments.LEXICAL_VALUE, "lexicalValue"},
-      {Fragments.CURRENT_CHAR, "currentChar = getNextChar(false)"},
+      {Fragments.GETC, "currentChar = getNextChar(false)"},
   };
 
 }

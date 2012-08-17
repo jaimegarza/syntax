@@ -56,6 +56,8 @@ import me.jaimegarza.syntax.definition.State;
  */
 public class CodeWriter extends AbstractPhase {
 
+  private static final char RESOURCE_SEPARATOR = '/';
+
   /**
    * Construct a code writer out of the shared environment
    * @param environment is the global environment
@@ -137,6 +139,24 @@ public class CodeWriter extends AbstractPhase {
 
     environment.language.printGrammarTable();
   }
+  
+  /**
+   * Given the defined arguments (and defaults) compute the skeleton name
+   * @return the skeleton in the resources
+   */
+  private String getSkeletonResourceName() {
+    StringBuilder builder = new StringBuilder();
+    String parserStructure = environment.isPacked() ? "packed" : "tabular";
+    builder.append("skeleton")
+           .append(RESOURCE_SEPARATOR)
+           .append("parser") // TODO this must change upon lexical driver parsers
+           .append(RESOURCE_SEPARATOR)
+           .append(parserStructure)
+           .append(RESOURCE_SEPARATOR)
+           .append(parserStructure).append(environment.language.getExtensionSuffix());
+    
+    return builder.toString();
+  }
 
   /**
    * Close the output by putting the remaining of the grammar file and the skeleton parser
@@ -145,13 +165,10 @@ public class CodeWriter extends AbstractPhase {
    * @throws IOException
    */
   private void finishOutput() throws IOException {
-    String filename;
+    String filename = getSkeletonResourceName();
 
-    filename = "skeletons/parser-skeleton-" +
-               (environment.isPacked() ? "packed" : "expanded") +
-                 environment.language.getExtensionSuffix();
     ClassLoader loader = this.getClass().getClassLoader();
-    InputStream is = loader.getResourceAsStream("classpath:" + filename);
+    InputStream is = loader.getResourceAsStream(filename);
     if (is != null) {
       try {
         if (environment.isVerbose()) {
@@ -163,8 +180,8 @@ public class CodeWriter extends AbstractPhase {
         environment.language.emitLine(1, filename);
         String line = reader.readLine();
         while (line != null) {
-          line = reader.readLine();
           environment.output.println(line);
+          line = reader.readLine();
         }
       } finally {
         is.close();
