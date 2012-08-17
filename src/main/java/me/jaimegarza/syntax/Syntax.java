@@ -99,7 +99,7 @@ public class Syntax {
    * 3. Generate the states pertinent to the rules
    * 4. Output the components of the resulting code.
    */
-  private void execute() {
+  public void execute() {
     CodeParser parser = new CodeParser(environment);
     StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
     TableGenerator generator = new TableGenerator(environment);

@@ -236,7 +236,7 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("private static final int FINAL=%d;\n", runtime.getStates().length);
     indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("private static final int SYMBS=%5d;\n\n", runtime.getTerminals().size() +
+    environment.output.printf("private static final int SYMBS=%d;\n\n", runtime.getTerminals().size() +
                                                                          runtime.getNonTerminals().size() -
                                                                            1);
     if (!environment.isPacked()) {

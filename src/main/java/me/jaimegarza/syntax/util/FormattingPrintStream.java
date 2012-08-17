@@ -65,8 +65,9 @@ public class FormattingPrintStream extends PrintStream {
    * Construct a formatting print stream from an output stream
    * @param out the output stream
    */
-  public FormattingPrintStream(OutputStream out) {
+  public FormattingPrintStream(Environment environment, OutputStream out) {
     super(out);
+    this.environment = environment;
   }
 
   /**
