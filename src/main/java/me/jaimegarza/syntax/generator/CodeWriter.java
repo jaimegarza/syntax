@@ -187,7 +187,11 @@ public class CodeWriter extends AbstractPhase {
         is.close();
       }
     } else {
-      System.err.println("\n\nWarning: internal skeleton \"" + filename + "\" not found.  Table was generated.\n");
+      System.err.println();
+      System.err.println();
+      System.err.println("Warning: internal skeleton \"" + filename + "\" not found.  Table was generated.");
+      System.err.println();
+
       environment.language.printMissingSkeleton(filename);
     }
 
