@@ -31,7 +31,18 @@ public class TestJavaPacked extends AbstractTestBase{
   };
   
   private static final String grammarPackedChecks[] = {
-    
+    "Algorithm:.*LALR",
+    "Language:.*java",
+    "Packed\\?:.*.*true",
+    "Tokens:.*18",
+    "Non Terminals:.*2",
+    "Types:.*1",
+    "Rules:.*17",
+    "Errors:.*7",
+    "Actions:.*57",
+    "Gotos:.*16",
+    "Recoveries:.*0",
+    "States:.*34",
   };
   
   @BeforeTest
