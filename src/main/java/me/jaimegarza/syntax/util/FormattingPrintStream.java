@@ -30,6 +30,7 @@ package me.jaimegarza.syntax.util;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Locale;
 
 import me.jaimegarza.syntax.cli.Environment;
 
@@ -54,6 +55,20 @@ public class FormattingPrintStream extends PrintStream {
     }
     newObjects[0] = environment.language.indent(indent);
     printFragment(key, newObjects);
+  }
+
+  @Override
+  public PrintStream printf(Locale l, String format, Object... args) {
+    String crlf = System.getProperty("line.separator");
+    format = format.replaceAll("\n", crlf);
+    return super.printf(l, format, args);
+  }
+
+  @Override
+  public PrintStream printf(String format, Object... args) {
+    String crlf = System.getProperty("line.separator");
+    format = format.replaceAll("\n", crlf);
+    return super.printf(format, args);
   }
 
   public void printlnIndentedFragment(String key, int indent, Object... objects) {

@@ -180,18 +180,14 @@ public class CodeWriter extends AbstractPhase {
         environment.language.emitLine(1, filename);
         String line = reader.readLine();
         while (line != null) {
-          environment.output.println(line);
           line = reader.readLine();
+          environment.output.println(line);
         }
       } finally {
         is.close();
       }
     } else {
-      System.err.println();
-      System.err.println();
-      System.err.println("Warning: internal skeleton \"" + filename + "\" not found.  Table was generated.");
-      System.err.println();
-
+      System.err.println("\n\nWarning: internal skeleton \"" + filename + "\" not found.  Table was generated.\n");
       environment.language.printMissingSkeleton(filename);
     }
 

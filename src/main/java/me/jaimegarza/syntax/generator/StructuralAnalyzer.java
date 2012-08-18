@@ -286,12 +286,11 @@ public class StructuralAnalyzer extends AbstractPhase {
    */
   private void print() {
     for (NonTerminal itm : runtimeData.getNonTerminals()) {
-      environment.report.println();
-      environment.report.println("First of " + itm.getName());
+      environment.report.printf("\n");
+      environment.report.printf("First of %s\n", itm.getName());
       for (Terminal tkn : runtimeData.getTerminals()) {
         if (itm.getFirst().contains(tkn.getId())) {
-          environment.report.printf("%s%3d%s%s", "   ", tkn.getId(), ". ", tkn.getName());
-          environment.report.println();
+          environment.report.printf("%s%3d%s%s\n", "   ", tkn.getId(), ". ", tkn.getName());
         }
       }
     }
@@ -301,12 +300,11 @@ public class StructuralAnalyzer extends AbstractPhase {
     }
 
     for (NonTerminal itm : runtimeData.getNonTerminals()) {
-      environment.report.println();
-      environment.report.println("Follow of " + itm.getName());
+      environment.report.printf("\n");
+      environment.report.printf("Follow of %s\n", itm.getName());
       for (Terminal tkn : runtimeData.getTerminals()) {
         if (itm.getFollow().contains(tkn.getId())) {
-          environment.report.printf("%s%3d%s%s", "   ", tkn.getId(), ". ", tkn.getName());
-          environment.report.println();
+          environment.report.printf("%s%3d%s%s\n", "   ", tkn.getId(), ". ", tkn.getName());
         }
       }
     }
@@ -322,8 +320,7 @@ public class StructuralAnalyzer extends AbstractPhase {
     for (NonTerminal symbol : runtimeData.getNonTerminals()) {
       searchItems.clear();
       if (environment.isVerbose()) {
-        System.out.printf("First of %d. %-40.40s", symbol.getId(), symbol.getName());
-        System.out.println();
+        System.out.printf("First of %d. %-40.40s\n", symbol.getId(), symbol.getName());
       }
       Set<Integer> first = getFirst(symbol.getId());
       if (first == null) {
@@ -343,8 +340,7 @@ public class StructuralAnalyzer extends AbstractPhase {
     for (NonTerminal symbol : runtimeData.getNonTerminals()) {
       searchItems.clear();
       if (environment.isVerbose()) {
-        System.out.printf("Follow of %d. %-40.40s", symbol.getId(), symbol.getName());
-        System.out.println();
+        System.out.printf("Follow of %d. %-40.40s\n", symbol.getId(), symbol.getName());
       }
       Set<Integer> follow = getFollow(symbol.getId());
       if (follow == null) {
