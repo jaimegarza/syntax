@@ -205,6 +205,29 @@ public class CodeWriter extends AbstractPhase {
     }
   }
 
+  private void reportSummary() {
+    environment.report.println();
+    environment.report.println("Summary:");
+    environment.report.println("=============================================================================================================");
+    environment.report.println("Source:           " + environment.getSourceFile());
+    environment.report.println("Output:           " + environment.getOutputFile());
+    environment.report.println("Include/Interface:" + environment.getIncludeFile());
+    environment.report.println("Algorithm:        " + environment.getAlgorithmType());
+    environment.report.println("Language:         " + environment.getLanguageEnum());
+    environment.report.println("Packed?:          " + environment.isPacked());
+    environment.report.println("Tokens:           " + runtimeData.getTerminals().size());
+    environment.report.println("Non Terminals:    " + runtimeData.getNonTerminals().size());
+    environment.report.println("Types:            " + runtimeData.getTypes().size());
+    environment.report.println("Rules:            " + runtimeData.getRules().size());
+    environment.report.println("Errors:           " + runtimeData.getErrorMessages().size());
+    environment.report.println("Actions:          " + runtimeData.getNumberOfActions());
+    environment.report.println("Gotos:            " + runtimeData.getNumberOfGoTos());
+    environment.report.println("Recoveries:       " + runtimeData.getNumberOfRecoveries());
+    environment.report.println("States:           " + runtimeData.getStates().length);
+    environment.report.println("=============================================================================================================");
+    environment.report.println();
+  }
+  
   /**
    * Execute all the elements of this phase
    * @throws OutputException on error
@@ -219,6 +242,7 @@ public class CodeWriter extends AbstractPhase {
       }
       printFooter();
       finishOutput();
+      reportSummary();
     } catch (IOException e) {
       throw new OutputException("Error while creating output files", e);
     }
