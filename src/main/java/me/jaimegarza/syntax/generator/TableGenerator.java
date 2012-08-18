@@ -156,9 +156,8 @@ public class TableGenerator extends AbstractPhase {
     environment.report.println();
     environment.report.printf("State #%3d", stateNum);
     if (I[stateNum].getFrom() >= 0) {
-      environment.report.printf(" Goto from state %d with symbol %s", I[stateNum].getFrom(), I[stateNum].getSymbol()
+      environment.report.printf(" Goto from state %d with symbol %s\n", I[stateNum].getFrom(), I[stateNum].getSymbol()
           .getName());
-      environment.report.println();
     } else {
       environment.report.println(" - Root");
     }
@@ -325,14 +324,10 @@ public class TableGenerator extends AbstractPhase {
     if (existingState >= 0) {
       actions = I[existingState].getActions();
       I[stateNumber].setPosition(I[existingState].getPosition());
-      environment.report.println();
-      environment.report.printf("Actions (same as state %d)", existingState);
-      environment.report.println("------------------------------");
+      environment.report.printf("\nActions (same as state %d)\n------------------------------\n", existingState);
     } else {
       I[stateNumber].setPosition(actionNumber);
-      environment.report.println();
-      environment.report.println("Actions");
-      environment.report.println("--------");
+      environment.report.printf("\nActions\n--------\n");
       actionNumber += actions.size();
     }
     I[stateNumber].setDefaultValue(defaultAction);
@@ -342,11 +337,11 @@ public class TableGenerator extends AbstractPhase {
     for (Action action : actions) {
       environment.report.printf("    With %s ", action.getSymbol().getName());
       if (action.getStateNumber() < 0) {
-        environment.report.println("Reduce by rule " + (-action.getStateNumber()));
+        environment.report.printf("Reduce by rule %d\n", -action.getStateNumber());
       } else if (action.getStateNumber() == ACCEPT) {
-        environment.report.println("Accept");
+        environment.report.printf("Accept\n");
       } else {
-        environment.report.println("Shift to state " + action.getStateNumber());
+        environment.report.printf("Shift to state %d\n", action.getStateNumber());
         errorToken = action;
         tokenCount++;
       }
@@ -370,8 +365,7 @@ public class TableGenerator extends AbstractPhase {
         if (symbol == null) {
           continue;
         }
-        environment.report.printf("    With %s Goto %d", symbol.getName(), parserLine[i + terminals]);
-        environment.report.println();
+        environment.report.printf("    With %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
         symbolCount++;
         errorSymbol = symbol;
         addGoto(symbol, stateNumber, parserLine[i + terminals]);
@@ -380,13 +374,11 @@ public class TableGenerator extends AbstractPhase {
     // imprime default
     environment.report.printf("    Default: ");
     if (defaultAction < 0) {
-      environment.report.println("Reduce by rule " + (-defaultAction));
+      environment.report.printf("Reduce by rule %d\n", -defaultAction);
     } else {
-      environment.report.println("Error");
+      environment.report.printf("Error\n");
     }
-    environment.report.println();
-    environment.report.println("Errors");
-    environment.report.println("-------");
+    environment.report.printf("\nErrors\n-------\n");
     if (tokenCount == 1) {
       String message = "";
       message = errorToken.getSymbol().getFullName() + " expected";
@@ -523,12 +515,11 @@ public class TableGenerator extends AbstractPhase {
 
       case LEFT:
         parserLine[tkn.getId()] = -rule.getRulenum();
-        environment.report.printf("Conflict with %s resolved by Reduce", tkn.getName());
-        environment.report.println();
+        environment.report.printf("Conflict with %s resolved by Reduce\n", tkn.getName());
         break;
 
       case RIGHT:
-        environment.report.printf("Conflict with %s resolved by Shift", tkn.getName());
+        environment.report.printf("Conflict with %s resolved by Shift\n", tkn.getName());
         break;
     }
 
@@ -547,8 +538,7 @@ public class TableGenerator extends AbstractPhase {
           environment.report.println("ACCEPT BY " + -dot.getRule().getRulenum());
           parserLine[0] = ACCEPT;
         } else {
-          environment.report.printf("REDUCE BY -%d", dot.getRule().getRulenum());
-          environment.report.println();
+          environment.report.printf("REDUCE BY -%d\n", dot.getRule().getRulenum());
           for (Symbol tkn : runtimeData.getTerminals()) {
             boolean containsToken = environment.algorithm.dotContains(dot, tkn.getId());
             if (containsToken) {
@@ -631,7 +621,7 @@ public class TableGenerator extends AbstractPhase {
     I[stateNumber].addAllKernelDots(dots);
     closure(I[stateNumber]);
     if (environment.isDebug()) {
-      System.out.println("Created new state " + stateNumber + ":" + I[stateNumber]);
+      System.out.println("Created new state " + stateNumber + ":\n" + I[stateNumber]);
     }
   }
 
@@ -735,9 +725,7 @@ public class TableGenerator extends AbstractPhase {
     finalState = 0;
     // generate till the end. Loop multiple times until all resolved and all printed.
     while (!completed) {
-      System.out.println();
-      System.out.println();
-      System.out.println("Starting a new phase with " + finalPhase + " and " + finalState + " states");
+      System.out.println("\n\nStarting a new phase with " + finalPhase + " and " + finalState + " states");
       int affected = 0;
       for (int stateIndex = 0;stateIndex <= finalState; stateIndex++) {
         //skip state if not to be reviewed (unless we want to print it)
@@ -745,8 +733,7 @@ public class TableGenerator extends AbstractPhase {
           continue;
         }
         if (environment.isVerbose()) {
-          System.out.printf("Reviewing state %d of %d", stateIndex, finalState);
-          System.out.println();
+          System.out.printf("Reviewing state %d of %d\n", stateIndex, finalState);
         }
         if (finalPhase) {
           printStateReport(stateIndex);

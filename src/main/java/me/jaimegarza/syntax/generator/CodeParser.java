@@ -272,12 +272,12 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     if (!environment.isDebug()) {
       return;
     }
-    System.out.println("  Stack pointer = " + pStxStack);
+    System.out.printf("  Stack pointer = %d\n", pStxStack);
     System.out.printf("  States: [");
     for (int i = 0; i <= pStxStack; i++) {
       System.out.printf(" %d %s", sStxStack[i], "{" + (StxStack[i] != null ? StxStack[i].toString() : "") + "}");
     }
-    System.out.println("]");
+    System.out.printf("]\n");
   }
 
   /**
@@ -292,7 +292,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     StxStack[pStxStack] = StxValue;
     StxState = state;
     if (environment.isDebug()) {
-      System.out.println("Shift to " + StxState + " with " + sym);
+      System.out.printf("Shift to %d with %d\n", StxState, sym);
     }
     PrintStack();
     return 1;
@@ -303,9 +303,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
    */
   int StxReduce(int sym, int rule) throws IOException {
     if (environment.isDebug()) {
-      System.out.printf("Reduce on rule %d with symbol %s(%d)", rule,
+      System.out.printf("Reduce on rule %d with symbol %s(%d)\n", rule,
           (sym >= 256 ? tokenNames[sym - 256] : "\"" + Character.toString((char) sym) + "\""), sym);
-      System.out.println();
     }
     if (!StxCode(rule)) {
       return 0;
@@ -675,8 +674,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
             }
           }
           if (environment.isDebug()) {
-            System.out.printf("Recuperate removing state %d and go to state %d", StxState, sStxStack[pStxStack - 1]);
-            System.out.println();
+            System.out.printf("Recuperate removing state %d and go to state %d\n", StxState, sStxStack[pStxStack - 1]);
           }
           StxState = sStxStack[--pStxStack];
         }
@@ -685,7 +683,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
 
       case 3: /* I need to drop the current token */
         if (environment.isDebug()) {
-          System.out.println("Recuperate removing symbol " + StxSym);
+          System.out.printf("Recuperate removing symbol %d\n", StxSym);
         }
         if (StxSym == 0) {
           return 0;
@@ -713,7 +711,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       action = StxAction(StxState, StxSym);
       if (action == 9999) {
         if (environment.isDebug()) {
-          System.out.println("Program Accepted");
+          System.out.printf("Program Accepted\n");
         }
         return true;
       }
@@ -1323,16 +1321,15 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     if (isRegex) {
       rc = getRegexSymbol();
       if (environment.isVerbose()) {
-        System.out.println("RegexScanner: " + rc);
+        System.out.printf("RegexScanner: %d\n", rc);
       }
     } else {
       rc = getNormalSymbol();
       StxValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null);
       if (environment.isDebug()) {
-        System.out.printf("* StdScanner: %s(%d) {%s}",
+        System.out.printf("* StdScanner: %s(%d) {%s}\n",
             (rc >= 256 ? tokenNames[rc - 256] : "\"" + Character.toString((char) rc) + "\""), rc,
             StxValue != null ? StxValue.toString() : "");
-        System.out.println();
       }
     }
     return rc;
@@ -1351,9 +1348,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     if (msg >= 0) {
       environment.error(-1, "Syntax error %d :\'%s\'.", StxState, StxErrorTable[msg]);
     } else {
-      System.err.printf("%s(%05d) : Unknown error on state %d", environment.getSourceFile().toString(),
+      System.err.printf("%s(%05d) : Unknown error on state %d\n", environment.getSourceFile().toString(),
           runtimeData.lineNumber + 1, StxState);
-      System.err.println();
     }
     isError = true;
     return 0; /*
@@ -1814,9 +1810,9 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
    */
   private void finalizeSymbols() {
     environment.report
-        .println("## Token                                    Name                                     Value Err  Refs  Prec Assc  Type");
+        .printf("## Token                                    Name                                     Value Err  Refs  Prec Assc  Type\n");
     environment.report
-        .println("________________________________________________________________________________________________________________________");
+        .printf("________________________________________________________________________________________________________________________\n");
 
     int recoveries = 0;
     int terminals = 0;
@@ -1839,7 +1835,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       if (id.getType() != null) {
         environment.report.printf("%s", id.getType().getName());
       }
-      environment.report.println();
+      environment.report.printf("\n");
       if (id instanceof ErrorToken) {
         int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
         ++recoveries;
@@ -1854,11 +1850,11 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       environment.language.generateToken(id, i == terminals);
       i++;
     }
-    environment.report.println();
+    environment.report.printf("\n");
     environment.report
-        .println("## Non Terminals                            Name                                     Refs  Type");
+        .printf("## Non Terminals                            Name                                     Refs  Type\n");
     environment.report
-        .println("__________________________________________________________________________________________________");
+        .printf("__________________________________________________________________________________________________\n");
 
     int noterminals = 0;
     for (NonTerminal id : runtimeData.getNonTerminals()) {
@@ -1867,17 +1863,17 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       if (id.getType() != null) {
         environment.report.printf("%s", id.getType().getName());
       }
-      environment.report.println();
+      environment.report.printf("\n");
       id.setId(noterminals++ + terminals);
       id.setFirst(null);
       id.setFollow(null);
     }
     
-    environment.report.println();
+    environment.report.printf("\n");
     environment.report
-        .println("Types");
+        .printf("Types\n");
     environment.report
-        .println("_____________________________________________");
+        .printf("_____________________________________________\n");
 
     for (Type type : runtimeData.getTypes()) {
       environment.report.println(type.toString());
@@ -1888,9 +1884,9 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
    * set rule numbers and print
    */
   private void finalizeRules() {
-    environment.report.println();
-    environment.report.println("Prec Rule  Grammar");
-    environment.report.println("_____________________________________________________");
+    environment.report.printf("\n");
+    environment.report.printf("Prec Rule  Grammar\n");
+    environment.report.printf("_____________________________________________________\n");
     int i = 0;
     for (Rule stx : runtimeData.getRules()) {
       stx.setRulenum(i);
@@ -1898,7 +1894,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       for (RuleItem itm : stx.getItems()) {
         environment.report.printf("%s ", itm.getSymbol().getName());
       }
-      environment.report.println();
+      environment.report.printf("\n");
       i = i + 1;
     }
   }
