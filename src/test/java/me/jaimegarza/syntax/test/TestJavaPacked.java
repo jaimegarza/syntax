@@ -16,7 +16,8 @@ public class TestJavaPacked extends AbstractTestBase{
     "--language", "java",
     "classpath:java-test.sy",
     "${file.language}",
-    "${file.grammar}"
+    "${file.grammar}",
+    "${file.include}"
   };
   
   private static final String languagePackedChecks[] = {
