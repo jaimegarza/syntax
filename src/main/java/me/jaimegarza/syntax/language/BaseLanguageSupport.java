@@ -48,6 +48,11 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
 
   protected Environment environment;
   protected RuntimeData runtime;
+  
+  @Override
+  public boolean getDefaultIncludeFlag() {
+    return true;
+  }
 
   @Override
   public void emitLine(int lineNumber) {

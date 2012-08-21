@@ -72,6 +72,9 @@ import org.apache.commons.logging.LogFactory;
  * TODO: Include a regular expression mode for tokens (For LEX-like recognition)
  *       Lexical actions could then be entered in regex format with a predefined
  *       code structure 
+ * TODO: Add maven artifact
+ * TODO: Add ant task
+ * TODO: Add compiler after java generation?
  * 
  * @author jaimegarza@gmail.com
  *
@@ -98,17 +101,12 @@ public class Syntax {
    * 2. Analyze and compute first and (for SLR) follow symbols
    * 3. Generate the states pertinent to the rules
    * 4. Output the components of the resulting code.
+   * 
+   * Uses the {@link #executeInternal()} routine.
    */
   public void execute() {
-    CodeParser parser = new CodeParser(environment);
-    StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
-    TableGenerator generator = new TableGenerator(environment);
-    CodeWriter writer = new CodeWriter(environment);
     try {
-      parser.execute();
-      analyzer.execute();
-      generator.execute();
-      writer.execute();
+      executeInternal();
     } catch (AnalysisException e) {
       LOG.error("Internal error: " + e.getMessage(), e);
     } catch (ParsingException e) {
@@ -116,6 +114,28 @@ public class Syntax {
     } catch (OutputException e) {
       LOG.error("Output error: " + e.getMessage(), e);
     }
+  }
+
+  /**
+   * Execute the phases as follows:
+   * 
+   * 1. Parse the file and create the rule structure
+   * 2. Analyze and compute first and (for SLR) follow symbols
+   * 3. Generate the states pertinent to the rules
+   * 4. Output the components of the resulting code.
+   * @throws ParsingException when the input file has issues.
+   * @throws AnalysisException when the input grammar can be parsed but has issues.
+   * @throws OutputException when the generation could not produce the output file
+   */
+  public void executeInternal() throws ParsingException, AnalysisException, OutputException {
+    CodeParser parser = new CodeParser(environment);
+    StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
+    TableGenerator generator = new TableGenerator(environment);
+    CodeWriter writer = new CodeWriter(environment);
+    parser.execute();
+    analyzer.execute();
+    generator.execute();
+    writer.execute();
   }
 
   /**

@@ -71,6 +71,11 @@ public interface LanguageSupport {
   String getIncludeExtensionSuffix();
   
   /**
+   * tells me the default value for include file generation
+   */
+  boolean getDefaultIncludeFlag();
+  
+  /**
    * emit #line in C
    */
   void emitLine(int line);
@@ -243,10 +248,10 @@ public interface LanguageSupport {
 
   /**
    * Emit one go to
-   * @param numGotos the number of gotos
+   * @param gotoIndex the number of gotos
    * @param pGoto the actual goto
    */
-  void printGoTo(int numGotos, GoTo pGoto);
+  void printGoTo(int gotoIndex, GoTo pGoto);
 
   /**
    * The skeleton was not found,  say so.

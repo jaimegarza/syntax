@@ -1379,10 +1379,14 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     return type;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#generateDollarNumber(me.jaimegarza.syntax.Lexer, int, me.jaimegarza.syntax.definition.Type, int)
-   */
+  private RuleItem getCurrentRuleItem(int index) {
+    RuleItem item= null;
+    if (runtimeData.currentRuleItems != null && index < runtimeData.currentRuleItems.size()) {
+      item = runtimeData.currentRuleItems.get(index);
+    }
+    return item;
+  }
+  
   @Override
   public boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign) throws IOException {
     int num;
@@ -1413,10 +1417,10 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
         return false;
       }
       if (type == null) {
-        int j = 0;
-        RuleItem rule = null;
-        for (int i = 1; i < num + elementCount && j < runtimeData.currentRuleItems.size(); j++, i++) {
-          rule = runtimeData.currentRuleItems.get(j);
+        int ruleIndex = 0;
+        RuleItem rule = getCurrentRuleItem(0);
+        for (int i = 1; i < num + elementCount && rule != null; i++) {
+          rule = getCurrentRuleItem(++ruleIndex);
         }
         if (rule != null) {
           Terminal terminal = runtimeData.findTerminalByName(rule.getSymbol().getName());
@@ -1439,16 +1443,12 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     return true;
   }
   
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#generateDollarDollar(me.jaimegarza.syntax.Lexer, int, java.lang.String, me.jaimegarza.syntax.definition.Type)
-   */
   @Override
   public boolean generateDollarDollar(Lexer lexer, int elementCount, String nonTerminalId, Type type) throws IOException {
     if (elementCount == 1) {
       environment.output.printFragment("stxstack", "");
     } else if (elementCount != 0) {
-      environment.output.printFragment("stxstack", Integer.toString(1-elementCount - 1));
+      environment.output.printFragment("stxstack", "-" + Integer.toString(elementCount - 1));
     } else {
       environment.output.printFragment("stxstack", "+1");
     }
@@ -1468,10 +1468,6 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     return true;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#generateConstant(me.jaimegarza.syntax.Lexer)
-   */
   @Override
   public boolean generateConstant(Lexer lexer, char characterType) throws IOException {
     environment.output.print(runtimeData.currentCharacter);
@@ -1850,6 +1846,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       environment.language.generateToken(id, i == terminals);
       i++;
     }
+    i = 1;
+    
     environment.report.printf("\n");
     environment.report
         .printf("## Non Terminals                            Name                                     Refs  Type\n");

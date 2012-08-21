@@ -17,8 +17,9 @@ public abstract class AbstractTestBase {
   protected String tmpGrammarFile;
   protected String tmpIncludeFile;
 
-  protected String createTmpFile(String suffix, String name) throws IOException {
-    File file = File.createTempFile("syntax-", suffix);
+  protected String createTmpFile(String filename, String name) throws IOException {
+    //File file = File.createTempFile("syntax-", suffix);
+    File file = new File("test-output/working-files/" + filename);
     String absolutePath = file.getAbsolutePath();
     absolutePath = absolutePath.replaceAll("\\\\", "\\/");
     System.out.println(name + " name:" + absolutePath);

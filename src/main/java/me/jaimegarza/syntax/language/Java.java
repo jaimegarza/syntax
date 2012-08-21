@@ -67,6 +67,11 @@ public class Java extends BaseLanguageSupport {
   }
   
   @Override
+  public boolean getDefaultIncludeFlag() {
+    return false;
+  }
+
+  @Override
   public void generateCaseStart(int lineNumber, String label) {
     indent(environment.output, environment.getIndent() + 1);
     environment.output.printf("case %s: ", label);
@@ -215,20 +220,58 @@ public class Java extends BaseLanguageSupport {
 
   @Override
   public void generateTokenDefinitions() {
-    boolean first = true;
+    indent(environment.include, environment.getIndent() - 1);
+    environment.include.printf("// Token definitions\n");
     for (Terminal id : runtime.getTerminals()) {
       id.computeVariable();
-      if (id.getVariable().equals("_")) {
-        if (first) {
-          indent(environment.include, environment.getIndent() - 1);
-          environment.include.printf("// Token definitions\n");
-          first = false;
-        }
+      if (!id.getVariable().equals("_")) {
         indent(environment.include, environment.getIndent() - 1);
         environment.include.printf("private static final int %s=%d;\n", id.getVariable(), id.getToken());
       }
     }
     environment.include.printf("\n");
+    indent(environment.include, environment.getIndent() - 1);
+    environment.include.printf("private class TokenDef {\n");
+    indent(environment.output, environment.getIndent());
+    environment.include.printf("int token;\n");
+    indent(environment.include, environment.getIndent());
+    environment.include.printf("String name;\n");
+    indent(environment.include, environment.getIndent());
+    environment.include.printf("String fullName;\n");
+    indent(environment.include, environment.getIndent());
+    environment.include.printf("boolean reserved;\n\n");
+    indent(environment.include, environment.getIndent());
+    environment.include.printf("TokenDef(String name, String fullName, int token, boolean reserved) {\n");
+    indent(environment.include, environment.getIndent() + 1);
+    environment.include.printf("this.name = name;\n");
+    indent(environment.include, environment.getIndent() + 1);
+    environment.include.printf("this.fullName = fullName;\n");
+    indent(environment.include, environment.getIndent() + 1);
+    environment.include.printf("this.token = token;\n");
+    indent(environment.include, environment.getIndent() + 1);
+    environment.include.printf("this.reserved = reserved;\n");
+    indent(environment.include, environment.getIndent());
+    environment.include.printf("}\n");
+    indent(environment.include, environment.getIndent() - 1);
+    environment.include.printf("}\n\n");
+    indent(environment.include, environment.getIndent() - 1);
+    environment.include.printf("private TokenDef tokenDefs[] = {\n");
+    int i = 0;
+    for (Terminal id : runtime.getTerminals()) {
+      indent(environment.include, environment.getIndent());
+      if (!id.getVariable().equals("_")) {
+        environment.include.printf("new TokenDef(\"%s\", \"%s\", %d, true)", id.getVariable(), id.getFullName(), id.getToken());
+      } else {
+        environment.include.printf("new TokenDef(\"%s\", \"%s\", %d, false)", id.getName(), id.getFullName(), id.getToken());
+      }
+      i++;
+      if (i < runtime.getTerminals().size()) {
+        environment.include.print(",");
+      }
+      environment.include.println();
+    }
+    indent(environment.include, environment.getIndent() - 1);
+    environment.include.printf("};\n\n");
   }
 
   @Override
@@ -386,10 +429,10 @@ public class Java extends BaseLanguageSupport {
   }
 
   @Override
-  public void printGoTo(int numGotos, GoTo pGoto) {
+  public void printGoTo(int gotoIndex, GoTo pGoto) {
     indent(environment.output, environment.getIndent());
     environment.output.printf("new Goto(%d, %d)", pGoto.getOrigin(), pGoto.getDestination());
-    if (numGotos == runtime.getNumberOfGoTos() - 1) {
+    if (gotoIndex == runtime.getNumberOfGoTos() - 1) {
       environment.output.printf("\n");
       indent(environment.output, environment.getIndent() - 1);
       environment.output.printf("};\n");

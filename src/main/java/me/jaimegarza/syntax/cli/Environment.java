@@ -241,7 +241,7 @@ public class Environment extends Options {
         "* may lend a big number of states in a \n" +
         "* sparsely populated table.", "packing");
     add("x", "external", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
-        "Generate include file (true,on,yes,1|false,off,no,0, default true)", "external");
+        "Generate include file (true,on,yes,1|false,off,no,0, default is language dependent)", "external");
   }
 
   /**
@@ -340,7 +340,7 @@ public class Environment extends Options {
    * @throws ParseException if the option cannot be computed
    */
   private void setExternalInclude() throws ParseException {
-    String value = get("x", "true");
+    String value = get("x", Boolean.toString(language.getDefaultIncludeFlag()));
     if (value.equalsIgnoreCase("true") ||
         value.equalsIgnoreCase("yes") ||
           value.equalsIgnoreCase("on") ||
@@ -532,6 +532,8 @@ public class Environment extends Options {
         if (externalInclude) {
           this.includeFile = new File(replaceExtension(outputFile.getPath(), language.getIncludeExtensionSuffix()));
           this.include = new FormattingPrintStream(this, FileUtils.openOutputStream(this.includeFile));
+        } else {
+          this.include = this.output;
         }
       } catch (IOException e) {
         throw new ParseException("Cannot open file " + outputFile);

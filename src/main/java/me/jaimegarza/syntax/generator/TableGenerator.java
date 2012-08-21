@@ -725,7 +725,9 @@ public class TableGenerator extends AbstractPhase {
     finalState = 0;
     // generate till the end. Loop multiple times until all resolved and all printed.
     while (!completed) {
-      System.out.println("\n\nStarting a new phase with " + finalPhase + " and " + finalState + " states");
+      if (environment.isVerbose()) {
+        System.out.println("\n\nStarting a new phase with " + finalPhase + " and " + finalState + " states");
+      }
       int affected = 0;
       for (int stateIndex = 0;stateIndex <= finalState; stateIndex++) {
         //skip state if not to be reviewed (unless we want to print it)

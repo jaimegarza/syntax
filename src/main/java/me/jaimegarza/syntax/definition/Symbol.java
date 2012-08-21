@@ -118,15 +118,18 @@ public abstract class Symbol {
    */
   public void computeVariable() {
     if (name == null || name.length() == 0) {
-      variable = name;
+      variable = "TOKEN_" + token;
+      return;
     }
 
     if (token == 0) {
       variable = "EOS";
+      return;
     }
 
     if (isIdentifier()) {
       variable = name;
+      return;
     }
 
     if (name.charAt(0) == '\\') {
@@ -157,15 +160,17 @@ public abstract class Symbol {
         variable = t;
       }
     }
-    String patched = "";
-    for (int i = 0; i < name.length(); i++) {
-      if (Character.isJavaIdentifierPart(name.charAt(i))) {
-        patched += name.charAt(i);
-      } else {
-        patched += '_';
+    if (variable == null) {
+      String patched = "";
+      for (int i = 0; i < name.length(); i++) {
+        if (Character.isJavaIdentifierPart(name.charAt(i))) {
+          patched += name.charAt(i);
+        } else {
+          patched += '_';
+        }
       }
+      variable = patched;
     }
-    variable = patched;
   }
 
   /**
@@ -174,6 +179,9 @@ public abstract class Symbol {
    */
   public boolean isIdentifier() {
     if (name.length() == 0 || !Character.isJavaIdentifierStart(name.charAt(0))) {
+      return false;
+    }
+    if (name.equals("$")) {
       return false;
     }
     for (int i = 1; i < name.length(); i++) {

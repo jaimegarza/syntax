@@ -92,7 +92,7 @@ public class CodeWriter extends AbstractPhase {
    * print packed tables
    */
   private void printTables() {
-    int stateNumber, action, numGotos, error;
+    int stateNumber, action, error;
 
     environment.language.printActionHeader();
     action = 0;
@@ -105,17 +105,12 @@ public class CodeWriter extends AbstractPhase {
       }
     }
 
-    numGotos = 0;
     environment.language.printGoToTableHeader();
-    for (NonTerminal id : runtimeData.getNonTerminals()) {
-      if (id.getGotos() != null && id.getGotos().size() > 0) {
-        numGotos += id.getGotos().size();
-      }
-    }
+    int gotoIndex = 0;
     for (NonTerminal id : runtimeData.getNonTerminals()) {
       if (id.getGotos() != null && id.getGotos().size() > 0) {
         for (GoTo pGoto : id.getGotos()) {
-          environment.language.printGoTo(numGotos, pGoto);
+          environment.language.printGoTo(gotoIndex++, pGoto);
         }
       }
     }
@@ -180,8 +175,8 @@ public class CodeWriter extends AbstractPhase {
         environment.language.emitLine(1, filename);
         String line = reader.readLine();
         while (line != null) {
-          line = reader.readLine();
           environment.output.println(line);
+          line = reader.readLine();
         }
       } finally {
         is.close();
