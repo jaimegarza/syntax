@@ -1,18 +1,18 @@
-  /* (non-Javadoc)
+  /*
    *
-   * Begin of template
+   * Begin of Skeleton
    *
    */
 
-  /*****************************************************************
-    Java Skeleton Parser for compact tables
+  /* ****************************************************************
+    Java Skeleton Parser for tabular tables
 
     This is not a sample program, but rather the parser skeleton
     to be included in the generated code.
     Modify at your own risk.
 
-    Copyright (c), 1985-2007 Jaime Garza
-  ******************************************************************/
+    Copyright (c), 1985-2012 Jaime Garza
+  ***************************************************************** */
 
   private static final int ERROR_FAIL = 0;
   private static final int ERROR_RE_ATTEMPT = 1;
@@ -40,23 +40,24 @@
   }
 
   /**
-   * Obtain the next symbol as a column for the parsing table
-   * by locating the symbol in the tokens' array
+   * This routine maps a state and a token to a new state on the action table
+   * @param state is the current state
+   * @param symbol is the given symbol to find (if not found, defa will be used
    */
-  private int parserSymbol(boolean initialize) {
-    int sym = parserElement(initialize);
-    int i;
+  private int parserAction(int state, int symbol) {
+    int index = getTokenIndex(symbol);
+    return parsingTable[state][index];
+  }
 
-    for(i = 0; i < TOKENS; i++) {
-      if(sym == tokens[i]) {
-        break;
-      }
-    }
-    if(i == TOKENS) {
-      return 0;
-    } else {
-      return i;
-    }
+  /**
+   * This routine maps a origin state to a destination state
+   * using the symbol position
+   * @param state is the current state
+   *@param non terminal that causes the transition
+   */
+  private int parserGoto(int state, int symbol) {
+    int index = symbol;
+    return parsingTable[state][index];
   }
 
   /**
@@ -111,12 +112,11 @@
     }
     stackTop -= grammarTable[rule].reductions;
     stateStack[stackTop+1] =
-        parsingTable[stateStack[stackTop]]
-                    [grammarTable[rule].symbol];
+        parserGoto(stateStack[stackTop], grammarTable[rule].symbol);
     state = stateStack[++stackTop];
     if (isVerbose()) {
-      parserPrintStack();
-  }
+        parserPrintStack();
+    }
     return 1;
   }
 
@@ -144,7 +144,7 @@
           // Look if the state on the stack's top has a transition with one of
           // the recovering elements in StxRecoverTable
           for (i=0; i<RECOVERS; i++) {
-            if((acc = parsingTable[state][recoverTable[i]]) > 0) {
+            if((acc = parserAction(state, recoverTable[i])) > 0) {
               // valid shift
               return parserShift(recoverTable[i], acc);
             }
@@ -165,7 +165,7 @@
         if(lexicalToken == 0) { // end of file
           return 0;
         }
-        lexicalToken = parserSymbol(false);
+        lexicalToken = parserElement(false);
         return 1;
     }
     // should never reach
@@ -185,7 +185,7 @@
     stateStack[0] = 0;
     stack[0] = null;
     currentChar = getNextChar(true);
-    lexicalToken = parserSymbol(true);
+    lexicalToken = parserElement(true);
     state = 0;
     errorFlag = 0;
     errorCount = 0;
@@ -196,8 +196,8 @@
     }
 
     while(1 == 1) { // forever with break and return below
-      action = parsingTable[state][lexicalToken];
-      if(action == 9999) {
+      action = parserAction(state, lexicalToken);
+      if(action == ACCEPT) {
         if (isVerbose()) {
           System.out.println("Program Accepted");
         }
@@ -208,7 +208,7 @@
         if(parserShift(lexicalToken, action) == 0) {
           return 0;
         }
-        lexicalToken = parserSymbol(false);
+        lexicalToken = parserElement(false);
         if(errorFlag > 0) {
            errorFlag--; // properly recovering from error
         }
@@ -230,6 +230,9 @@
     }
   }
 
+  /**
+   * @returns the current lextical value
+   */
   public LexicalValue getResult() {
     return stack[stackTop];
   }
@@ -239,9 +242,9 @@
    * @returns the name of a token, given the token number
    */
   public String getTokenName(int token) {
-    for (int i = 0; i < tokenNames.length; i++) {
-      if (tokenNames[i].token == token) {
-        return tokenNames[i].name;
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].token == token) {
+        return tokenDefs[i].name;
         }
     }
     if (token < 256) {
@@ -249,6 +252,19 @@
     } else {
       return "UNKNOWN TOKEN";
     }
+  }
+
+  /**
+   * @param token is the number of the token
+   * @returns the name of a token, given the token number
+   */
+  public int getTokenIndex(int token) {
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].token == token) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   /**
@@ -264,21 +280,21 @@
   }
 
   int findReservedWord(String word) {
-    for (int i = 0; i < tokenNames.length; i++) {
-      if (tokenNames[i].reserved && tokenNames[i].name.equals(word)) {
-        return tokenNames[i].token;
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].reserved && tokenDefs[i].name.equals(word)) {
+        return tokenDefs[i].token;
       }
     }
-    return 0;
+    return -1;
   }
 
   int findReservedWordIgnoreCase(String word) {
-    for (int i = 0; i < tokenNames.length; i++) {
-      if (tokenNames[i].reserved && tokenNames[i].name.equalsIgnoreCase(word)) {
-        return tokenNames[i].token;
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].reserved && tokenDefs[i].name.equalsIgnoreCase(word)) {
+        return tokenDefs[i].token;
       }
     }
-    return 0;
+    return -1;
   }
 
   private static final int REGEX_MATCHED = 0;
@@ -301,10 +317,10 @@
     }
   }
 
-  private RegexpMatch matchRegExp() {
+  /*private RegexpMatch matchRegExp() {
     String s = "";
 
-    int candidates[] = new int[tokenNames.length];
+    int candidates[] = new int[tokenDefs.length];
 
     for (int i = 0; i < candidates.length; i++) {
       candidates[i] = 1;
@@ -323,9 +339,9 @@
       previousIndex = index;
       count = 0;
       index = -1;
-      for (int i = 0; i < tokenNames.length; i++) {
-        if (candidates[i] == 1 && tokenNames[i].regex != null && tokenNames[i].regex.length() > 0) {
-          if (s.toString().matches(tokenNames[i].regex)) {
+      for (int i = 0; i < tokenDefs.length; i++) {
+        if (candidates[i] == 1 && tokenDefs[i].regex != null && tokenDefs[i].regex.length() > 0) {
+          if (s.toString().matches(tokenDefs[i].regex)) {
             index = i;
             count++;
           } else {
@@ -355,11 +371,11 @@
     } else {
       return new RegexpMatch(-1, s, REGEX_TOOMANY);
     }
-  }
+  }*/
 
-  /* (non-Javadoc)
+/*
    *
-   * End of template
+   * End of packed skeleton for java
    *
    */
 
