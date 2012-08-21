@@ -52,10 +52,6 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
     super(environment);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#mergeLookAheads(me.jaimegarza.syntax.definition.State[], int, java.util.List)
-   */
   @Override
   public boolean addLookaheadsToState(State I[], int state, List<Dot> dots) {
     Dot i, k;
@@ -76,10 +72,6 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
     return true;
   }
   
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#computeLookAhead(me.jaimegarza.syntax.definition.Rule, me.jaimegarza.syntax.definition.RuleItem)
-   */
   @Override
   public LookAhead computeLookAhead(Rule rule, RuleItem item) {
     LookAhead l = new LookAhead();
@@ -117,11 +109,6 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
     return l;
   }  
   
-
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#mergeLookaheads(me.jaimegarza.syntax.definition.Dot, me.jaimegarza.syntax.definition.Dot)
-   */
   @Override
   public void mergeLookaheads(Dot marker, Dot auxiliary) {
     LookAhead l = computeLookAhead(marker.getRule(), marker.getItem());
@@ -131,19 +118,11 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
     }
   }
   
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#addAllLookaheads(me.jaimegarza.syntax.definition.Dot, me.jaimegarza.syntax.definition.Dot)
-   */
   @Override
   public void addAllLookaheads(Dot marker, Dot auxiliary) {
     marker.addAllLookaheads(auxiliary.getLookahead());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#printLookahead(me.jaimegarza.syntax.definition.Dot)
-   */
   @Override
   public void printLookahead(Dot dot) {
     Set<Integer> lookAhead = dot.getLookahead();
@@ -160,37 +139,21 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
     environment.report.print("}");
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#dotContains(int)
-   */
   @Override
   public boolean dotContains(Dot dot, int terminalId) {
     return  dot.getLookahead().contains(terminalId);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#isMultiPass()
-   */
   @Override
   public boolean isMultiPass() {
     return true;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#initializeDot()
-   */
   @Override
   public void initializeDot(Dot dot) {
     dot.addLookahead(0); // empty set
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.algorithm.AlgorithmicSupport#hasFollows()
-   */
   @Override
   public boolean hasFollows() {
     return false;

@@ -36,6 +36,7 @@ import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
+import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 
 /**
@@ -279,19 +280,76 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("private static final int FINAL=%d;\n", runtime.getStates().length);
     indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("private static final int SYMBS=%d;\n\n", runtime.getTerminals().size() +
-                                                                         runtime.getNonTerminals().size() -
-                                                                           1);
+    environment.output.printf("private static final int SYMBS=%d;\n\n", runtime.getTerminals().size() + runtime.getNonTerminals().size() - 1);
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("private static final int ACCEPT=Integer.MAX_VALUE;\n\n");
     if (!environment.isPacked()) {
-      indent(environment.output, environment.getIndent());
+      indent(environment.output, environment.getIndent()-1);
       environment.output.printf("// Parsing Table\n");
-      indent(environment.output, environment.getIndent());
+      indent(environment.output, environment.getIndent()-1);
       environment.output.printf("private int parsingTable[][] = {\n");
+      indent(environment.output, environment.getIndent()-1);
+      environment.output.print("        //  ");
+      for (Terminal t : runtime.getTerminals()) {
+        String name = getShortSymbolName(t);
+        environment.output.printf("%6s ", name);
+      }
+      for (NonTerminal nt : runtime.getNonTerminals()) {
+        if (nt == runtime.getRoot()) {
+          continue;
+        }
+        String name = getShortSymbolName(nt);
+        environment.output.printf("%6s ", name);
+      }
+      environment.output.println();
     }
+  }
+
+  private String getShortSymbolName(Symbol t) {
+    String name = t.getFullName();
+    if (name.startsWith("\"") || name.startsWith("\'")) {
+      name = name.substring(1);
+    }
+    if (name.endsWith("\"") || name.endsWith("\'")) {
+      name = name.substring(0, name.length()-1);
+    }
+    if (name.length() > 6) {
+      name = name.substring(0, 6);
+    }
+    if (name.endsWith(" ")) {
+      name = name.substring(0, name.length()-1);
+    }
+    return name;
   }
 
   @Override
   public void printTableRow(int symbolCounter, int[] parserLine, int stateNumber) {
+    indent(environment.output, environment.getIndent() );
+    environment.output.printf(" /*%3d*/ {", stateNumber);
+    int index;
+    for (int column = index = 0; index <= symbolCounter; ++index) {
+      // If this column does not fit, cut with \n
+      if ((column + 1) * 5 + 5 > environment.getMargin()) {
+        environment.output.printf("\n     ");
+        column = 0;
+      }
+      column++;
+      if (parserLine[index] == Integer.MAX_VALUE) {
+        environment.output.print("ACCEPT");
+      } else {
+        environment.output.printf("%6d", parserLine[index]);
+      }
+      if (index < symbolCounter) {
+        environment.output.printf(",");
+      }
+    }
+    if (stateNumber == runtime.getStates().length - 1) {
+      environment.output.printf("}\n");
+      indent(environment.output, environment.getIndent()-1);
+      environment.output.printf("};\n");
+    } else {
+      environment.output.printf("},\n");
+    }
   }
 
   @Override
@@ -474,7 +532,7 @@ public class Java extends BaseLanguageSupport {
     for (Rule stx : runtime.getRules()) {
       int itemSize = stx.getItems().size();
       indent(environment.output, environment.getIndent());
-      environment.output.printf("new Grammar(%d, %d)",
+      environment.output.printf("/*Rule %3d */ new Grammar(%6d, %6d)", stx.getRulenum(),
           environment.isPacked() ? stx.getLeftHand().getToken() : stx.getLeftHandId(), itemSize);
       if (++index == numberOfRules) {
         environment.output.printf("\n");

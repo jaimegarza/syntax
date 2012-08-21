@@ -20,44 +20,44 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestJavaPacked extends AbstractGenerationBase {
+public class TestJavaExpanded extends AbstractGenerationBase {
 
-  static final String packedArgs[] = {
+  static final String expandedArgs[] = {
       // "-v",
       "--algorithm",
       "l",
       "--language",
       "java",
+      "--packing",
+      "tabular",
       "classpath:java-test.sy",
       "${file.language}"
   };
 
-  private static final String languagePackedChecks[] = {
+  private static final String languageExpandedChecks[] = {
       "int TOKENS=18",
       "int FINAL=34",
       "int SYMBS=19",
-      "int ACTIONS=57",
+      "int ACTIONS=0",
       "int NON_TERMINALS=2",
       "Begin of Skeleton",
-      "Java Skeleton"
+      "Java Skeleton Parser for packed tables"
   };
 
-  private static final String grammarPackedChecks[] = {
+  private static final String grammarExpandedChecks[] = {
       "Algorithm:.*LALR",
       "Language:.*java",
-      "Packed\\?:.*.*true",
+      "Packed\\?:.*.*false",
       "Tokens:.*18",
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
       "Errors:.*7",
-      "Actions:.*57",
-      "Gotos:.*16",
+      "Actions:.*0",
+      "Gotos:.*0",
       "Recoveries:.*0",
       "States:.*34",
   };
-
-  protected static final int MAX_COMPILE_ERRORS = 10;
 
   @Override
   @BeforeTest
@@ -73,15 +73,15 @@ public class TestJavaPacked extends AbstractGenerationBase {
 
   @Test
   public void test01Generate() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(packedArgs);
+    generateJavaFile(expandedArgs);
 
-    checkRegularExpressions(tmpLanguageFile, languagePackedChecks);
-    checkRegularExpressions(tmpGrammarFile, grammarPackedChecks);
+    checkRegularExpressions(tmpLanguageFile, languageExpandedChecks);
+    checkRegularExpressions(tmpGrammarFile, grammarExpandedChecks);
   }
 
   @Test
   public void test02Compile() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(packedArgs);
+    generateJavaFile(expandedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
@@ -101,7 +101,7 @@ public class TestJavaPacked extends AbstractGenerationBase {
   public void test03Runtime() throws ParsingException, AnalysisException, OutputException, MalformedURLException,
       ClassNotFoundException, InstantiationException, IllegalAccessException, SecurityException,
       NoSuchMethodException, IllegalArgumentException, InvocationTargetException {
-    generateJavaFile(packedArgs);
+    generateJavaFile(expandedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();

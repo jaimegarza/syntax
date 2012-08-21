@@ -5,7 +5,7 @@
    */
 
   /* ****************************************************************
-    Java Skeleton Parser for compact tables
+    Java Skeleton Parser for packed tables
 
     This is not a sample program, but rather the parser skeleton
     to be included in the generated code.
@@ -260,13 +260,26 @@
     for (int i = 0; i < tokenDefs.length; i++) {
       if (tokenDefs[i].token == token) {
         return tokenDefs[i].name;
-        }
+      }
     }
     if (token < 256) {
       return "\'" + (char) token + "\'";
     } else {
       return "UNKNOWN TOKEN";
     }
+  }
+
+  /**
+   * @param token is the number of the token
+   * @returns the name of a token, given the token number
+   */
+  public int getTokenIndex(int token) {
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].token == token) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   /**
