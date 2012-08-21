@@ -261,7 +261,7 @@ public class Pascal extends BaseLanguageSupport {
     boolean first = true;
     for (Terminal id : runtime.getTerminals()) {
       id.computeVariable();
-      if (id.getVariable().equals("_")) {
+      if (!id.getVariable().equals("_")) {
         if (first) {
           environment.include.printf("\n(* Token definitions *)\n");
           environment.include.printf("\nConst\n");
@@ -465,9 +465,9 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  public void printGoTo(int numGotos, GoTo pGoto) {
+  public void printGoTo(int gotoIndex, GoTo pGoto) {
     environment.output.printf("    (origin:%d; destination:%d)", pGoto.getOrigin(), pGoto.getDestination());
-    if (numGotos == runtime.getNumberOfGoTos() - 1) {
+    if (gotoIndex == runtime.getNumberOfGoTos() - 1) {
       environment.output.printf(");\n");
     } else {
       environment.output.printf(",\n");

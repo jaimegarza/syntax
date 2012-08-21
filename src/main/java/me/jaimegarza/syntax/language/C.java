@@ -224,7 +224,7 @@ public class C extends BaseLanguageSupport {
     boolean first = true;
     for (Terminal id : runtime.getTerminals()) {
       id.computeVariable();
-      if (id.getVariable().equals("_")) {
+      if (!id.getVariable().equals("_")) {
         if (first) {
           environment.include.printf("\n/* Token definitions */\n");
           first = false;
@@ -347,9 +347,9 @@ public class C extends BaseLanguageSupport {
   }
 
   @Override
-  public void printGoTo(int numGotos, GoTo pGoto) {
+  public void printGoTo(int gotoIndex, GoTo pGoto) {
     environment.output.printf("\t{%d, %d}", pGoto.getOrigin(), pGoto.getDestination());
-    if (numGotos == runtime.getNumberOfGoTos() - 1) {
+    if (gotoIndex == runtime.getNumberOfGoTos() - 1) {
       environment.output.printf("\n};\n");
     } else {
       environment.output.printf(",\n");

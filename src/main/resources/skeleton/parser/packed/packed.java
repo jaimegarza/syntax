@@ -1,18 +1,18 @@
-  /*********************
-   *                   *
-   * Begin of Skeleton *
-   *                   *
-   *********************/
+  /*
+   *
+   * Begin of Skeleton
+   *
+   */
 
-  /*****************************************************************
+  /* ****************************************************************
     Java Skeleton Parser for compact tables
 
     This is not a sample program, but rather the parser skeleton
     to be included in the generated code.
     Modify at your own risk.
 
-    Copyright (c), 1985-2007 Jaime Garza
-  ******************************************************************/
+    Copyright (c), 1985-2012 Jaime Garza
+  ***************************************************************** */
 
   private static final int ERROR_FAIL = 0;
   private static final int ERROR_RE_ATTEMPT = 1;
@@ -212,7 +212,7 @@
 
     while(1 == 1) { // forever with break and return below
       action = parserAction(state, lexicalToken);
-      if(action == 9999) {
+      if(action == Integer.MAX_VALUE) {
         if (isVerbose()) {
           System.out.println("Program Accepted");
         }
@@ -257,9 +257,9 @@
    * @returns the name of a token, given the token number
    */
   public String getTokenName(int token) {
-    for (int i = 0; i < tokenNames.length; i++) {
-      if (tokenNames[i].token == token) {
-        return tokenNames[i].name;
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].token == token) {
+        return tokenDefs[i].name;
         }
     }
     if (token < 256) {
@@ -282,18 +282,18 @@
   }
 
   int findReservedWord(String word) {
-    for (int i = 0; i < tokenNames.length; i++) {
-      if (tokenNames[i].reserved && tokenNames[i].name.equals(word)) {
-        return tokenNames[i].token;
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].reserved && tokenDefs[i].name.equals(word)) {
+        return tokenDefs[i].token;
       }
     }
     return -1;
   }
 
   int findReservedWordIgnoreCase(String word) {
-    for (int i = 0; i < tokenNames.length; i++) {
-      if (tokenNames[i].reserved && tokenNames[i].name.equalsIgnoreCase(word)) {
-        return tokenNames[i].token;
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].reserved && tokenDefs[i].name.equalsIgnoreCase(word)) {
+        return tokenDefs[i].token;
       }
     }
     return -1;
@@ -319,10 +319,10 @@
     }
   }
 
-  private RegexpMatch matchRegExp() {
+  /*private RegexpMatch matchRegExp() {
     String s = "";
 
-    int candidates[] = new int[tokenNames.length];
+    int candidates[] = new int[tokenDefs.length];
 
     for (int i = 0; i < candidates.length; i++) {
       candidates[i] = 1;
@@ -341,9 +341,9 @@
       previousIndex = index;
       count = 0;
       index = -1;
-      for (int i = 0; i < tokenNames.length; i++) {
-        if (candidates[i] == 1 && tokenNames[i].regex != null && tokenNames[i].regex.length() > 0) {
-          if (s.toString().matches(tokenNames[i].regex)) {
+      for (int i = 0; i < tokenDefs.length; i++) {
+        if (candidates[i] == 1 && tokenDefs[i].regex != null && tokenDefs[i].regex.length() > 0) {
+          if (s.toString().matches(tokenDefs[i].regex)) {
             index = i;
             count++;
           } else {
@@ -373,11 +373,11 @@
     } else {
       return new RegexpMatch(-1, s, REGEX_TOOMANY);
     }
-  }
+  }*/
 
-/* (non-Javadoc)
+/*
    *
-   * End of template
+   * End of packed skeleton for java
    *
    */
 
