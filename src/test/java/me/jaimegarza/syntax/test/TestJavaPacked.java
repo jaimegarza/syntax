@@ -54,7 +54,7 @@ public class TestJavaPacked extends AbstractTestBase {
   }
 
   @Test
-  public void testPacked() throws ParsingException, AnalysisException, OutputException {
+  public void test01Generate() throws ParsingException, AnalysisException, OutputException {
     generateJavaFile();
     
     checkRegularExpressions(tmpLanguageFile, languagePackedChecks);
@@ -62,7 +62,7 @@ public class TestJavaPacked extends AbstractTestBase {
   }
 
   @Test
-  public void testCompile() throws ParsingException, AnalysisException, OutputException {
+  public void test02Compile() throws ParsingException, AnalysisException, OutputException {
     generateJavaFile();
     
     File source = new File(tmpLanguageFile);
@@ -80,7 +80,7 @@ public class TestJavaPacked extends AbstractTestBase {
   }
 
   @Test
-  public void testRuntime() throws ParsingException, AnalysisException, OutputException, MalformedURLException, 
+  public void test03Runtime() throws ParsingException, AnalysisException, OutputException, MalformedURLException, 
         ClassNotFoundException, InstantiationException, IllegalAccessException, SecurityException, 
         NoSuchMethodException, IllegalArgumentException, InvocationTargetException {
     generateJavaFile();
