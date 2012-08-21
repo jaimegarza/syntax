@@ -6,7 +6,7 @@
     top be included in the generated code.
     Modify at your own risk.
 
-    Copyright (c), 1985-199 Jaime Garza V zquez
+    Copyright (c), 1985-2012 Jaime Garza
 
 /*/
 
@@ -195,7 +195,7 @@ int StxParse(void)
 
     while(1){
         action = StxAction(StxState, StxSym);
-        if(action == 9999) {
+        if(action == 2147483647) {
 #ifdef DEBUG
             printf("Program Accepted\n");
 #endif
