@@ -413,11 +413,15 @@ public class Java extends BaseLanguageSupport {
     environment.output.printf("\"%s\"", runtime.getErrorMessages().get(error));
     if (error == runtime.getErrorMessages().size() - 1) {
       environment.output.printf("\n");
-      indent(environment.output, environment.getIndent() - 1);
-      environment.output.printf("};\n");
     } else {
       environment.output.printf(",\n");
     }
+  }
+
+  @Override
+  public void printErrorFooter() {
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("};\n");
   }
 
   @Override
@@ -542,25 +546,23 @@ public class Java extends BaseLanguageSupport {
         environment.output.printf(",\n");
       }
     }
-    if (environment.isPacked()) {
-      indent(environment.output, environment.getIndent() - 1);
-      environment.output.printf("private final int NON_TERMINALS=%d;\n", runtime.getNonTerminals().size());
-      indent(environment.output, environment.getIndent() - 1);
-      environment.output.printf("private final int nonTerminals[] = {\n");
-      int i = 1;
-      for (NonTerminal id : runtime.getNonTerminals()) {
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("private final int NON_TERMINALS=%d;\n", runtime.getNonTerminals().size());
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("private final int nonTerminals[] = {\n");
+    int i = 1;
+    for (NonTerminal id : runtime.getNonTerminals()) {
+      indent(environment.output, environment.getIndent());
+      if (i == runtime.getNonTerminals().size()) {
+        environment.output.printf("\n");
         indent(environment.output, environment.getIndent());
-        if (i == runtime.getNonTerminals().size()) {
-          environment.output.printf("\n");
-          indent(environment.output, environment.getIndent());
-          environment.output.printf("%d // %s\n", id.getToken(), id.getName());
-          indent(environment.output, environment.getIndent() - 1);
-          environment.output.printf("};\n\n");
-        } else {
-          environment.output.printf("%d // %s,", id.getToken(), id.getName());
-        }
-        i++;
+        environment.output.printf("%d // %s\n", environment.isPacked()?id.getToken():id.getId(), id.getName());
+        indent(environment.output, environment.getIndent() - 1);
+        environment.output.printf("};\n\n");
+      } else {
+        environment.output.printf("%d,// %s", environment.isPacked()?id.getToken():id.getId(), id.getName());
       }
+      i++;
     }
     if (!runtime.isStackTypeDefined()) {
       environment.output.printf("\n");

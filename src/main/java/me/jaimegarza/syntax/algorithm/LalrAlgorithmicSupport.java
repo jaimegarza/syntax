@@ -75,18 +75,14 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
   @Override
   public LookAhead computeLookAhead(Rule rule, RuleItem item) {
     LookAhead l = new LookAhead();
+    l.setCarry(true);
+    
     if (item == null) {
       return l;
     }
 
     int index = rule.getItems().indexOf(item);
-    if (index == -1) {
-      return l;
-    }
-
-    l.setCarry(true);
-
-    if (index >= rule.getItems().size() - 1) {
+    if (index == -1 || index >= rule.getItems().size() - 1) {
       return l;
     }
 
@@ -114,7 +110,7 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
     LookAhead l = computeLookAhead(marker.getRule(), marker.getItem());
     auxiliary.getLookahead().addAll(l.getSymbolIds());
     if (l.isCarry()) {
-      marker.getLookahead().addAll(auxiliary.getLookahead());
+      auxiliary.getLookahead().addAll(marker.getLookahead());
     }
   }
   

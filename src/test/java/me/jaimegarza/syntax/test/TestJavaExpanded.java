@@ -38,10 +38,9 @@ public class TestJavaExpanded extends AbstractGenerationBase {
       "int TOKENS=18",
       "int FINAL=34",
       "int SYMBS=19",
-      "int ACTIONS=0",
       "int NON_TERMINALS=2",
       "Begin of Skeleton",
-      "Java Skeleton Parser for packed tables"
+      "Java Skeleton Parser for matrix tables"
   };
 
   private static final String grammarExpandedChecks[] = {

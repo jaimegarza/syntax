@@ -94,44 +94,45 @@ public class CodeWriter extends AbstractPhase {
   private void printTables() {
     int stateNumber, action, error;
 
-    environment.language.printActionHeader();
-    action = 0;
-    for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
-      if (runtimeData.getStates()[stateNumber].getPosition() >= action) {
-        for (Action anAction : runtimeData.getStates()[stateNumber].getActions()) {
-          environment.language.printAction(action, anAction);
-          action++;
+    if (environment.isPacked()) {
+      environment.language.printActionHeader();
+      action = 0;
+      for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
+        if (runtimeData.getStates()[stateNumber].getPosition() >= action) {
+          for (Action anAction : runtimeData.getStates()[stateNumber].getActions()) {
+            environment.language.printAction(action, anAction);
+            action++;
+          }
         }
       }
-    }
 
-    environment.language.printGoToTableHeader();
-    int gotoIndex = 0;
-    for (NonTerminal id : runtimeData.getNonTerminals()) {
-      if (id.getGotos() != null && id.getGotos().size() > 0) {
-        for (GoTo pGoto : id.getGotos()) {
-          environment.language.printGoTo(gotoIndex++, pGoto);
+      environment.language.printGoToTableHeader();
+      int gotoIndex = 0;
+      for (NonTerminal id : runtimeData.getNonTerminals()) {
+        if (id.getGotos() != null && id.getGotos().size() > 0) {
+          for (GoTo pGoto : id.getGotos()) {
+            environment.language.printGoTo(gotoIndex++, pGoto);
+          }
         }
       }
-    }
-    environment.language.printParsingTableHeader();
-    for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
-      environment.language.printPackedState(stateNumber);
+      
+      environment.language.printParsingTableHeader();
+      for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
+        environment.language.printPackedState(stateNumber);
+      }
     }
     environment.language.printErrorTableHeader();
     for (error = 0; error < runtimeData.getErrorMessages().size(); error++) {
       environment.language.printErrorEntry(error);
     }
+    environment.language.printErrorFooter();
   }
 
   /**
    * Close the printing of code
    */
   private void printFooter() {
-    if (environment.isPacked()) {
-      printTables();
-    }
-
+    printTables();
     environment.language.printGrammarTable();
   }
   

@@ -5,7 +5,7 @@
    */
 
   /* ****************************************************************
-    Java Skeleton Parser for tabular tables
+    Java Skeleton Parser for matrix tables
 
     This is not a sample program, but rather the parser skeleton
     to be included in the generated code.
