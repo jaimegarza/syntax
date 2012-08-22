@@ -37,6 +37,7 @@ import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
+import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Terminal;
 
 
@@ -269,6 +270,27 @@ public class C extends BaseLanguageSupport {
     }
   }
 
+  @Override
+  public void printParserErrors() {
+    if (environment.isPacked() == true) {
+      return;
+    }
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("// Parsing Errors\n");
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("int StxParsingError[FINAL] = {\n");
+    int i = 0;
+    for (State I : runtime.getStates()) {
+      if (i == runtime.getStates().length - 1) {
+        environment.output.printf("    /* State %3d */ %s  // %s\n", i, I.getMessage(), getErrorMessage(I));
+        environment.output.printf("};\n\n");
+      } else {
+        environment.output.printf("    /* State %3d */ %s, // %s\n", i, I.getMessage(), getErrorMessage(I));
+      }
+      i++;
+    }
+  }  
+  
   @Override
   public void printParsingTableHeader() {
     environment.output.printf("\n"

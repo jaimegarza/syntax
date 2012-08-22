@@ -81,7 +81,7 @@ public class CodeWriter extends AbstractPhase {
     int parserLine[] = state.getRow();
     int stateNumber = state.getId();
 
-    if (environment.isPacked()) {
+    if (environment.isPacked() == true) {
       return;
     }
     int symbolCounter = runtimeData.getTerminals().size() + runtimeData.getNonTerminals().size() - 2;
@@ -89,12 +89,12 @@ public class CodeWriter extends AbstractPhase {
   }
 
   /**
-   * print packed tables
+   * print multiple tables
    */
   private void printTables() {
     int stateNumber, action, error;
 
-    if (environment.isPacked()) {
+    if (environment.isPacked() == true) {
       environment.language.printActionHeader();
       action = 0;
       for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
@@ -120,6 +120,9 @@ public class CodeWriter extends AbstractPhase {
       for (stateNumber = 0; stateNumber < runtimeData.getStates().length; stateNumber++) {
         environment.language.printPackedState(stateNumber);
       }
+    }
+    if (environment.isPacked() == false) {
+      environment.language.printParserErrors();
     }
     environment.language.printErrorTableHeader();
     for (error = 0; error < runtimeData.getErrorMessages().size(); error++) {

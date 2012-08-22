@@ -36,6 +36,7 @@ import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
+import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 
@@ -261,9 +262,9 @@ public class Java extends BaseLanguageSupport {
     for (Terminal id : runtime.getTerminals()) {
       indent(environment.include, environment.getIndent());
       if (!id.getVariable().equals("_")) {
-        environment.include.printf("new TokenDef(\"%s\", \"%s\", %d, true)", id.getVariable(), id.getFullName(), id.getToken());
+        environment.include.printf("new TokenDef(\"%s\", \"%s\", %d, true)", id.getVariable(), escapeDoubleQuotes(id.getFullName()), id.getToken());
       } else {
-        environment.include.printf("new TokenDef(\"%s\", \"%s\", %d, false)", id.getName(), id.getFullName(), id.getToken());
+        environment.include.printf("new TokenDef(\"%s\", \"%s\", %d, false)", id.getName(), escapeDoubleQuotes(id.getFullName()), id.getToken());
       }
       i++;
       if (i < runtime.getTerminals().size()) {
@@ -283,7 +284,7 @@ public class Java extends BaseLanguageSupport {
     environment.output.printf("private static final int SYMBS=%d;\n\n", runtime.getTerminals().size() + runtime.getNonTerminals().size() - 1);
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("private static final int ACCEPT=Integer.MAX_VALUE;\n\n");
-    if (!environment.isPacked()) {
+    if (environment.isPacked() == false) {
       indent(environment.output, environment.getIndent()-1);
       environment.output.printf("// Parsing Table\n");
       indent(environment.output, environment.getIndent()-1);
@@ -302,6 +303,29 @@ public class Java extends BaseLanguageSupport {
         environment.output.printf("%6s ", name);
       }
       environment.output.println();
+    }
+  }
+  
+  @Override
+  public void printParserErrors() {
+    if (environment.isPacked() == true) {
+      return;
+    }
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("// Parsing Errors\n");
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("private int parsingError[] = {\n");
+    int i = 0;
+    for (State I : runtime.getStates()) {
+      indent(environment.output, environment.getIndent());
+      if (i == runtime.getStates().length - 1) {
+        environment.output.printf(" /* State %3d */ %s  // %s\n", i, I.getMessage(), getErrorMessage(I));
+        indent(environment.output, environment.getIndent()-1);
+        environment.output.printf("};\n\n");
+      } else {
+        environment.output.printf(" /* State %3d */ %s, // %s\n", i, I.getMessage(), getErrorMessage(I));
+      }
+      i++;
     }
   }
 
@@ -410,7 +434,7 @@ public class Java extends BaseLanguageSupport {
   @Override
   public void printErrorEntry(int error) {
     indent(environment.output, environment.getIndent());
-    environment.output.printf("\"%s\"", runtime.getErrorMessages().get(error));
+    environment.output.printf(" /* %d */ \"%s\"", error, escapeDoubleQuotes(runtime.getErrorMessages().get(error)));
     if (error == runtime.getErrorMessages().size() - 1) {
       environment.output.printf("\n");
     } else {

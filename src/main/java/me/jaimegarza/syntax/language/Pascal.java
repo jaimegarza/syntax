@@ -37,6 +37,7 @@ import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
+import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Terminal;
 
 /**
@@ -398,8 +399,29 @@ public class Pascal extends BaseLanguageSupport {
       environment.output.printf("),\n");
     }
   }
-
+  
   @Override
+  public void printParserErrors() {
+    if (environment.isPacked() == true) {
+      return;
+    }
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("{Parsing Errors}\n");
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("    StxParsingError : array [TABLEROWS] of Integer = (\n");
+    int i = 0;
+    for (State I : runtime.getStates()) {
+      indent(environment.output, environment.getIndent());
+      if (i == runtime.getStates().length - 1) {
+        environment.output.printf(" {State %3d} %s  (* %s *)\n", i, I.getMessage(), getErrorMessage(I));
+        indent(environment.output, environment.getIndent()-1);
+        environment.output.printf(");\n\n");
+      } else {
+        environment.output.printf(" {State %3d} %s, (* %s *)\n", i, I.getMessage(), getErrorMessage(I));
+      }
+      i++;
+    }
+  }  @Override
   public void printParsingTableHeader() {
     environment.output.printf("\n" + "  StxParsingTable : array [TABLEROWS] of PARSER = (\n");
   }
