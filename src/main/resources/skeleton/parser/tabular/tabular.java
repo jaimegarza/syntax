@@ -121,6 +121,18 @@
   }
 
   /**
+   * Get the error message for a state
+   */
+  private String getErrorMessage() {
+    int msgIndex = parsingError[state];
+    if (msgIndex >= 0) {
+      return errorTable[msgIndex];
+    } else {
+      return "Syntax error on state " + state + " with token " + getTokenName(lexicalToken);
+    }
+  }
+
+  /**
    * Recover from a syntax error removing stack states/symbols, and removing
    * input tokens.  The array StxRecover contains the tokens that bound
    * the error
@@ -130,7 +142,7 @@
 
     switch(errorFlag) {
       case 0: // 1st error
-        if(parserError(state, lexicalToken, stackTop) == 0) {
+        if(parserError(state, lexicalToken, stackTop, getErrorMessage()) == 0) {
           return 0;
         }
         errorCount++;

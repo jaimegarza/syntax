@@ -35,6 +35,7 @@ import java.io.PrintStream;
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.cli.Environment;
+import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.generator.RuntimeData;
 
@@ -363,5 +364,18 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
       lexer.getCharacter();
     }
     return true;
+  }
+
+  protected String getErrorMessage(State I) {
+    int msgIndex = I.getMessage();
+    if (msgIndex >= 0) {
+      return runtime.getErrorMessages().get(msgIndex);
+    } else {
+      return "No error assigned";
+    }
+  }
+
+  protected String escapeDoubleQuotes(String error) {
+    return error.replaceAll("\\\"", "\\\\\"");
   }
 }

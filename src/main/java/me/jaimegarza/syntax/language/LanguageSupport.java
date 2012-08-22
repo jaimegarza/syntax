@@ -269,4 +269,6 @@ public interface LanguageSupport {
    */
   void printGrammarTable();
 
+  void printParserErrors();
+
 }

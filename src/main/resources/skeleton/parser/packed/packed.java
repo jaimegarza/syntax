@@ -136,6 +136,18 @@
   }
 
   /**
+   * Get the error message for a state
+   */
+  private String getErrorMessage() {
+    int msgIndex = parsingTable[state].msg;
+    if (msgIndex >= 0) {
+      return errorTable[msgIndex];
+    } else {
+      return "Syntax error on state " + state + " with token " + getTokenName(lexicalToken);
+    }
+  }
+
+  /**
    * Recover from a syntax error removing stack states/symbols, and removing
    * input tokens.  The array StxRecover contains the tokens that bound
    * the error
@@ -145,7 +157,7 @@
 
     switch(errorFlag) {
       case 0: // 1st error
-        if(parserError(state, lexicalToken, stackTop) == 0) {
+        if(parserError(state, lexicalToken, stackTop, getErrorMessage()) == 0) {
           return 0;
         }
         errorCount++;
@@ -212,7 +224,7 @@
 
     while(1 == 1) { // forever with break and return below
       action = parserAction(state, lexicalToken);
-      if(action == Integer.MAX_VALUE) {
+      if(action == ACCEPT) {
         if (isVerbose()) {
           System.out.println("Program Accepted");
         }
