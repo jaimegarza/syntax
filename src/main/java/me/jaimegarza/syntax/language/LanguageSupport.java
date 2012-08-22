@@ -230,6 +230,11 @@ public interface LanguageSupport {
   void printErrorEntry(int error);
 
   /**
+   * Close the error table
+   */
+  void printErrorFooter();
+
+  /**
    * emit the header of the action table
    */
   void printActionHeader();
@@ -263,4 +268,5 @@ public interface LanguageSupport {
    * Output the whole grammar table
    */
   void printGrammarTable();
+
 }

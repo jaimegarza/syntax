@@ -1862,7 +1862,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
         environment.report.printf("%s", id.getType().getName());
       }
       environment.report.printf("\n");
-      id.setId(noterminals++ + terminals);
+      id.setId(noterminals + terminals);
+      noterminals++;
       id.setFirst(null);
       id.setFollow(null);
     }

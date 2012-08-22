@@ -378,6 +378,7 @@ public class TableGenerator extends AbstractPhase {
     } else {
       environment.report.printf("Error\n");
     }
+    
     environment.report.printf("\nErrors\n-------\n");
     if (tokenCount == 1) {
       String message = "";
@@ -538,7 +539,7 @@ public class TableGenerator extends AbstractPhase {
           environment.report.println("ACCEPT BY " + -dot.getRule().getRulenum());
           parserLine[0] = ACCEPT;
         } else {
-          environment.report.printf("REDUCE BY -%d\n", dot.getRule().getRulenum());
+          environment.report.printf("REDUCE BY RULE %d\n", dot.getRule().getRulenum());
           for (Symbol tkn : runtimeData.getTerminals()) {
             boolean containsToken = environment.algorithm.dotContains(dot, tkn.getId());
             if (containsToken) {
@@ -690,6 +691,16 @@ public class TableGenerator extends AbstractPhase {
    * @param stateNumber is the current state
    */
   private void completeState(int[] parserLine, int stateNumber) {
+    environment.report.println("    ---------------------------------------------------------");
+    for (int i = 0; i < parserLine.length; i++) {
+      if (parserLine[i] > 0) {
+        Symbol s = runtimeData.findTerminalById(i);
+        if (s == null) {
+          s = runtimeData.findNonTerminalById(i);
+        }
+        environment.report.printf("SHIFT ON %s TO STATE %d\n", s.getName(), parserLine[i]);
+      }
+    }
     computeReduce(parserLine, stateNumber);
     I[stateNumber].setMessage(-1);
     I[stateNumber].setRow(parserLine);

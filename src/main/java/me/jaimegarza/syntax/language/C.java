@@ -304,10 +304,15 @@ public class C extends BaseLanguageSupport {
   public void printErrorEntry(int error) {
     environment.output.printf("\t\"%s\"", runtime.getErrorMessages().get(error));
     if (error == runtime.getErrorMessages().size() - 1) {
-      environment.output.printf("\n};\n");
+      environment.output.printf("\n");
     } else {
       environment.output.printf(",\n");
     }
+  }
+
+  @Override
+  public void printErrorFooter() {
+    environment.output.printf("};\n");
   }
 
   @Override

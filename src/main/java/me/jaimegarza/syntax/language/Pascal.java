@@ -433,11 +433,14 @@ public class Pascal extends BaseLanguageSupport {
       environment.output.printf("%c", c);
     }
     environment.output.printf("\'");
-    if (error == runtime.getErrorMessages().size() - 1) {
-      environment.output.printf(");\n");
-    } else {
+    if (error != runtime.getErrorMessages().size() - 1) {
       environment.output.printf(",\n");
     }
+  }
+
+  @Override
+  public void printErrorFooter() {
+    environment.output.printf(");\n");
   }
 
   @Override
