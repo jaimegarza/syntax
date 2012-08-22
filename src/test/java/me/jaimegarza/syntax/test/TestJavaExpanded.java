@@ -51,7 +51,7 @@ public class TestJavaExpanded extends AbstractGenerationBase {
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
-      "Errors:.*7",
+      "Errors:.*8",
       "Actions:.*0",
       "Gotos:.*0",
       "Recoveries:.*0",

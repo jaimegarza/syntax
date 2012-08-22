@@ -42,6 +42,7 @@ import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
+import me.jaimegarza.syntax.definition.Terminal;
 
 /**
  * Phases:
@@ -379,63 +380,146 @@ public class TableGenerator extends AbstractPhase {
       environment.report.printf("Error\n");
     }
     
+  }
+  
+  /**
+   * Given a parsing line, compute its possible error messages
+   * 
+   * TODO: Group like in "operator missing" with %group
+   * 
+   * @param parserLine is the parsing table's line
+   * @param stateNumber is the current state
+   */
+  private void computeErrorsForState(int parserLine[], int stateNumber) {
+    int tokenCount = 0;
+    int nonTerminalCount = 0;
+    int acceptCount = 0;
+    int reduceCount = 0;
+    Terminal theToken = null;
+    Terminal theReducer = null;
+    NonTerminal theNonTerminal = null;
+
+    for (int i = 0; i < parserLine.length; i++) {
+      if (parserLine[i] == ACCEPT) {
+        acceptCount++;
+      } else if (parserLine[i] > 0) { // a shift or goto
+        Terminal token = runtimeData.findTerminalById(i);
+        if (token != null) { // a shift
+          tokenCount++;
+          if (tokenCount == 1) {
+            theToken = token;
+          }
+        } else { // a goto
+          nonTerminalCount++;
+          if (nonTerminalCount == 1) {
+            theNonTerminal = runtimeData.findNonTerminalById(i);
+          }
+        }
+      } else if (parserLine[i] < 0) {
+        reduceCount++;
+        if (reduceCount == 1) {
+          theReducer = runtimeData.findTerminalById(i);
+        }
+      }
+    }
+
     environment.report.printf("\nErrors\n-------\n");
     if (tokenCount == 1) {
       String message = "";
-      message = errorToken.getSymbol().getFullName() + " expected";
+      message = theToken.getFullName() + " expected";
       environment.report.println("    " + message);
       I[stateNumber].setMessage(addErrorMessage(message));
-    } else if (symbolCount == 1) {
-      String message = "Expecting " + errorSymbol.getFullName();
+    } else if (nonTerminalCount == 1 && theNonTerminal != null) {
+      String message = "Expecting " + theNonTerminal.getFullName();
       environment.report.println("    " + message);
       I[stateNumber].setMessage(addErrorMessage(message));
-    } else if (tokenCount != 0 && (tokenCount < symbolCount || symbolCount == 0)) {
+    } else if (reduceCount == 1 && theReducer != null) {
+      String message = theReducer.getFullName() + " expected";
+      environment.report.println("    " + message);
+      I[stateNumber].setMessage(addErrorMessage(message));
+    } else if (tokenCount != 0 && (tokenCount < nonTerminalCount || nonTerminalCount == 0)) {
       StringBuilder messageBuffer = new StringBuilder();
-      int i = 0;
-      for (Action action : actions) {
-        if (action.getStateNumber() > 0 && action.getStateNumber() != ACCEPT) {
-          if (i > 0) {
-            if (i == tokenCount - 1) {
-              messageBuffer.append(" or ");
-            } else {
-              messageBuffer.append(", ");
+      int count = 0;
+      for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
+        if (parserLine[i] > 0 && parserLine[i] != ACCEPT) {
+          Terminal t = runtimeData.findTerminalById(i);
+          if (t != null) {
+            if (count > 0) {
+              if (count == tokenCount - 1) {
+                messageBuffer.append(" or ");
+              } else {
+                messageBuffer.append(", ");
+              }
             }
+            messageBuffer.append(t.getFullName());
+            count++;
           }
-          messageBuffer.append(action.getSymbol().getFullName());
-          i++;
         }
       }
       messageBuffer.append(" expected");
       environment.report.println("    " + messageBuffer.toString());
       I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
-    } else if (symbolCount != 0) {
+    } else if (nonTerminalCount != 0) {
       StringBuilder messageBuffer = new StringBuilder("Expecting ");
-      int j = 0;
+      int count = 0;
+      int terminals = runtimeData.getTerminals().size();
       for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
         if (parserLine[terminals + i] != 0) {
-          for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
-            if (nonTerminal.getId() == i + terminals) {
-              if (j > 0) {
-                if (j == symbolCount - 1) {
-                  messageBuffer.append(" or ");
-                } else {
-                  messageBuffer.append(", ");
-                }
+          NonTerminal nt = runtimeData.findNonTerminalById(terminals + i);
+          if (nt != null) {
+            if (count > 0) {
+              if (count == nonTerminalCount - 1) {
+                messageBuffer.append(" or ");
+              } else {
+                messageBuffer.append(", ");
               }
-              messageBuffer.append(nonTerminal.getFullName());
-              break;
             }
+            messageBuffer.append(nt.getFullName());
+            count++;
+            /*
+             * putting this break for now because in the example I was trying just
+             * putting the first one seems OK
+             */
+            break;
           }
-          j++;
-          /*
-           * putting this break for now because in the example I was trying just
-           * putting the first one seems OK
-           */
-          break;
         }
       }
       environment.report.println("    " + messageBuffer.toString());
       I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
+    } else if (reduceCount != 0) {
+      StringBuilder messageBuffer = new StringBuilder("");
+      int count = 0;
+      for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
+        if (parserLine[i] < 0) {
+          Terminal t = runtimeData.findTerminalById(i);
+          if (t != null) {
+            if (count > 0) {
+              if (count == tokenCount - 1) {
+                messageBuffer.append(" or ");
+              } else {
+                messageBuffer.append(", ");
+              }
+            }
+            messageBuffer.append(t.getFullName());
+            count++;
+          }
+        }
+      }
+      messageBuffer.append(" may be missing");
+      String message = messageBuffer.toString();
+      if (count == 0) {
+        message = "Syntax error";
+      } else if (count == 1) {
+        message = "The symbol " + message;
+      } else {
+        message = "One of the symbols " + message;
+      }
+      environment.report.println("    " + message);
+      I[stateNumber].setMessage(addErrorMessage(message));
+    } else if (acceptCount == 1) {
+      String message = "No more elements expected";
+      environment.report.println("    " + message);
+      I[stateNumber].setMessage(addErrorMessage(message));
     } else {
       I[stateNumber].setMessage(-1);
     }
@@ -705,6 +789,7 @@ public class TableGenerator extends AbstractPhase {
     I[stateNumber].setMessage(-1);
     I[stateNumber].setRow(parserLine);
     packState(parserLine, stateNumber);
+    computeErrorsForState(parserLine, stateNumber);
   }
 
   /**

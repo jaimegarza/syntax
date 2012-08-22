@@ -50,7 +50,7 @@ public class TestJavaPacked extends AbstractGenerationBase {
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
-      "Errors:.*7",
+      "Errors:.*8",
       "Actions:.*57",
       "Gotos:.*16",
       "Recoveries:.*0",
