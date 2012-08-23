@@ -146,9 +146,7 @@ public class CodeWriter extends AbstractPhase {
   private String getSkeletonResourceName() {
     StringBuilder builder = new StringBuilder();
     String parserStructure = environment.isPacked() ? "packed" : "tabular";
-    builder.append("skeleton")
-           .append(RESOURCE_SEPARATOR)
-           .append("parser") // TODO this must change upon lexical driver parsers
+    builder.append(environment.getDriver().skeleton())
            .append(RESOURCE_SEPARATOR)
            .append(parserStructure)
            .append(RESOURCE_SEPARATOR)
