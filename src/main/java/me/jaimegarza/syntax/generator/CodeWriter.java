@@ -157,8 +157,6 @@ public class CodeWriter extends AbstractPhase {
 
   /**
    * Close the output by putting the remaining of the grammar file and the skeleton parser
-   * TODO - add all the parser skeletons in a nice way.
-   * TODO - make sure we have lexical driven parsers together with the run-once parsers
    * @throws IOException
    */
   private void finishOutput() throws IOException {
