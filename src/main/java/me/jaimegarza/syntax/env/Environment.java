@@ -44,6 +44,7 @@ import me.jaimegarza.syntax.algorithm.AlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.LalrAlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.SlrAlgorithmicSupport;
 import me.jaimegarza.syntax.code.Fragments;
+import me.jaimegarza.syntax.definition.Driver;
 import me.jaimegarza.syntax.language.BaseLanguageSupport;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.language.LanguageSupport;
@@ -114,6 +115,8 @@ public class Environment extends Options {
   private ResourceBundle fragments;
   private int parsedLine;
   private Locale locale;
+
+  private Driver driver;
 
 
 
@@ -187,6 +190,7 @@ public class Environment extends Options {
       setIndent();
       setPacking();
       setExternalInclude();
+      setDriver();
       this.fileNames = cmd.getArgList();
       setSourceFile();
       setOutputFile();
@@ -228,7 +232,7 @@ public class Environment extends Options {
     add("v", "verbose", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Verbose output, default no", "");
     add("a", "algorithm", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Algorithm, either s|l (For SLR and LALR, default LALR)", "algorithm");
-    add("d", "debug", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Prints debug information", "");
+    add("g", "debug", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Prints debug information", "");
     add("n", "noline", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Disable #line directives in C, default enabled", "");
     add("m", "margin", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Right margin on generated source, default 8000",
         "margin");
@@ -241,6 +245,8 @@ public class Environment extends Options {
         "* sparsely populated table.", "packing");
     add("x", "external", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Generate include file (true,on,yes,1|false,off,no,0, default is language dependent)", "external");
+    add("d", "driver", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "What parser driver is to be used (parser|scanner, default is parser)", "parser");
   }
 
   /**
@@ -350,7 +356,21 @@ public class Environment extends Options {
                  value.equalsIgnoreCase("off") ||
                  value.equalsIgnoreCase("0")) {
       this.externalInclude = false;
-      ;
+    } else {
+      throw new ParseException("Option -x|--external is not valid :" + value);
+    }
+  }
+
+  /**
+   * compute the driver to be used
+   * @throws ParseException if the option cannot be computed
+   */
+  private void setDriver() throws ParseException {
+    String value = get("d", "parser");
+    if (value.equalsIgnoreCase("parser")) {
+      this.driver = Driver.PARSER;
+    } else if (value.equalsIgnoreCase("scanner")) {
+      this.driver = Driver.SCANNER;
     } else {
       throw new ParseException("Option -x|--external is not valid :" + value);
     }
@@ -369,7 +389,7 @@ public class Environment extends Options {
    * @throws ParseException if the option cannot be computed
    */
   private void setDebug() throws ParseException {
-    this.debug = has("d");
+    this.debug = has("g");
   }
 
   /**
@@ -600,6 +620,13 @@ public class Environment extends Options {
    */
   public Algorithm getAlgorithmType() {
     return algorithmEnum;
+  }
+  
+  /**
+   * @return the driver being used
+   */
+  public Driver getDriver() {
+    return driver;
   }
 
   /**

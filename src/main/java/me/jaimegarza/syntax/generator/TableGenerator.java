@@ -35,6 +35,7 @@ import java.util.List;
 import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.Dot;
+import me.jaimegarza.syntax.definition.Driver;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
@@ -205,7 +206,10 @@ public class TableGenerator extends AbstractPhase {
   /**
    * given a parser line with transitions, find the one with the highest 
    * frequency such that it can be assumed to be the default.  Usually
-   * only terminals are considered in the computation
+   * only terminals are considered in the computation.<p>
+   * For scanner based parsers, ALWAYS assume error as the default.  The reason
+   * being is that having explicit shifts, reduces can produce a better
+   * stopping point.
    * 
    * @param parserLine is the parsing line with state transitions
    * @param numberOfElements restricts the number of elements in the parsing table
@@ -216,6 +220,9 @@ public class TableGenerator extends AbstractPhase {
     int defaultValue = 0, defaultCount = 0;
     int i, j, count;
 
+    if (environment.getDriver() == Driver.SCANNER) {
+      return 0;
+    }
     for (i = 0; i < numberOfElements; i++) {
       if (parserLine[i] < 0 && parserLine[i] != defaultValue) {
         // Cuenta ocurrencias
@@ -251,12 +258,8 @@ public class TableGenerator extends AbstractPhase {
     for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
       if (parserLine[i] != 0 && parserLine[i] != defaultValue) {
         // a shift action with symbol number = i
-        for (Symbol symbol : runtimeData.getTerminals()) {
-          if (symbol.getId() == i) {
-            actions.add(new Action(symbol, parserLine[i]));
-            break;
-          }
-        }
+        Terminal symbol = runtimeData.findTerminalById(i);
+        actions.add(new Action(symbol, parserLine[i]));
       }
     }
     return actions;
@@ -333,8 +336,6 @@ public class TableGenerator extends AbstractPhase {
     }
     I[stateNumber].setDefaultValue(defaultAction);
     I[stateNumber].setActions(actions);
-    int tokenCount = 0;
-    Action errorToken = null;
     for (Action action : actions) {
       environment.report.printf("    With %s ", action.getSymbol().getName());
       if (action.getStateNumber() < 0) {
@@ -343,15 +344,10 @@ public class TableGenerator extends AbstractPhase {
         environment.report.printf("Accept\n");
       } else {
         environment.report.printf("Shift to state %d\n", action.getStateNumber());
-        errorToken = action;
-        tokenCount++;
       }
     }
     // compute and emit GOTO's
-    int symbolCount = 0;
-
     int terminals = runtimeData.getTerminals().size();
-    NonTerminal errorSymbol = null;
     for (int i = 0; i < runtimeData.getNonTerminals().size(); i++) {
       if (parserLine[terminals + i] != 0) {
         NonTerminal symbol = null;
@@ -367,8 +363,6 @@ public class TableGenerator extends AbstractPhase {
           continue;
         }
         environment.report.printf("    With %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
-        symbolCount++;
-        errorSymbol = symbol;
         addGoto(symbol, stateNumber, parserLine[i + terminals]);
       }
     }
