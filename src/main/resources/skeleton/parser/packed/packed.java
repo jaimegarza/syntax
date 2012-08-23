@@ -258,7 +258,7 @@
   }
 
   /**
-   * @returns the current lextical value
+   * @returns the current lexical value
    */
   public LexicalValue getResult() {
     return stack[stackTop];

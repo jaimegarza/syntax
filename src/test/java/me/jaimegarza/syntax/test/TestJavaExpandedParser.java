@@ -1,3 +1,31 @@
+/*
+ ===============================================================================
+ Copyright (c) 1985, 2012, Jaime Garza
+ All rights reserved.
+ 
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+     * Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+     * Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+     * Neither the name of Jaime Garza nor the
+       names of its contributors may be used to endorse or promote products
+       derived from this software without specific prior written permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ===============================================================================
+*/
 package me.jaimegarza.syntax.test;
 
 import java.io.File;
@@ -20,44 +48,43 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestJavaPacked extends AbstractGenerationBase {
+public class TestJavaExpandedParser extends AbstractGenerationBase {
 
-  static final String packedArgs[] = {
+  static final String expandedArgs[] = {
       // "-v",
       "--algorithm",
       "l",
       "--language",
       "java",
+      "--packing",
+      "tabular",
       "classpath:java-test.sy",
       "${file.language}"
   };
 
-  private static final String languagePackedChecks[] = {
+  private static final String languageExpandedChecks[] = {
       "int TOKENS=18",
       "int FINAL=34",
       "int SYMBS=19",
-      "int ACTIONS=57",
       "int NON_TERMINALS=2",
       "Begin of Skeleton",
-      "Java Skeleton"
+      "Java Skeleton Parser for matrix tables"
   };
 
-  private static final String grammarPackedChecks[] = {
+  private static final String grammarExpandedChecks[] = {
       "Algorithm:.*LALR",
       "Language:.*java",
-      "Packed\\?:.*.*true",
+      "Packed\\?:.*.*false",
       "Tokens:.*18",
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
       "Errors:.*8",
-      "Actions:.*57",
-      "Gotos:.*16",
+      "Actions:.*0",
+      "Gotos:.*0",
       "Recoveries:.*0",
       "States:.*34",
   };
-
-  protected static final int MAX_COMPILE_ERRORS = 10;
 
   @Override
   @BeforeTest
@@ -73,15 +100,15 @@ public class TestJavaPacked extends AbstractGenerationBase {
 
   @Test
   public void test01Generate() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(packedArgs);
+    generateJavaFile(expandedArgs);
 
-    checkRegularExpressions(tmpLanguageFile, languagePackedChecks);
-    checkRegularExpressions(tmpGrammarFile, grammarPackedChecks);
+    checkRegularExpressions(tmpLanguageFile, languageExpandedChecks);
+    checkRegularExpressions(tmpGrammarFile, grammarExpandedChecks);
   }
 
   @Test
   public void test02Compile() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(packedArgs);
+    generateJavaFile(expandedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
@@ -101,7 +128,7 @@ public class TestJavaPacked extends AbstractGenerationBase {
   public void test03Runtime() throws ParsingException, AnalysisException, OutputException, MalformedURLException,
       ClassNotFoundException, InstantiationException, IllegalAccessException, SecurityException,
       NoSuchMethodException, IllegalArgumentException, InvocationTargetException {
-    generateJavaFile(packedArgs);
+    generateJavaFile(expandedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
