@@ -21,8 +21,6 @@
   int            state;
   LexicalValue   lexicalValue;
   int            lexicalToken;
-  int            errorCount;
-  int            errorFlag;
   boolean        verbose = false;
 
   /**
@@ -148,117 +146,76 @@
   }
 
   /**
-   * Recover from a syntax error removing stack states/symbols, and removing
-   * input tokens.  The array StxRecover contains the tokens that bound
-   * the error
+   * initialize the parser.  Caller (or constructor) must call it
    */
-  private int parserRecover() {
-    int i, acc;
-
-    switch(errorFlag) {
-      case 0: // 1st error
-        if(parserError(state, lexicalToken, stackTop, getErrorMessage()) == 0) {
-          return 0;
-        }
-        errorCount++;
-        // continues and goes into 1 and 2.  No break on purpose
-
-      case 1:
-      case 2: // three attempts are made before dropping the current token
-        errorFlag = 3; // Remove token
-
-        while(stackTop > 0) {
-          // Look if the state on the stack's top has a transition with one of
-          // the recovering elements in StxRecoverTable
-          for (i=0; i<RECOVERS; i++) {
-            if((acc = parserAction(state, recoverTable[i])) > 0) {
-              // valid shift
-              return parserShift(recoverTable[i], acc);
-            }
-          }
-          if (isVerbose()) {
-            System.out.println("Recuperate removing state " + state + " and going to state " +
-                            stack[stackTop-1]);
-          }
-          state = stateStack[--stackTop];
-        }
-        stackTop = 0;
-        return 0;
-
-      case 3: // I need to drop the current token
-        if (isVerbose()) {
-          System.out.println("Recuperate removing symbol " + lexicalToken);
-        }
-        if(lexicalToken == 0) { // end of file
-          return 0;
-        }
-        lexicalToken = parserElement(false);
-        return 1;
-    }
-    // should never reach
-    System.err.println("ASSERTION FAILED ON PARSER");
-    Exception e = new Exception();
-    e.printStackTrace(System.err);
-    return 0;
-  }
-
-  /**
-   * Main parser routine, uses Shift, Reduce and Recover
-   */
-  public int parse() {
-    int action;
-
+  public void init() {
     stackTop = 0;
     stateStack[0] = 0;
     stack[0] = null;
-    currentChar = getNextChar(true);
-    lexicalToken = parserElement(true);
     state = 0;
-    errorFlag = 0;
-    errorCount = 0;
+  }
+  
+  public static final int ACCEPTED = 1;
+  public static final int SHIFTED = 2;
+  public static final int PARSING_ERROR = 3;
+  public static final int INTERNAL_ERROR = 4;
+  
+  /**
+   * send and parse one token.  main routine of the scanner driven recognizer
+   */
+  public int parse(int symbol, LexicalValue value) {
+    int action;
+    lexicalToken = getTokenIndex(symbol);
+    lexicalValue = value;
 
     if (isVerbose()) {
-      System.out.println("Starting to parse");
+      System.out.println("Starting to parse symbol " + symbol + "(" + lexicalToken + ":" + lexicalValue.toString() + ")");
       parserPrintStack();
     }
 
     while(1 == 1) { // forever with break and return below
-      action = parserAction(state, lexicalToken);
+      action = parserAction(state, symbol);
+      if (isVerbose()) {
+        System.out.println("Action: " + action);
+      }
       if(action == ACCEPT) {
         if (isVerbose()) {
           System.out.println("Program Accepted");
         }
-        return 1;
+        return ACCEPTED;
       }
 
       if(action > 0) {
         if(parserShift(lexicalToken, action) == 0) {
-          return 0;
+          return INTERNAL_ERROR;
         }
-        lexicalToken = parserElement(false);
-        if(errorFlag > 0) {
-           errorFlag--; // properly recovering from error
-        }
+        return SHIFTED;
       } else if(action < 0) {
         if(parserReduce(lexicalToken, -action) == 0) {
-          if(errorFlag == -1) {
-            if(parserRecover() == 0) {
-              return 0;
-            }
-          } else {
-            return 0;
-          }
+          return INTERNAL_ERROR;
         }
       } else if(action == 0) {
-        if(parserRecover() == 0) {
-          return 0;
-        }
+        return PARSING_ERROR;
       }
     }
   }
+  
+  /**
+   * give me the available actions that can be taken.  I am also returning reduces.
+   */
+  public int[] getValidTokens() {
+    int position = parsingTable[state].position;
+
+    int actions[] = new int[parsingTable[state].elements];
+    int index = 0;
+    for(int i=0; i < parsingTable[state].elements; i++) {
+      actions[index++] = actionTable[position+i].symbol;
+    }
+    return actions;
+  }
 
   /**
-   * @returns the current lextical value
+   * @returns the current lexical value
    */
   public LexicalValue getResult() {
     return stack[stackTop];

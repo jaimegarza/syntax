@@ -5,12 +5,16 @@ public class TestParser {
 %union {
   int number;
     
-  LexicalValue () {
+  public LexicalValue () {
     this.number = 0;
   }
     
   public String toString() {
     return "n=" + number;
+  }
+  
+  public void setNumber(int number) {
+    this.number = number;
   }
 }
 
@@ -131,11 +135,5 @@ Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 
     return getResult().number;
   }
   
-  public static void main(String[] args) {
-    TestParser parser = new TestParser();
-    parser.setVerbose(true);
-    parser.parse();
-    System.out.println(parser.getResult().number);
-  }
 }
   

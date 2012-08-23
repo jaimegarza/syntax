@@ -158,7 +158,7 @@ public class Java extends BaseLanguageSupport {
     int level;
 
     indent(environment.include, 1);
-    environment.include.printf("private class LexicalValue");
+    environment.include.printf("public static class LexicalValue");
     level = 0;
     while (2 > 1) {
       if (runtime.currentCharacter == '\0') {
@@ -591,7 +591,7 @@ public class Java extends BaseLanguageSupport {
     if (!runtime.isStackTypeDefined()) {
       environment.output.printf("\n");
       indent(environment.output, environment.getIndent() - 1);
-      environment.output.printf("private class LexicalValue {\n");
+      environment.output.printf("public static class LexicalValue {\n");
       indent(environment.output, environment.getIndent() - 1);
       environment.output.printf("}\n\n");
     }
