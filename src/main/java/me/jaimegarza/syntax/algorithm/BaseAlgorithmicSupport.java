@@ -28,8 +28,8 @@
 */
 package me.jaimegarza.syntax.algorithm;
 
-import me.jaimegarza.syntax.cli.Environment;
-import me.jaimegarza.syntax.generator.RuntimeData;
+import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.env.RuntimeData;
 
 public abstract class BaseAlgorithmicSupport implements AlgorithmicSupport {
   /**

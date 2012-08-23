@@ -30,7 +30,8 @@ package me.jaimegarza.syntax.generator;
 
 import java.io.PrintStream;
 
-import me.jaimegarza.syntax.cli.Environment;
+import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.env.RuntimeData;
 
 /**
  * Base clase for all phases.  Common routines will be placed here

@@ -35,11 +35,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import me.jaimegarza.syntax.OutputException;
-import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.State;
+import me.jaimegarza.syntax.env.Environment;
 
 /**
  * Phases:

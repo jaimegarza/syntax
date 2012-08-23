@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.Dot;
@@ -43,6 +42,7 @@ import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.env.Environment;
 
 /**
  * Phases:
