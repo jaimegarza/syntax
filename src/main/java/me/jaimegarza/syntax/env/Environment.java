@@ -26,7 +26,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.cli;
+package me.jaimegarza.syntax.env;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,7 +44,6 @@ import me.jaimegarza.syntax.algorithm.AlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.LalrAlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.SlrAlgorithmicSupport;
 import me.jaimegarza.syntax.code.Fragments;
-import me.jaimegarza.syntax.generator.RuntimeData;
 import me.jaimegarza.syntax.language.BaseLanguageSupport;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.language.LanguageSupport;

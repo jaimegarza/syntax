@@ -26,12 +26,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.generator;
+package me.jaimegarza.syntax.env;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.RuleItem;

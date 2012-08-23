@@ -34,10 +34,10 @@ import java.io.PrintStream;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
-import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Type;
-import me.jaimegarza.syntax.generator.RuntimeData;
+import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.env.RuntimeData;
 
 /**
  * Class that contains routines common to all language drivers

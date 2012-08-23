@@ -36,7 +36,6 @@ import java.util.Stack;
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.ParsingException;
-import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.NonTerminal;
@@ -45,6 +44,7 @@ import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
+import me.jaimegarza.syntax.env.Environment;
 
 /**
  * Parser for a grammar.<p>

@@ -7,7 +7,7 @@ import me.jaimegarza.syntax.AnalysisException;
 import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.Syntax;
-import me.jaimegarza.syntax.cli.Environment;
+import me.jaimegarza.syntax.env.Environment;
 
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.compilers.JavaCompiler;

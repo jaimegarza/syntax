@@ -32,7 +32,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Locale;
 
-import me.jaimegarza.syntax.cli.Environment;
+import me.jaimegarza.syntax.env.Environment;
 
 public class FormattingPrintStream extends PrintStream {
 

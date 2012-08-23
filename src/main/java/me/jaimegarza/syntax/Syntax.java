@@ -28,7 +28,7 @@
 */
 package me.jaimegarza.syntax;
 
-import me.jaimegarza.syntax.cli.Environment;
+import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.generator.CodeParser;
 import me.jaimegarza.syntax.generator.CodeWriter;
 import me.jaimegarza.syntax.generator.StructuralAnalyzer;

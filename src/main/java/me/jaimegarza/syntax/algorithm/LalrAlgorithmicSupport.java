@@ -31,7 +31,6 @@ package me.jaimegarza.syntax.algorithm;
 import java.util.List;
 import java.util.Set;
 
-import me.jaimegarza.syntax.cli.Environment;
 import me.jaimegarza.syntax.definition.Dot;
 import me.jaimegarza.syntax.definition.LookAhead;
 import me.jaimegarza.syntax.definition.NonTerminal;
@@ -40,6 +39,7 @@ import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.env.Environment;
 
 public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
 
