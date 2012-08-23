@@ -74,7 +74,6 @@ import org.apache.commons.logging.LogFactory;
  *       code structure 
  * TODO: Add maven artifact
  * TODO: Add ant task
- * TODO: Add compiler after java generation?
  * 
  * @author jaimegarza@gmail.com
  *
