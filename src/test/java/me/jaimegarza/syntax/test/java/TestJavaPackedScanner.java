@@ -26,7 +26,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.test;
+package me.jaimegarza.syntax.test.java;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +39,7 @@ import java.net.URLClassLoader;
 import me.jaimegarza.syntax.AnalysisException;
 import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.jci.compilers.CompilationResult;
@@ -48,43 +49,46 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestJavaExpandedParser extends AbstractGenerationBase {
+public class TestJavaPackedScanner extends AbstractGenerationBase {
 
-  static final String expandedArgs[] = {
+  static final String packedArgs[] = {
       // "-v",
       "--algorithm",
       "l",
       "--language",
       "java",
-      "--packing",
-      "tabular",
+      "--driver",
+      "scanner",
       "classpath:java-test.sy",
       "${file.language}"
   };
 
-  private static final String languageExpandedChecks[] = {
+  private static final String languagePackedChecks[] = {
       "int TOKENS=18",
       "int FINAL=34",
       "int SYMBS=19",
+      "int ACTIONS=254",
       "int NON_TERMINALS=2",
       "Begin of Skeleton",
-      "Java Skeleton Parser for matrix tables"
+      "Java Skeleton"
   };
 
-  private static final String grammarExpandedChecks[] = {
+  private static final String grammarPackedChecks[] = {
       "Algorithm:.*LALR",
       "Language:.*java",
-      "Packed\\?:.*.*false",
+      "Packed\\?:.*.*true",
       "Tokens:.*18",
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
       "Errors:.*8",
-      "Actions:.*0",
-      "Gotos:.*0",
+      "Actions:.*254",
+      "Gotos:.*16",
       "Recoveries:.*0",
       "States:.*34",
   };
+
+  protected static final int MAX_COMPILE_ERRORS = 10;
 
   @Override
   @BeforeTest
@@ -100,15 +104,15 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
 
   @Test
   public void test01Generate() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(expandedArgs);
+    generateJavaFile(packedArgs);
 
-    checkRegularExpressions(tmpLanguageFile, languageExpandedChecks);
-    checkRegularExpressions(tmpGrammarFile, grammarExpandedChecks);
+    checkRegularExpressions(tmpLanguageFile, languagePackedChecks);
+    checkRegularExpressions(tmpGrammarFile, grammarPackedChecks);
   }
 
   @Test
   public void test02Compile() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(expandedArgs);
+    generateJavaFile(packedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
@@ -128,7 +132,7 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
   public void test03Runtime() throws ParsingException, AnalysisException, OutputException, MalformedURLException,
       ClassNotFoundException, InstantiationException, IllegalAccessException, SecurityException,
       NoSuchMethodException, IllegalArgumentException, InvocationTargetException {
-    generateJavaFile(expandedArgs);
+    generateJavaFile(packedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
@@ -140,16 +144,69 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
     URLClassLoader classLoader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
     String className = FilenameUtils.getBaseName(tmpLanguageFile);
     Class<?> clazz = classLoader.loadClass(className);
+    String lexicalClassName = className + "$LexicalValue";
+    Class<?> lexicalClazz = classLoader.loadClass(lexicalClassName);
     Object parser = clazz.newInstance();
     Method setVerbose = parser.getClass().getMethod("setVerbose", boolean.class);
-    Method parse = parser.getClass().getMethod("parse");
+    Method init = parser.getClass().getMethod("init");
+    Method parse = parser.getClass().getMethod("parse", Integer.TYPE, lexicalClazz);
+    Method getValidTokens = parser.getClass().getMethod("getValidTokens");
     Method getTotal = parser.getClass().getMethod("getTotal");
     setVerbose.invoke(parser, true);
-    parse.invoke(parser);
+    init.invoke(parser);
+    for (Parameter p: parameters) {
+      int [] tokens = (int[]) getValidTokens.invoke(parser);
+      Assert.assertTrue(arrayContains(tokens, p.token), "Token " + p.token + " ain't there");
+      Object lexicalValue = lexicalClazz.newInstance();
+      Method setNumber = lexicalClazz.getMethod("setNumber", Integer.TYPE);
+      setNumber.invoke(lexicalValue, p.value);
+      parse.invoke(parser, p.token, lexicalValue);
+      Object t = getTotal.invoke(parser);
+      Assert.assertEquals(((Integer) t).intValue(), p.result, "Result is not " + p.result); 
+    }
     Object o = getTotal.invoke(parser);
     Assert.assertTrue(o instanceof Integer);
     Integer i = (Integer) o;
     Assert.assertEquals((int) i, -17, "total does not match");
+  }
+  
+  private static final int TOK_NUMBER = 32769;
+  
+  Parameter parameters[] = {
+      new Parameter('(', 0, 0),
+      new Parameter(TOK_NUMBER, 1, 1),
+      new Parameter('+', 0, 0),
+      new Parameter(TOK_NUMBER, 3, 3),
+      new Parameter(')', 0, 0),
+      new Parameter('*', 0, 0),
+      new Parameter(TOK_NUMBER, 4, 4),
+      new Parameter('/', 0, 0),
+      new Parameter(TOK_NUMBER, 5, 5),
+      new Parameter('+', 0, 0),
+      new Parameter('-', 0, 0),
+      new Parameter(TOK_NUMBER, 20, 20),
+      new Parameter(0, 0, -17),
+  };
+  
+  private boolean arrayContains(int array[], int value) {
+    for (int x : array) {
+      if (x == value) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  private static class Parameter {
+    int token;
+    int value;
+    int result;
+    
+    Parameter(int token, int value, int result) {
+      this.token = token;
+      this.value = value;
+      this.result = result;
+    }
   }
 
 }
