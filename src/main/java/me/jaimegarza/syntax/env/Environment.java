@@ -367,12 +367,12 @@ public class Environment extends Options {
    */
   private void setDriver() throws ParseException {
     String value = get("d", "parser");
-    if (value.equalsIgnoreCase("parser")) {
+    if (value.equalsIgnoreCase("p") || value.equalsIgnoreCase("parser")) {
       this.driver = Driver.PARSER;
-    } else if (value.equalsIgnoreCase("scanner")) {
+    } else if (value.equalsIgnoreCase("s") || value.equalsIgnoreCase("scanner")) {
       this.driver = Driver.SCANNER;
     } else {
-      throw new ParseException("Option -x|--external is not valid :" + value);
+      throw new ParseException("Option -d|--driver is not valid :" + value);
     }
   }
 
