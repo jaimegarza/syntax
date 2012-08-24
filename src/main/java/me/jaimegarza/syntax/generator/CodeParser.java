@@ -1816,7 +1816,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       // Look for the default token for a non assigned terminal symbol
       if (id.getToken() == -1) {
         int tok_num = 1;
-        for (tok_num = environment.isPacked() ? 32768 : 1;; tok_num++) {
+        for (tok_num = Short.MAX_VALUE+1 ;; tok_num++) {
           Terminal cual = runtimeData.findTerminalByToken(tok_num);
           if (cual == null) {
             break;
