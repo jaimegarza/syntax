@@ -26,7 +26,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.test;
+package me.jaimegarza.syntax.test.java;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +39,7 @@ import java.net.URLClassLoader;
 import me.jaimegarza.syntax.AnalysisException;
 import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.jci.compilers.CompilationResult;
@@ -48,7 +49,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestJavaPackedScanner extends AbstractGenerationBase {
+public class TestJavaPackedParser extends AbstractGenerationBase {
 
   static final String packedArgs[] = {
       // "-v",
@@ -56,8 +57,6 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
       "l",
       "--language",
       "java",
-      "--driver",
-      "scanner",
       "classpath:java-test.sy",
       "${file.language}"
   };
@@ -66,7 +65,7 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
       "int TOKENS=18",
       "int FINAL=34",
       "int SYMBS=19",
-      "int ACTIONS=254",
+      "int ACTIONS=57",
       "int NON_TERMINALS=2",
       "Begin of Skeleton",
       "Java Skeleton"
@@ -81,7 +80,7 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
       "Types:.*1",
       "Rules:.*17",
       "Errors:.*8",
-      "Actions:.*254",
+      "Actions:.*57",
       "Gotos:.*16",
       "Recoveries:.*0",
       "States:.*34",
@@ -143,69 +142,16 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
     URLClassLoader classLoader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
     String className = FilenameUtils.getBaseName(tmpLanguageFile);
     Class<?> clazz = classLoader.loadClass(className);
-    String lexicalClassName = className + "$LexicalValue";
-    Class<?> lexicalClazz = classLoader.loadClass(lexicalClassName);
     Object parser = clazz.newInstance();
     Method setVerbose = parser.getClass().getMethod("setVerbose", boolean.class);
-    Method init = parser.getClass().getMethod("init");
-    Method parse = parser.getClass().getMethod("parse", Integer.TYPE, lexicalClazz);
-    Method getValidTokens = parser.getClass().getMethod("getValidTokens");
+    Method parse = parser.getClass().getMethod("parse");
     Method getTotal = parser.getClass().getMethod("getTotal");
     setVerbose.invoke(parser, true);
-    init.invoke(parser);
-    for (Parameter p: parameters) {
-      int [] tokens = (int[]) getValidTokens.invoke(parser);
-      Assert.assertTrue(arrayContains(tokens, p.token), "Token " + p.token + " ain't there");
-      Object lexicalValue = lexicalClazz.newInstance();
-      Method setNumber = lexicalClazz.getMethod("setNumber", Integer.TYPE);
-      setNumber.invoke(lexicalValue, p.value);
-      parse.invoke(parser, p.token, lexicalValue);
-      Object t = getTotal.invoke(parser);
-      Assert.assertEquals(((Integer) t).intValue(), p.result, "Result is not " + p.result); 
-    }
+    parse.invoke(parser);
     Object o = getTotal.invoke(parser);
     Assert.assertTrue(o instanceof Integer);
     Integer i = (Integer) o;
     Assert.assertEquals((int) i, -17, "total does not match");
-  }
-  
-  private static final int TOK_NUMBER = 32769;
-  
-  Parameter parameters[] = {
-      new Parameter('(', 0, 0),
-      new Parameter(TOK_NUMBER, 1, 1),
-      new Parameter('+', 0, 0),
-      new Parameter(TOK_NUMBER, 3, 3),
-      new Parameter(')', 0, 0),
-      new Parameter('*', 0, 0),
-      new Parameter(TOK_NUMBER, 4, 4),
-      new Parameter('/', 0, 0),
-      new Parameter(TOK_NUMBER, 5, 5),
-      new Parameter('+', 0, 0),
-      new Parameter('-', 0, 0),
-      new Parameter(TOK_NUMBER, 20, 20),
-      new Parameter(0, 0, -17),
-  };
-  
-  private boolean arrayContains(int array[], int value) {
-    for (int x : array) {
-      if (x == value) {
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  private static class Parameter {
-    int token;
-    int value;
-    int result;
-    
-    Parameter(int token, int value, int result) {
-      this.token = token;
-      this.value = value;
-      this.result = result;
-    }
   }
 
 }

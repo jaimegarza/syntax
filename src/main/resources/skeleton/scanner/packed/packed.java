@@ -132,7 +132,7 @@
     }
     return 1;
   }
-  
+
   /**
    * Get the error message for a state
    */
