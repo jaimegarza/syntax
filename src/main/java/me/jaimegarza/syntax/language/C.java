@@ -268,8 +268,22 @@ public class C extends BaseLanguageSupport {
         runtime.getStates().length, runtime.getTerminals().size() +
                                     runtime.getNonTerminals().size() -
                                     1);
+    environment.include.printf("#define ACCEPT %d\n\n", Integer.MAX_VALUE);
     if (!environment.isPacked()) {
       environment.output.printf("/* Parsing Table */\n" + "int StxParsingTable[FINAL][SYMBS] = {\n");
+      environment.output.print("   //");
+      for (Terminal t : runtime.getTerminals()) {
+        String name = getShortSymbolName(t);
+        environment.output.printf("%6s ", name);
+      }
+      for (NonTerminal nt : runtime.getNonTerminals()) {
+        if (nt == runtime.getRoot()) {
+          continue;
+        }
+        String name = getShortSymbolName(nt);
+        environment.output.printf("%6s ", name);
+      }
+      environment.output.println();
     }
   }
 
@@ -284,7 +298,11 @@ public class C extends BaseLanguageSupport {
         column = 0;
       }
       column++;
-      environment.output.printf("%4d", parserLine[index]);
+      if (parserLine[index] == Integer.MAX_VALUE) {
+        environment.output.print("ACCEPT");
+      } else {
+        environment.output.printf("%6d", parserLine[index]);
+      }
       if (index < symbolCounter) {
         environment.output.printf(",");
       }

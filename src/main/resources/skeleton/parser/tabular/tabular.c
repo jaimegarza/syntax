@@ -1,17 +1,21 @@
-/*
+  /*
+   *
+   * Begin of Skeleton
+   *
+   */
 
-    Pascal Skeleton Parser for matrix tables
+  /* ****************************************************************
+    C Skeleton Parser for matrix tables
 
     This is not a sample program, but rather the parser skeleton
-    top be included in the generated code.
+    to be included in the generated code.
     Modify at your own risk.
 
-    Copyright (c), 1985-199 Jaime Garza V zquez
+    Copyright (c), 1985-2012 Jaime Garza
+  ***************************************************************** */
 
-*/
-
-/* Define this as an unpacked parser */
-#define STX_UNPACKED
+  /* Define this as a packed parser */
+#define STX_PACKED
 
 /* Force an error */
 #ifndef STX_ERROR
@@ -36,48 +40,51 @@ int StxCode(int dummy)
 
 
 /* Global variables */
-TSTACK  StxValue;       /* Scanner OUT value. Intended for scanner writer */
-int     sStxStack[150]; /* State stack. Internal use                      */
-int     StxSym;         /* Actual scanner symbol. Internal usage          */
-int     StxState;       /* Current automaton state. Internal usage        */
-int     StxErrors;      /* Counts the number of errors.  User can read    */
-int     StxErrorFlag;   /* Recuperation machinery state. Internal usage */
+TSTACK            StxValue;       /* Scanner OUT value. Intended for scanner writer */
+char              StxChar;        /* The curent character                           */
+int               sStxStack[150]; /* State stack. Internal use                      */
+unsigned long int StxSym;         /* Actual scanner symbol. Internal usage          */
+int               StxState;       /* Current automaton state. Internal usage        */
+int               StxErrors;      /* Counts the number of errors.  User can read    */
+int               StxErrorFlag;   /* Recuperation machinery state. Internal usage   */
+
+#define ERROR_FAIL 0
+#define ERROR_RE_ATTEMPT 1
+
 
 /* These functions must be provided by the user */
-int StxScan(void);
-int StxError(int StxState, int StxSym, int pStxStack);
+unsigned long int StxLexer();
+int StxError(int StxState, int StxSym, int pStxStack, char * message);
 
 /*
-    This function calls the user provided scanner routine
-    Converts the returned token intio the equivalent column number for parser
-    matrix.
-
-    The StxTokens contains the tokens available
+  This routine maps a state and a token to a new state on the action table  
 */
-int StxScanner(void)
+int StxAction(int state, int symbol)
 {
-    int sym = StxScan();
-    int i;
-
-    for(i=0; i<TOKENS; i++)
-        if(sym == StxTokens[i])
-            break;
-    if(i == TOKENS)
-        return 0;
-    else
-        return i;
+    int index = StxGetTokenIndex(symbol);
+    return StxParsingTable[state][index];
 }
 
 /*
-  This routine prints the contents of the parsing stack
+  This routine maps a origin state to a destination state
+  using the symbol position 
+*/
+int StxGoto(int state, int symbol)
+{
+    int index = symbol;
+    return StxParsingTable[state][index];
+}
+
+/*
+  This routine prints the contents of the parsing stack 
 */
 
 #ifdef DEBUG
-void PrintStack()
+void StxPrintStack()
 {
     int i;
 
-    printf("Stack pointer = %d ErrorFlag = %d\n", pStxStack, StxErrorFlag);
+    printf("Stack pointer = %d\n", pStxStack);
     printf("States: [");
     for(i=0;i<=pStxStack;i++)
         printf(" %d", sStxStack[i]);
@@ -85,8 +92,17 @@ void PrintStack()
 }
 #endif
 
+char * StxErrorMessage() {
+    int msgIndex = StxParsingError[StxState];
+    if (msgIndex >= 0) {
+        return StxErrorTable[msgIndex];
+    } else {
+        return "Syntax error";
+    }
+}
+
 /*
-   Does a shift operation.  Puts a new state on the top of the stack
+   Does a shift operation.  Puts a new state on the top of the stack 
 */
 int StxShift(int sym, int state)
 {
@@ -98,13 +114,13 @@ int StxShift(int sym, int state)
     StxState = state;
 #ifdef DEBUG
     printf("Shift to %d with %d\n", StxState, sym);
-    PrintStack();
+    StxPrintStack();
 #endif
     return 1;
 }
 
 /*
-  Recognizes a rule an removes all its elements from the stack
+    Recognizes a rule an removes all its elements from the stack
 */
 int StxReduce(int sym, int rule)
 {
@@ -115,11 +131,10 @@ int StxReduce(int sym, int rule)
         return 0;
     pStxStack -= StxGrammarTable[rule].reductions;
     sStxStack[pStxStack+1] =
-        StxParsingTable  [sStxStack[pStxStack]]
-            [StxGrammarTable[rule].symbol];
+        StxGoto(sStxStack[pStxStack], StxGrammarTable[rule].symbol);
     StxState = sStxStack[++pStxStack];
 #ifdef DEBUG
-    PrintStack();
+    StxPrintStack();
 #endif
     return 1;
 }
@@ -127,7 +142,7 @@ int StxReduce(int sym, int rule)
 /*
   Recover from a syntax error removing stack states/symbols, and removing
   input tokens.  The array StxRecover contains the tokens that bound
-  the error
+  the error 
 */
 int StxRecover(void)
 {
@@ -135,7 +150,7 @@ int StxRecover(void)
 
     switch(StxErrorFlag){
         case 0: /* 1st error */
-            if(!StxError(StxState, StxSym, pStxStack))
+            if(!StxError(StxState, StxSym, pStxStack, StxErrorMessage()))
                 return 0;
             StxErrors++;
             /* goes into 1 and 2 */
@@ -148,7 +163,7 @@ int StxRecover(void)
                 /* Look if the state on the stack's top has a transition with one of
                   the recovering elements in StxRecoverTable */
                 for(i=0; i<RECOVERS; i++)
-                    if((acc = StxParsingTable[StxState][StxRecoverTable[i]]) > 0)
+                    if((acc = StxAction(StxState, StxRecoverTable[i])) > 0)
                         /* valid shift */
                         return StxShift(StxRecoverTable[i], acc);
 #ifdef DEBUG
@@ -166,55 +181,86 @@ int StxRecover(void)
 #endif
             if(StxSym == 0) /* End of input string */
                 return 0;
-            StxSym = StxScanner();
-            return 1;
+            StxSym = StxLexer();
+            return 1; 
     }
 }
 
-/*
-  Main parser routine, uses Shift, Reduce and Recover
+/* 
+  Main parser routine, uses Shift, Reduce and Recover 
 */
 int StxParse(void)
 {
+    int action;
+
     pStxStack = 0;
     sStxStack[0] = 0;
-    StxSym = StxScanner();
+    StxChar = StxNextChar();
+    StxSym = StxLexer();
     StxState = 0;
     StxErrorFlag = 0;
     StxErrors = 0;
 
-    while(1){
-        if(StxParsingTable[StxState][StxSym] == 9999) {
+    while(1) {
+        action = StxAction(StxState, StxSym);
+        if(action == 2147483647) {
 #ifdef DEBUG
             printf("Program Accepted\n");
 #endif
             return 1;
         }
-
-        if(StxParsingTable[StxState][StxSym] > 0) {
-            if(!StxShift(StxSym, StxParsingTable[StxState][StxSym]))
+            
+        if(action > 0) {
+            if(!StxShift(StxSym, action))
                 return 0;
-            StxSym = StxScanner();
+            StxSym = StxLexer();
             if(StxErrorFlag > 0)
                 StxErrorFlag--; /* properly recovering from error */
         }
-
-        if(StxParsingTable[StxState][StxSym] < 0){
-            if(!StxReduce(StxSym, -StxParsingTable[StxState][StxSym])){
+        else if(action < 0) {
+            if(!StxReduce(StxSym, -action)){
                 if(StxErrorFlag == -1){
                     if(!StxRecover())
                         return 0;
                 }else
                     return 0;
-                return 0;
             }
         }
-
-        if(StxParsingTable[StxState][StxSym] == 0){
+        else if(action == 0) {
             if(!StxRecover())
                 return 0;
         }
     }
+}
+
+TSTACK StxGetResult() {
+    return StxStack[pStxStack];
+}
+
+/*
+ * returns the name of a token, given the token number
+ */
+char * StxGetTokenName(int token) {
+    int i;
+    for (i = 0; i < TOKENS; i++) {
+        if (StxTokenDefs[i].token == token) {
+            return StxTokenDefs[i].name;
+        }
+    }
+    return "UNKNOWN TOKEN";
+}
+
+/*
+ * Find the index of a token
+ */
+int StxGetTokenIndex(int token) {
+   int i;
+   for (i = 0; i < TOKENS; i++) {
+       if (StxTokenDefs[i].token == token) {
+           return i;
+       }
+    }
+    return -1;
 }
 
 /* End of parser */
