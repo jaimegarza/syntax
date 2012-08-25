@@ -39,6 +39,7 @@ import java.net.URLClassLoader;
 import me.jaimegarza.syntax.AnalysisException;
 import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
 import org.apache.commons.io.FilenameUtils;
@@ -87,10 +88,9 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
       "States:.*34",
   };
 
-  @Override
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp();
+    super.setUp(Language.java, "TestParser");
   }
 
   @Override
@@ -101,7 +101,7 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
 
   @Test
   public void test01Generate() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(expandedArgs);
+    generateLanguageFile(expandedArgs);
 
     checkRegularExpressions(tmpLanguageFile, languageExpandedChecks);
     checkRegularExpressions(tmpGrammarFile, grammarExpandedChecks);
@@ -109,7 +109,7 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
 
   @Test
   public void test02Compile() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(expandedArgs);
+    generateLanguageFile(expandedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
@@ -129,7 +129,7 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
   public void test03Runtime() throws ParsingException, AnalysisException, OutputException, MalformedURLException,
       ClassNotFoundException, InstantiationException, IllegalAccessException, SecurityException,
       NoSuchMethodException, IllegalArgumentException, InvocationTargetException {
-    generateJavaFile(expandedArgs);
+    generateLanguageFile(expandedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();

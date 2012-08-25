@@ -77,6 +77,7 @@ public class C extends BaseLanguageSupport {
   @Override
   public void emitLine(int lineNumber, String filename) {
     if (environment.isEmitLine()) {
+      filename = filename.replaceAll("\\\\", "/");
       environment.output.printf("#line %d \"%s\"\n", lineNumber, filename);
     }
   }
@@ -106,12 +107,14 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void generateLexerHeader() {
-    environment.output.printf("\n")
+    environment.include
                       .printf("/* Lexical Recognizer */\n")
                       .printf("\n")
-                      .printf("char StxChar;")
-                      .printf("\n")
-                      .printf("int StxLexer()\n")
+                      .printf("extern char   StxChar;\n")
+                      .printf("extern TSTACK StxValue;\n")
+                      .printf("char          StxNextChar();\n");
+    environment.output.printf("\n")
+                      .printf("unsigned long int StxLexer()\n")
                       .printf("{\n");
   }
 
@@ -156,12 +159,13 @@ public class C extends BaseLanguageSupport {
   
   @Override
   public void generateRecoveryTableHeader(int numberOfErrorTokens) {
-    environment.output.printf("\n#define RECOVERS %d\n\n"
-                              + "/* Contains tokens in compact mode, and column in matrix */", numberOfErrorTokens);
+    environment.include.printf("\n#define RECOVERS %d\n", numberOfErrorTokens);
+    environment.output.printf("\n"
+                              + "/* Contains tokens in compact mode, and column in matrix */");
     if (numberOfErrorTokens != 0) {
       environment.output.printf("\nint StxRecoverTable[RECOVERS] = {\n");
     } else {
-      environment.output.printf("\nint StxRecoverTable[1] = {0};\n\n");
+      environment.output.printf("\nint StxRecoverTable[1] = {0};\n");
     }
   }
 
@@ -207,7 +211,7 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void generateTokensHeader(int terminals) {
-    environment.output.printf("\n#define TOKENS %d\n", terminals);
+    environment.include.printf("\n#define TOKENS %d\n", terminals);
     environment.output.printf("\nint StxTokens[TOKENS] = {\n");
   }
 
@@ -234,11 +238,33 @@ public class C extends BaseLanguageSupport {
       }
     }
     environment.include.printf("\n");
+    environment.include.printf("/* Token information structure */\n");
+    environment.include.printf("typedef struct {\n");
+    environment.include.printf("    char * name;\n");
+    environment.include.printf("    char * fullName;\n");
+    environment.include.printf("    int token;\n");
+    environment.include.printf("    int reserved;\n");
+    environment.include.printf("} TOKENDEF, *PTOKENDEF;\n\n");
+    environment.output.printf("TOKENDEF StxTokenDefs[] = {\n");
+    int i = 0;
+    for (Terminal id : runtime.getTerminals()) {
+      if (!id.getVariable().equals("_")) {
+        environment.output.printf("    {\"%s\", \"%s\", %d, 1}", id.getVariable(), escapeDoubleQuotes(id.getFullName()), id.getToken());
+      } else {
+        environment.output.printf("    {\"%s\", \"%s\", %d, 0}", id.getName(), escapeDoubleQuotes(id.getFullName()), id.getToken());
+      }
+      i++;
+      if (i < runtime.getTerminals().size()) {
+        environment.output.print(",");
+      }
+      environment.output.println();
+    }
+    environment.output.printf("};\n");
   }
 
   @Override
   public void printCodeHeader() {
-    environment.output.printf("\n" + "#define FINAL %d\n" + "#define SYMBS %5d\n\n",
+    environment.include.printf("#define FINAL %d\n" + "#define SYMBS %d\n\n",
         runtime.getStates().length, runtime.getTerminals().size() +
                                     runtime.getNonTerminals().size() -
                                     1);
@@ -293,8 +319,8 @@ public class C extends BaseLanguageSupport {
   
   @Override
   public void printParsingTableHeader() {
-    environment.output.printf("\n"
-        + "/* Parsing table */\n"
+    environment.include.printf(
+          "/* Parsing Table definition */"
           + "typedef struct {\n"
           + "\tshort\tposition;\n"
           + "\tshort\tdefa;\n"
@@ -302,7 +328,7 @@ public class C extends BaseLanguageSupport {
           + "\tshort\tmsg;\n"
           + "} PARSER, *PPARSER;\n"
           + "\n");
-    environment.output.printf("PARSER StxParsingTable[FINAL] = {\n");
+    environment.output.printf("/* Parsing table */\nPARSER StxParsingTable[FINAL] = {\n");
   }
 
   @Override
@@ -324,7 +350,7 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void printErrorEntry(int error) {
-    environment.output.printf("\t\"%s\"", runtime.getErrorMessages().get(error));
+    environment.output.printf("\t\"%s\"", escapeDoubleQuotes(runtime.getErrorMessages().get(error)));
     if (error == runtime.getErrorMessages().size() - 1) {
       environment.output.printf("\n");
     } else {
@@ -334,20 +360,20 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void printErrorFooter() {
-    environment.output.printf("};\n");
+    environment.output.printf("};\n\n");
   }
 
   @Override
   public void printActionHeader() {
-    environment.output.printf("\n"
-        + "/* Acction table */\n"
+    environment.include.printf(
+          "/* Action table */\n"
           + "typedef struct {\n"
-          + "\tshort\tsymbol;\n"
-          + "\tshort\tstate;\n"
+          + "\tunsigned long int\tsymbol;\n"
+          + "\tunsigned long int\tstate;\n"
           + "} ACTION, *PACTION;\n"
           + "\n");
-    environment.output.printf("#define ACTIONS %d\n" + "\n" + "ACTION StxActionTable[ACTIONS] = {\n",
-        runtime.getNumberOfActions());
+    environment.include.printf("#define ACTIONS %d\n\n", runtime.getNumberOfActions());
+    environment.output.printf("\n" + "ACTION StxActionTable[ACTIONS] = {\n");
   }
 
   @Override
@@ -362,15 +388,14 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void printGoToTableHeader() {
-    environment.output.printf("\n"
-        + "/* Goto table */\n"
+    environment.include.printf(
+          "/* Goto table */\n"
           + "typedef struct {\n"
           + "\tshort\torigin;\n"
           + "\tshort\tdestination;\n"
-          + "} GOTOS, *PGOTOS;\n"
-          + "\n");
-    environment.output.printf("#define NUM_GOTOS %d\n" + "\n" + "GOTOS StxGotoTable[NUM_GOTOS] = {\n",
-        runtime.getNumberOfGoTos());
+          + "} GOTOS, *PGOTOS;\n\n"
+          + "#define NUM_GOTOS %d\n\n", runtime.getNumberOfGoTos());
+    environment.output.printf("" + "\n" + "GOTOS StxGotoTable[NUM_GOTOS] = {\n");
   }
 
   @Override
@@ -390,8 +415,8 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void printGrammarTable() {
-    environment.output.printf("\n"
-        + "/* symbols y reductions table */\n"
+    environment.include.printf(
+          "/* symbols y reductions table */\n"
           + "typedef struct {\n"
           + "\tshort\tsymbol;\n"
           + "\tshort\treductions;\n"
@@ -410,8 +435,8 @@ public class C extends BaseLanguageSupport {
       }
     }
     if (environment.isPacked()) {
-      environment.output.printf("\n#define NON_TERMINALS %d\n", runtime.getNonTerminals().size());
-      environment.output.printf("\nint StxNonTerminals[NON_TERMINALS] = {\n");
+      environment.include.printf("#define NON_TERMINALS %d\n", runtime.getNonTerminals().size());
+      environment.output.printf("int StxNonTerminals[NON_TERMINALS] = {\n");
       int i = 1;
       for (NonTerminal id : runtime.getNonTerminals()) {
         if (i == runtime.getNonTerminals().size()) {

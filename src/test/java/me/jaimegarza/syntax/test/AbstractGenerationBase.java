@@ -36,6 +36,7 @@ import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.Syntax;
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.language.Language;
 
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.compilers.JavaCompiler;
@@ -45,7 +46,7 @@ import org.apache.commons.jci.stores.FileResourceStore;
 
 public abstract class AbstractGenerationBase extends AbstractTestBase {
   
-  protected void generateJavaFile(String[] args) throws ParsingException, AnalysisException, OutputException {
+  protected void generateLanguageFile(String[] args) throws ParsingException, AnalysisException, OutputException {
     Environment environment = new Environment("Syntax", setupFileArguments(args));
     Syntax syntax = new Syntax(environment);
     syntax.executeInternal();
@@ -60,11 +61,20 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
     return result;
   }
 
-  public void setUp() throws IOException {
+  public void setUp(Language language, String basename) throws IOException {
     System.out.println("filenames:");
-    tmpLanguageFile = createTmpFile("TestParser.java", "output implementation file");
-    tmpGrammarFile = createTmpFile("TestParser.txt", "grammar file");
-    tmpIncludeFile = createTmpFile("TestParserIntf.java", "interface file");
+    switch (language) {
+    case java:
+      tmpLanguageFile = createTmpFile("TestParser.java", "output implementation file");
+      tmpGrammarFile = createTmpFile("TestParser.txt", "grammar file");
+      tmpIncludeFile = createTmpFile("TestParserIntf.java", "interface file");
+      break;
+    case C:
+      tmpLanguageFile = createTmpFile(basename + ".c", "output implementation file");
+      tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
+      tmpIncludeFile = createTmpFile(basename + ".h", "interface file");
+      break;
+    }
   }
 
   public void tearDown() {

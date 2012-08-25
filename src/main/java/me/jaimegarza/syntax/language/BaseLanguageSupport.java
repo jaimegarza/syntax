@@ -34,7 +34,9 @@ import java.io.PrintStream;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
+import me.jaimegarza.syntax.code.Fragments;
 import me.jaimegarza.syntax.definition.State;
+import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.env.RuntimeData;
@@ -240,7 +242,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
       return true;
     } else if (runtime.currentCharacter == 'v') {
       lexer.getCharacter();
-      environment.output.printFragment("lexicalValue");
+      environment.output.printFragment(Fragments.LEXICAL_VALUE);
       return true;
     }
     environment.output.print('$');
@@ -377,5 +379,22 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
 
   protected String escapeDoubleQuotes(String error) {
     return error.replaceAll("\\\"", "\\\\\"");
+  }
+
+  protected String getShortSymbolName(Symbol t) {
+    String name = t.getFullName();
+    if (name.startsWith("\"") || name.startsWith("\'")) {
+      name = name.substring(1);
+    }
+    if (name.endsWith("\"") || name.endsWith("\'")) {
+      name = name.substring(0, name.length()-1);
+    }
+    if (name.length() > 6) {
+      name = name.substring(0, 6);
+    }
+    if (name.endsWith(" ")) {
+      name = name.substring(0, name.length()-1);
+    }
+    return name;
   }
 }

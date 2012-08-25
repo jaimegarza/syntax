@@ -33,6 +33,9 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.ParsingException;
@@ -1611,13 +1614,41 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
         } else {
           environment.output.print('\\');
         }
-      }
-      if (runtimeData.currentCharacter == '%') {
+      } else if (runtimeData.currentCharacter == '%') {
         if ((getCharacter()) == '}') {
           getCharacter();
           return true;
         } else {
           environment.output.print('%');
+        }
+      } else if (runtimeData.currentCharacter == '$') {
+        getCharacter();
+        if (runtimeData.currentCharacter == '$') {
+          getCharacter();
+          switch (runtimeData.currentCharacter) {
+            case 'b':
+              getCharacter();
+              environment.output.print(FilenameUtils.getBaseName(environment.getOutputFile().getAbsolutePath()));
+              break;
+            case 'n':
+              getCharacter();
+              environment.output.print(FilenameUtils.getName(environment.getOutputFile().getAbsolutePath()));
+              break;
+            case 'f':
+              getCharacter();
+              environment.output.print(environment.getOutputFile().getAbsolutePath());
+              break;
+            case 'e':
+              getCharacter();
+              environment.output.print(FilenameUtils.getExtension(environment.getOutputFile().getAbsolutePath()));
+              break;
+            case 'p':
+              getCharacter();
+              environment.output.print(FilenameUtils.getPath(environment.getOutputFile().getAbsolutePath()));
+              break;
+            default:
+              environment.output.print("$$");
+          }
         }
       }
       environment.output.print(runtimeData.currentCharacter);
