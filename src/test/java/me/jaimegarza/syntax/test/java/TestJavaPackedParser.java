@@ -39,6 +39,7 @@ import java.net.URLClassLoader;
 import me.jaimegarza.syntax.AnalysisException;
 import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
 import org.apache.commons.io.FilenameUtils;
@@ -88,10 +89,9 @@ public class TestJavaPackedParser extends AbstractGenerationBase {
 
   protected static final int MAX_COMPILE_ERRORS = 10;
 
-  @Override
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp();
+    super.setUp(Language.java, "TestParser");
   }
 
   @Override
@@ -102,7 +102,7 @@ public class TestJavaPackedParser extends AbstractGenerationBase {
 
   @Test
   public void test01Generate() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(packedArgs);
+    generateLanguageFile(packedArgs);
 
     checkRegularExpressions(tmpLanguageFile, languagePackedChecks);
     checkRegularExpressions(tmpGrammarFile, grammarPackedChecks);
@@ -110,7 +110,7 @@ public class TestJavaPackedParser extends AbstractGenerationBase {
 
   @Test
   public void test02Compile() throws ParsingException, AnalysisException, OutputException {
-    generateJavaFile(packedArgs);
+    generateLanguageFile(packedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
@@ -130,7 +130,7 @@ public class TestJavaPackedParser extends AbstractGenerationBase {
   public void test03Runtime() throws ParsingException, AnalysisException, OutputException, MalformedURLException,
       ClassNotFoundException, InstantiationException, IllegalAccessException, SecurityException,
       NoSuchMethodException, IllegalArgumentException, InvocationTargetException {
-    generateJavaFile(packedArgs);
+    generateLanguageFile(packedArgs);
 
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();

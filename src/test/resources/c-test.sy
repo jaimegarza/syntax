@@ -1,0 +1,134 @@
+%{
+#include "$$b.h"
+%}
+
+%union {
+  int number;
+}
+
+%lexer = {
+  while ($c <= ' ' && $c > '\0') {
+    $+;
+  }
+}
+
+%left             TOK_AND      256:"AND" =  if ($c == '&') {$+; return TOK_AND;};
+%left             TOK_OR       257:"OR" =  if ($c == '|') {$+; return TOK_OR;}; 
+%right            TOK_NOT      258:"NOT" =  if ($c == '!') {$+; return TOK_NOT;};
+%left             TOK_LE       259:"'<='"
+                  TOK_LT       260:"'<'"
+                  TOK_GE       261:"'>='"
+                  TOK_GT       262:"'>'"
+                  TOK_NE       263:"'<>'"
+                  TOK_EQ       264:"'=='" = {
+  if ($c == '=') {
+    $+; 
+    return TOK_EQ;
+  }
+  if ($c == '<') {
+    $+;
+    if ($c == '=') {
+      $+;
+      return TOK_LE;
+    }
+    if ($c == '>') {
+      $+;
+      return TOK_NE;
+    }
+    return TOK_LT;
+  }
+  if ($c == '>') {
+    $+;
+    if ($c == '=') {
+      $+;
+      return TOK_GE;
+    }
+    return TOK_GT;
+  }  
+}
+
+%left             '+' : "plus" =  if ($c == '+') {$+; return '+';};
+                , '-' : '"minus"'=  if ($c == '-') {$+; return '-';};
+%left             '*' =  if ($c == '*') {$+; return '*';};
+                , '/' =  if ($c == '/') {$+; return '/';};
+
+%right            TOK_UMINUS:"unary minus"  
+
+%token            '(' =  if ($c == '(') {$+; return '(';};
+                  ')' =  if ($c == ')') {$+; return ')';};
+
+%token   <number> TOK_NUMBER:"number" = {
+  if ($c >= '0' && $c <= '9') {
+    int number = 0;
+    while ($c >= '0' && $c <= '9') {
+      number = number * 10 + $c - '0';
+      $+;
+    }
+    $v.number = number;
+    return TOK_NUMBER;
+  }
+}
+
+%type    <number> Expression
+
+%start Expression
+
+%lexer = {
+}
+
+
+%%
+Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 : 0;
+             |  Expression TOK_OR Expression  = $$ = ($1 != 0) || ($3 != 0) ? 1 : 0;
+             |  TOK_NOT Expression            = $$ = ($2 != 0) ? 0 : 1;
+             |  Expression TOK_LE Expression  = $$ = $1 <= $3 ? 1 : 0;
+             |  Expression TOK_LT Expression  = $$ = $1 < $3 ? 1 : 0;
+             |  Expression TOK_GE Expression  = $$ = $1 >= $3 ? 1 : 0;
+             |  Expression TOK_GT Expression  = $$ = $1 > $3 ? 1 : 0;
+             |  Expression TOK_NE Expression  = $$ = $1 != $3 ? 1 : 0;
+             |  Expression TOK_EQ Expression  = $$ = $1 == $3 ? 1 : 0;
+             |  Expression '+' Expression     = $$ = $1 + $3;
+             |  Expression '-' Expression     = $$ = $1 - $3;
+             |  Expression '*' Expression     = $$ = $1 * $3;
+             |  Expression '/' Expression     = $$ = $1 / $3;
+             |  '-' Expression %prec TOK_UMINUS = $$ = -$2;
+             |  '(' Expression ')'            = $$ = $2;
+             |  TOK_NUMBER
+             ;
+%%
+
+// END OF GRAMMAR
+
+int charNum = 0;
+char * expression = "(1 + 3) *4 / 5 + -20";
+
+char StxNextChar()
+{
+    if (charNum < strlen(expression)) {
+      printf("Char %c\n", expression[charNum]);
+      return expression[charNum++];
+    }
+    return EOS;
+}
+
+
+ int StxError(int state, int token, int top, char * message)
+ {
+    printf("An error occurred in state %d with token %d on the position %d\n", state, token, top);
+    printf("%s\n", message);
+#ifdef DEBUG
+    StxPrintStack();
+#endif
+    return ERROR_RE_ATTEMPT;
+}
+  
+int GetTotal() {
+    return StxGetResult().number;
+}
+
+int main(char *argv) 
+{
+    if (StxParse()) {
+        printf("Total=%d\n", GetTotal());
+    }
+}

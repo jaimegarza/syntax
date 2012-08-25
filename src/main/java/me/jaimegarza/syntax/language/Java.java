@@ -37,7 +37,6 @@ import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.State;
-import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 
 /**
@@ -327,23 +326,6 @@ public class Java extends BaseLanguageSupport {
       }
       i++;
     }
-  }
-
-  private String getShortSymbolName(Symbol t) {
-    String name = t.getFullName();
-    if (name.startsWith("\"") || name.startsWith("\'")) {
-      name = name.substring(1);
-    }
-    if (name.endsWith("\"") || name.endsWith("\'")) {
-      name = name.substring(0, name.length()-1);
-    }
-    if (name.length() > 6) {
-      name = name.substring(0, 6);
-    }
-    if (name.endsWith(" ")) {
-      name = name.substring(0, name.length()-1);
-    }
-    return name;
   }
 
   @Override
