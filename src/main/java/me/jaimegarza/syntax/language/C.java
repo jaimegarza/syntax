@@ -467,18 +467,18 @@ public class C extends BaseLanguageSupport {
         environment.output.printf(",\n");
       }
     }
-    if (environment.isPacked()) {
-      environment.include.printf("#define NON_TERMINALS %d\n", runtime.getNonTerminals().size());
-      environment.output.printf("int StxNonTerminals[NON_TERMINALS] = {\n");
-      int i = 1;
-      for (NonTerminal id : runtime.getNonTerminals()) {
-        if (i == runtime.getNonTerminals().size()) {
-          environment.output.printf("\t%d /* %s */\n};\n\n", id.getToken(), id.getName());
-        } else {
-          environment.output.printf("\t%d, /* %s */\n", id.getToken(), id.getName());
-        }
-        i++;
+    //if (environment.isPacked()) {
+    environment.include.printf("#define NON_TERMINALS %d\n", runtime.getNonTerminals().size());
+    environment.output.printf("int StxNonTerminals[NON_TERMINALS] = {\n");
+    int i = 1;
+    for (NonTerminal id : runtime.getNonTerminals()) {
+      if (i == runtime.getNonTerminals().size()) {
+        environment.output.printf("\t%d /* %s */\n};\n\n", id.getToken(), id.getName());
+      } else {
+        environment.output.printf("\t%d, /* %s */\n", id.getToken(), id.getName());
       }
+      i++;
     }
+    //}
   }
 }
