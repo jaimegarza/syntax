@@ -1,4 +1,5 @@
 %{
+#include <stdio.h>
 #include "$$b.h"
 %}
 
@@ -126,9 +127,82 @@ int GetTotal() {
     return StxGetResult().number;
 }
 
+#ifdef SCANNER_MODE
+typedef struct {
+    int token;
+    int value;
+    int result;
+    
+} PARAMETER, *PPARAMETER;
+
+PARAMETER parameters[] = {
+    {'(', 0, 0},
+    {TOK_NUMBER, 1, 1},
+    {'+', 0, 0},
+    {TOK_NUMBER, 3, 3},
+    {')', 0, 0},
+    {'*', 0, 0},
+    {TOK_NUMBER, 4, 4},
+    {'/', 0, 0},
+    {TOK_NUMBER, 5, 5},
+    {'+', 0, 0},
+    {'-', 0, 0},
+    {TOK_NUMBER, 20, 20},
+    {0, 0, -17},
+    {-1,0,0}
+};
+
+int arrayContains(int *array, int value, int count) {
+    int i;
+    for (i = 0; i < count; i++) {
+        if (array[i] == value) {
+            return 1;
+        }
+    }
+    return 0;
+}
+  
+int main(char *argv) 
+{
+    PPARAMETER p = parameters;
+    int count;
+    int t;
+    TSTACK value;
+    
+    StxInit();
+    
+    while (p->token != -1) {
+        int *tokens = StxValidTokens(&count);
+        if (!arrayContains(tokens, p->token, count)) {
+            printf("Token %d ain't there\n", p->token);
+            exit (1);
+        }
+        value.number = p->value;
+        if (!StxParse(p->token, value)) {
+            printf("Error when parsing symbol %d\n", p->token);
+            exit (1);
+        }
+        t = GetTotal();
+        if (t != p->result) {
+            printf("Result is not %d\n", p->result);
+            exit (1);
+        }
+        p++;
+    }
+    t = GetTotal();
+    printf("Total: %d\n", t);
+    if (t != -17) {
+        printf("total does not match\n");
+        exit (1);
+     }
+    exit (0);
+}
+#else
+
 int main(char *argv) 
 {
     if (StxParse()) {
         printf("Total=%d\n", GetTotal());
     }
 }
+#endif

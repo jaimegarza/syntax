@@ -33,6 +33,7 @@ import java.io.IOException;
 
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.definition.Action;
+import me.jaimegarza.syntax.definition.Driver;
 import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
@@ -107,6 +108,20 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void generateLexerHeader() {
+    if (environment.getDriver() == Driver.PARSER) {
+      environment.include.println("#define PARSER_MODE");
+    } else {
+      environment.include.println("#define SCANNER_MODE");
+      environment.include.println("#define ACCEPTED 1");
+      environment.include.println("#define SHIFTED 2");
+      environment.include.println("#define PARSING_ERROR 3");
+      environment.include.println("#define INTERNAL_ERROR 4");;
+    }
+    if (!runtime.isStackTypeDefined()) {
+      environment.include.println("typedef int tstack, *ptstack");
+      environment.include.printf("#define TSTACK tstack\n#define PTSTACK ptstack\n");
+      environment.include.println("typedef int tstack, *ptstack");
+    }
     environment.include
                       .printf("/* Lexical Recognizer */\n")
                       .printf("\n")

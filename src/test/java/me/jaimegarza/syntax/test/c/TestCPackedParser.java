@@ -54,6 +54,7 @@ public class TestCPackedParser extends AbstractGenerationBase {
   };
 
   private static final String includePackedParserChecks[] = {
+      "#define PARSER_MODE",
       "#define TOKENS 18",
       "#define FINAL 34",
       "#define SYMBS 19",

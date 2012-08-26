@@ -4,18 +4,20 @@
    *
    */
 
-  /* ****************************************************************
-    C Skeleton Parser for matrix tables
+/*/        
+
+    C Skeleton Parser for compact tables
 
     This is not a sample program, but rather the parser skeleton
-    to be included in the generated code.
+    top be included in the generated code.
     Modify at your own risk.
 
     Copyright (c), 1985-2012 Jaime Garza
-  ***************************************************************** */
 
-  /* Define this as a packed parser */
-#define STX_TABULAR
+/*/
+
+/* Define this as a packed parser */
+#define STX_PACKED
 
 /* Force an error */
 #ifndef STX_ERROR
@@ -54,20 +56,31 @@ int StxError(int StxState, int StxSym, int pStxStack, char * message);
 /*
   This routine maps a state and a token to a new state on the action table  
 */
-int StxAction(int state, int symbol)
+int StxAction(int state, int sym)
 {
-    int index = StxGetTokenIndex(symbol);
-    return StxParsingTable[state][index];
+    int position = StxParsingTable[state].position;
+    int i;
+
+    /* Look in actions if there is a transaction with the token */
+    for(i=0; i < StxParsingTable[state].elements; i++)
+        if(StxActionTable[position+i].symbol == sym)
+            return StxActionTable[position+i].state;
+    /* otherwise */
+    return StxParsingTable[state].defa;
 }
 
 /*
   This routine maps a origin state to a destination state
   using the symbol position 
 */
-int StxGoto(int state, int symbol)
+int StxGoto(int state, int position)
 {
-    int index = symbol;
-    return StxParsingTable[state][index];
+    /* Search in gotos if there is a state transition */
+    for(; StxGotoTable[position].origin != -1; position++)
+        if(StxGotoTable[position].origin == state)
+            return StxGotoTable[position].destination;
+    /* default */
+    return StxGotoTable[position].destination;
 }
 
 /*
@@ -88,13 +101,13 @@ void StxPrintStack()
 #endif
 
 char * StxErrorMessage() {
-    int msgIndex = StxParsingError[StxState];
+    short msgIndex = StxParsingTable[StxState].msg;
     if (msgIndex >= 0) {
-        return StxErrorTable[msgIndex];
+      return StxErrorTable[msgIndex];
     } else {
-        return "Syntax error";
+      return "Syntax error";
     }
-}
+  }
 
 /*
    Does a shift operation.  Puts a new state on the top of the stack 
@@ -181,52 +194,81 @@ int StxRecover(void)
     }
 }
 
+/*
+  Initialize the scanner
+*/
+void StxInit() {
+    pStxStack = 0;
+    sStxStack[0] = 0;
+    StxState = 0;
+}
+  
 /* 
   Main parser routine, uses Shift, Reduce and Recover 
 */
-int StxParse(void)
+int StxParse(int symbol, TSTACK value)
 {
     int action;
+    StxSym = StxGetTokenIndex(symbol);
+    StxValue = value;
 
-    pStxStack = 0;
-    sStxStack[0] = 0;
-    StxChar = StxNextChar();
-    StxSym = StxLexer();
-    StxState = 0;
-    StxErrorFlag = 0;
-    StxErrors = 0;
+#ifdef DEBUG
+        printf("Starting to parse symbol %d (%d)\n", symbol, StxSym);
+        StxPrintStack();
+#endif
 
-    while(1) {
-        action = StxAction(StxState, StxSym);
-        if(action == 2147483647) {
+    while(1 == 1) { // forever with break and return below
+        action = StxAction(StxState, symbol);
+#ifdef DEBUG
+        printf("Action: %d\n", action);
+#endif
+        if(action == ACCEPT) {
 #ifdef DEBUG
             printf("Program Accepted\n");
 #endif
-            return 1;
+            return ACCEPTED;
         }
-            
+
         if(action > 0) {
-            if(!StxShift(StxSym, action))
-                return 0;
-            StxSym = StxLexer();
-            if(StxErrorFlag > 0)
-                StxErrorFlag--; /* properly recovering from error */
-        }
-        else if(action < 0) {
-            if(!StxReduce(StxSym, -action)){
-                if(StxErrorFlag == -1){
-                    if(!StxRecover())
-                        return 0;
-                }else
-                    return 0;
+            if(StxShift(StxSym, action) == 0) {
+                return INTERNAL_ERROR;
             }
-        }
-        else if(action == 0) {
-            if(!StxRecover())
-                return 0;
+            return SHIFTED;
+        } else if(action < 0) {
+            if(StxReduce(StxSym, -action) == 0) {
+                return INTERNAL_ERROR;
+            }
+        } else if(action == 0) {
+            return PARSING_ERROR;
         }
     }
 }
+
+/*
+ give me the available actions that can be taken.  I am also returning reduces.
+*/
+int * StxValidTokens(int * count) {
+    int position = StxParsingTable[StxState].position;
+
+    int * actions = malloc(StxParsingTable[StxState].elements * sizeof(int));
+    int index = 0;
+    int i;
+#ifdef DEBUG
+    printf ("Valid actions:[");
+#endif
+    for(i=0; i < StxParsingTable[StxState].elements; i++) {
+#ifdef DEBUG
+      if (i > 0) printf(", ");
+      printf("%d", StxActionTable[position+i].symbol);
+#endif
+      actions[index++] = StxActionTable[position+i].symbol;
+    }
+#ifdef DEBUG
+    printf ("]\n");
+#endif
+    *count = StxParsingTable[StxState].elements;
+    return actions;
+  }
 
 TSTACK StxGetResult() {
     return StxStack[pStxStack];
