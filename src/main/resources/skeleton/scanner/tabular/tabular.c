@@ -56,31 +56,20 @@ int StxError(int StxState, int StxSym, int pStxStack, char * message);
 /*
   This routine maps a state and a token to a new state on the action table  
 */
-int StxAction(int state, int sym)
+int StxAction(int state, int symbol)
 {
-    int position = StxParsingTable[state].position;
-    int i;
-
-    /* Look in actions if there is a transaction with the token */
-    for(i=0; i < StxParsingTable[state].elements; i++)
-        if(StxActionTable[position+i].symbol == sym)
-            return StxActionTable[position+i].state;
-    /* otherwise */
-    return StxParsingTable[state].defa;
+    int index = StxGetTokenIndex(symbol);
+    return StxParsingTable[StxState][index];
 }
 
 /*
   This routine maps a origin state to a destination state
   using the symbol position 
 */
-int StxGoto(int state, int position)
+int StxGoto(int state, int symbol)
 {
-    /* Search in gotos if there is a state transition */
-    for(; StxGotoTable[position].origin != -1; position++)
-        if(StxGotoTable[position].origin == state)
-            return StxGotoTable[position].destination;
-    /* default */
-    return StxGotoTable[position].destination;
+    int index = symbol;
+    return StxParsingTable[state][index];
 }
 
 /*
@@ -101,11 +90,11 @@ void StxPrintStack()
 #endif
 
 char * StxErrorMessage() {
-    short msgIndex = StxParsingTable[StxState].msg;
+    int msgIndex = StxParsingError[StxState];
     if (msgIndex >= 0) {
-      return StxErrorTable[msgIndex];
+        return StxErrorTable[msgIndex];
     } else {
-      return "Syntax error";
+        return "Syntax error";
     }
 }
 
@@ -248,25 +237,32 @@ int StxParse(int symbol, TSTACK value)
  give me the available actions that can be taken.  I am also returning reduces.
 */
 int * StxValidTokens(int * count) {
-    int position = StxParsingTable[StxState].position;
-
-    int * actions = malloc(StxParsingTable[StxState].elements * sizeof(int));
-    int index = 0;
+    int c = 0;
     int i;
+    for (i = 0; i < TOKENS; i++) {
+      if(StxParsingTable[StxState][i] != 0) {
+        c ++;
+      }
+    }
+    
+    int * actions = malloc(c * sizeof(int));
+    int index = 0;
 #ifdef DEBUG
     printf ("Valid actions:[");
 #endif
-    for(i=0; i < StxParsingTable[StxState].elements; i++) {
+    for(i=0; i < TOKENS; i++) {
+        if (StxParsingTable[StxState][i] != 0) {
 #ifdef DEBUG
-        if (i > 0) printf(", ");
-        printf("%d", StxActionTable[position+i].symbol);
+            if (index > 0) printf(", ");
+            printf("%d", StxTokenDefs[i].token);
 #endif
-        actions[index++] = StxActionTable[position+i].symbol;
+            actions[index++] = StxTokenDefs[i].token;
+        }
     }
 #ifdef DEBUG
     printf ("]\n");
 #endif
-    *count = StxParsingTable[StxState].elements;
+    *count = c;
     return actions;
 }
 
