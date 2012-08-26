@@ -24,11 +24,6 @@
 #define STX_ERROR {ErrorFlag = -1; return FALSE;}
 #endif
 
-/* Define stack type if not defined by the user */
-#ifndef TSTACK
-#define TSTACK int
-#endif
-
 /* Create generation information if no user code entered */
 #ifndef STXCODE_DEFINED
 int pStxStack;

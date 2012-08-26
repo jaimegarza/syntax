@@ -40,7 +40,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestCExpandedParser extends AbstractGenerationBase {
+public class TestCPackedScanner extends AbstractGenerationBase {
 
   static final String packedParserArgs[] = {
       // "-v",
@@ -48,18 +48,20 @@ public class TestCExpandedParser extends AbstractGenerationBase {
       "l",
       "--language",
       "c",
-      "--packing",
-      "tabular",
       "--noline",
+      "--driver",
+      "scanner",
       "classpath:c-test.sy",
       "${file.language}"
   };
 
   private static final String includePackedParserChecks[] = {
-      "#define PARSER_MODE",
+      "#define SCANNER_MODE",
       "#define TOKENS 18",
       "#define FINAL 34",
       "#define SYMBS 19",
+      "#define ACTIONS 254",
+      "#define NON_TERMINALS 2",
   };
   
   private static final String languagePackedParserChecks[] = {
@@ -73,19 +75,21 @@ public class TestCExpandedParser extends AbstractGenerationBase {
   private static final String grammarPackedParserChecks[] = {
       "Algorithm:.*LALR",
       "Language:.*C",
-      "Packed\\?:.*.*false",
+      "Packed\\?:.*.*true",
       "Tokens:.*18",
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
       "Errors:.*8",
+      "Actions:.*254",
+      "Gotos:.*16",
       "Recoveries:.*0",
       "States:.*34",
   };
 
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp(Language.C, "expandedparser");
+    super.setUp(Language.C, "packedscanner");
   }
 
 
