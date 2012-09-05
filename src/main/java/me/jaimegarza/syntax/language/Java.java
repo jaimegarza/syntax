@@ -66,11 +66,6 @@ public class Java extends BaseLanguageSupport {
   public String getIncludeExtensionSuffix() {
     return "Intf.java";
   }
-  
-  @Override
-  public boolean getDefaultIncludeFlag() {
-    return false;
-  }
 
   @Override
   public void generateCaseStart(int lineNumber, String label, String comment) {
