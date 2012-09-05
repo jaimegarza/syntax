@@ -75,7 +75,9 @@ public class Java extends BaseLanguageSupport {
   @Override
   public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent() + 1);
-    environment.output.printf("case %s: // %s", label, comment);
+    environment.output.printf("// %s\n", comment);
+    indent(environment.output, environment.getIndent() + 1);
+    environment.output.printf("case %s:", label);
     indent(environment.output, environment.getIndent() + 1);
   }
   

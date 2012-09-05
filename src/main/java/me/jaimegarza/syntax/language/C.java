@@ -91,7 +91,9 @@ public class C extends BaseLanguageSupport {
   @Override
   public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent());
-    environment.output.printf("case %s: // %s\n", label, comment);
+    environment.output.printf("// %s\n", comment);
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("case %s:\n", label);
     indent(environment.output, environment.getIndent() + 1);
     if (environment.isEmitLine()) {
       emitLine(lineNumber + 1);

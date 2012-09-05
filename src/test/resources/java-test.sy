@@ -131,8 +131,12 @@ Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 
     return ERROR_RE_ATTEMPT;
   }
   
-  private String toString(TSTACK value) {
-    return value.toString();
+  private String toString(LexicalValue value) {
+    if(value == null) {
+      return "";
+    } else {
+      return value.toString();
+    }
   }
   
   public int getTotal() {
