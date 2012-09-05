@@ -112,7 +112,7 @@ public interface LanguageSupport {
    * @param lineNumber the line number on the source
    * @param label the label of the case statement
    */
-  void generateCaseStart(int lineNumber, String label); 
+  void generateCaseStart(int lineNumber, String label, String comment); 
   /**
    * emit a case end statement
    */
@@ -149,6 +149,12 @@ public interface LanguageSupport {
    */
   void generateCodeGeneratorFooter();
 
+  /**
+   * there was no code generated.  Generate a good-for-nothing code
+   * generator routine.
+   */
+  void generateVoidCodeGenerator();
+  
   /**
    * The recovery table deals with tokens that can be used to recognize
    * syntax context and can recover from errors.
@@ -270,5 +276,6 @@ public interface LanguageSupport {
   void printGrammarTable();
 
   void printParserErrors();
+
 
 }

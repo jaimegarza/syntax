@@ -26,7 +26,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.test.c;
+package me.jaimegarza.syntax.test.pascal;
 
 import java.io.IOException;
 
@@ -40,39 +40,39 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestCExpandedParser extends AbstractGenerationBase {
+public class TestPascalExpandedParser extends AbstractGenerationBase {
 
-  static final String tabularParserArgs[] = {
-      // "-v",
+  static final String tabularParserArguments[] = {
+      "-v",
+      "-g",
       "--algorithm",
       "l",
       "--language",
-      "c",
+      "pascal",
       "--packing",
       "tabular",
-      "--noline",
-      "classpath:c-test.sy",
+      "classpath:pascal-test.sy",
       "${file.language}"
   };
 
   private static final String includePackedParserChecks[] = {
-      "#define PARSER_MODE",
-      "#define TOKENS 18",
-      "#define FINAL 34",
-      "#define SYMBS 19",
+      "\\$DEFINE PARSER_MODE",
+      "TOKENS = 18",
+      "FINAL = 34",
+      "SYMBS = 19",
   };
   
   private static final String languagePackedParserChecks[] = {
     "Begin of Skeleton",
-    "C Skeleton",
-    "unsigned long int StxLexer()",
-    "int StxCode",
+    "Pascal Skeleton",
+    "StxLexer():longint",
+    "StxCode.*BOOLEAN",
     "End of parser"
   };
 
   private static final String grammarPackedParserChecks[] = {
       "Algorithm:.*LALR",
-      "Language:.*C",
+      "Language:.*pascal",
       "Packed\\?:.*.*false",
       "Tokens:.*18",
       "Non Terminals:.*2",
@@ -85,7 +85,7 @@ public class TestCExpandedParser extends AbstractGenerationBase {
 
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp(Language.C, "expandedparser");
+    super.setUp(Language.pascal, "expandedparser");
   }
 
 
@@ -97,7 +97,7 @@ public class TestCExpandedParser extends AbstractGenerationBase {
 
   @Test
   public void test01GeneratePackedParser() throws ParsingException, AnalysisException, OutputException {
-    generateLanguageFile(tabularParserArgs);
+    generateLanguageFile(tabularParserArguments);
 
     checkRegularExpressions(tmpIncludeFile, includePackedParserChecks);
     checkRegularExpressions(tmpLanguageFile, languagePackedParserChecks);

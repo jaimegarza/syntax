@@ -52,6 +52,7 @@ public class Fragments extends ListResourceBundle{
   public static final String GETC = "getc";
   public static final String LEXICAL_VALUE = "lexicalValue";
   public static final String CURRENT_CHAR = "currentChar";
+  public static final String RETURN_VALUE = "returnValue";
 
   @Override
   protected Object[][] getContents() {

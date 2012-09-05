@@ -89,9 +89,9 @@ public class C extends BaseLanguageSupport {
   }
 
   @Override
-  public void generateCaseStart(int lineNumber, String label) {
+  public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent());
-    environment.output.printf("case %s:\n", label);
+    environment.output.printf("case %s: // %s\n", label, comment);
     indent(environment.output, environment.getIndent() + 1);
     if (environment.isEmitLine()) {
       emitLine(lineNumber + 1);
@@ -116,6 +116,11 @@ public class C extends BaseLanguageSupport {
       environment.include.println("#define SHIFTED 2");
       environment.include.println("#define PARSING_ERROR 3");
       environment.include.println("#define INTERNAL_ERROR 4");;
+    }
+    if (environment.isPacked()) {
+      environment.include.println("#define PACKED_TABLES");
+    } else {
+      environment.include.println("#define MATRIX_TABLES");
     }
     if (!runtime.isStackTypeDefined()) {
       environment.include.println("typedef int tstack, *ptstack");
@@ -144,17 +149,12 @@ public class C extends BaseLanguageSupport {
   @Override
   public void generateCodeGeneratorHeader() {
     environment.output.printf("\n")
+                      .printf("#define STACK_DEPTH 5000\n")
+                      .printf("\n")
                       .printf("/* Code Generator */\n")
                       .printf("\n")
-                      .printf("#ifndef TSTACK\n")
-                      .printf("#define TSTACK int\n")
-                      .printf("#endif\n")
-                      .printf("\n")
-                      .printf("TSTACK StxStack[150];\n")
-                      .printf("\n")
+                      .printf("TSTACK StxStack[STACK_DEPTH];\n")
                       .printf("int pStxStack;\n")
-                      .printf("\n")
-                      .printf("#define STXCODE_DEFINED\n")
                       .printf("\n")
                       .printf("int StxCode(int rule)\n")
                       .printf("{\n");
@@ -170,6 +170,21 @@ public class C extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("return 1; /* OK */\n");
     environment.output.printf("}/* End of StxCode */\n");
+  }
+  
+  @Override
+  public void generateVoidCodeGenerator() {
+    environment.output.printf("\n")
+      .printf("/* Code Generator */\n")
+      .printf("\n")
+      .printf("TSTACK StxStack[STACK_DEPTH];\n")
+      .printf("int pStxStack;\n")
+      .printf("\n")
+      .printf("int StxCode(int rule)\n")
+      .printf("{\n");
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("return 1; /* OK */\n")
+      .printf("}/* End of StxCode */\n");
   }
   
   @Override
@@ -341,10 +356,10 @@ public class C extends BaseLanguageSupport {
     int i = 0;
     for (State I : runtime.getStates()) {
       if (i == runtime.getStates().length - 1) {
-        environment.output.printf("    /* State %3d */ %s  // %s\n", i, I.getMessage(), getErrorMessage(I));
+        environment.output.printf("    /* %3d */ %s  // %s\n", i, I.getMessage(), getErrorMessage(I));
         environment.output.printf("};\n\n");
       } else {
-        environment.output.printf("    /* State %3d */ %s, // %s\n", i, I.getMessage(), getErrorMessage(I));
+        environment.output.printf("    /* %3d */ %s, // %s\n", i, I.getMessage(), getErrorMessage(I));
       }
       i++;
     }
@@ -378,6 +393,7 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void printErrorTableHeader() {
+    environment.output.printf("// Error Messages\n");
     environment.output.printf("\nchar * StxErrorTable[] = {\n");
   }
 

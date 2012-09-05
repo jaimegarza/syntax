@@ -64,16 +64,21 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
   public void setUp(Language language, String basename) throws IOException {
     System.out.println("filenames:");
     switch (language) {
-    case java:
-      tmpLanguageFile = createTmpFile("TestParser.java", "output implementation file");
-      tmpGrammarFile = createTmpFile("TestParser.txt", "grammar file");
-      tmpIncludeFile = createTmpFile("TestParserIntf.java", "interface file");
-      break;
-    case C:
-      tmpLanguageFile = createTmpFile(basename + ".c", "output implementation file");
-      tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
-      tmpIncludeFile = createTmpFile(basename + ".h", "interface file");
-      break;
+      case java:
+        tmpLanguageFile = createTmpFile("TestParser.java", "output implementation file");
+        tmpGrammarFile = createTmpFile("TestParser.txt", "grammar file");
+        tmpIncludeFile = createTmpFile("TestParserIntf.java", "interface file");
+        break;
+      case C:
+        tmpLanguageFile = createTmpFile(basename + ".c", "output implementation file");
+        tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
+        tmpIncludeFile = createTmpFile(basename + ".h", "interface file");
+        break;
+      case pascal:
+        tmpLanguageFile = createTmpFile(basename + ".pas", "output implementation file");
+        tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
+        tmpIncludeFile = createTmpFile(basename + ".inc", "interface file");
+        break;
     }
   }
 

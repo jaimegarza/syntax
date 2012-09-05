@@ -35,13 +35,13 @@ int StxCode(int dummy)
 
 
 /* Global variables */
-TSTACK            StxValue;       /* Scanner OUT value. Intended for scanner writer */
-char              StxChar;        /* The curent character                           */
-int               sStxStack[150]; /* State stack. Internal use                      */
-unsigned long int StxSym;         /* Actual scanner symbol. Internal usage          */
-int               StxState;       /* Current automaton state. Internal usage        */
-int               StxErrors;      /* Counts the number of errors.  User can read    */
-int               StxErrorFlag;   /* Recuperation machinery state. Internal usage   */
+TSTACK            StxValue;               /* Scanner OUT value. Intended for scanner writer */
+char              StxChar;                /* The curent character                           */
+int               sStxStack[STACK_DEPTH]; /* State stack. Internal use                      */
+unsigned long int StxSym;                 /* Actual scanner symbol. Internal usage          */
+int               StxState;               /* Current automaton state. Internal usage        */
+int               StxErrors;              /* Counts the number of errors.  User can read    */
+int               StxErrorFlag;           /* Recuperation machinery state. Internal usage   */
 
 #define ERROR_FAIL 0
 #define ERROR_RE_ATTEMPT 1
@@ -50,6 +50,9 @@ int               StxErrorFlag;   /* Recuperation machinery state. Internal usag
 /* These functions must be provided by the user */
 unsigned long int StxLexer();
 int StxError(int StxState, int StxSym, int pStxStack, char * message);
+#ifdef DEBUG
+char * StxToString(TSTACK value);
+#endif
 
 /*
   This routine maps a state and a token to a new state on the action table  
@@ -83,7 +86,11 @@ void StxPrintStack()
     printf("States: [");
     for(i=0;i<=pStxStack;i++)
         printf(" %d", sStxStack[i]);
-    printf("]\n");
+    printf("]<--Top of Stack (%d)\n", pStxStack);
+    printf("Values: [");
+    for(i=0;i<=pStxStack;i++)
+        printf(" %s", StxToString(StxStack[i]));
+    printf("]<--Top of Stack (%d)\n", pStxStack);
 }
 #endif
 
@@ -101,7 +108,7 @@ char * StxErrorMessage() {
 */
 int StxShift(int sym, int state)
 {
-    if(pStxStack >= 149)
+    if(pStxStack >= STACK_DEPTH-1)
         return 0;
 
     sStxStack[++pStxStack] = state;

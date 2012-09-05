@@ -122,6 +122,16 @@ char StxNextChar()
 #endif
     return ERROR_RE_ATTEMPT;
 }
+
+#ifdef DEBUG
+char staticToStringValue[1024];
+
+char * StxToString(TSTACK value)
+{
+    sprintf(staticToStringValue, "%d", value.number);
+    return staticToStringValue;
+}
+#endif
   
 int GetTotal() {
     return StxGetResult().number;
