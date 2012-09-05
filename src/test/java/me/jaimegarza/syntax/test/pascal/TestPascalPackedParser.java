@@ -40,30 +40,28 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestPascalExpandedParser extends AbstractGenerationBase {
+public class TestPascalPackedParser extends AbstractGenerationBase {
 
-  static final String tabularParserArguments[] = {
+  static final String packedParserArguments[] = {
       //"-v",
       "--algorithm",
       "l",
       "--language",
       "pascal",
-      "--packing",
-      "tabular",
       "classpath:pascal-test.sy",
       "${file.language}",
       "${file.include}",
-      "${file.grammar}"
+      "${file.grammar}",
   };
 
-  private static final String languageTabularIncludeChecks[] = {
+  private static final String languagePackedIncludeChecks[] = {
     "\\$DEFINE PARSER_MODE",
     "TOKENS = 18",
     "FINAL = 34",
     "SYMBS = 19",
   };
-
-  private static final String languageTabularParserChecks[] = {
+  
+  private static final String languagePackedParserChecks[] = {
     "Begin of Skeleton",
     "Pascal Skeleton",
     "StxLexer():longint",
@@ -71,10 +69,10 @@ public class TestPascalExpandedParser extends AbstractGenerationBase {
     "End of parser"
   };
 
-  private static final String grammarTabularParserChecks[] = {
+  private static final String grammarPackedParserChecks[] = {
       "Algorithm:.*LALR",
       "Language:.*pascal",
-      "Packed\\?:.*.*false",
+      "Packed\\?:.*.*true",
       "Tokens:.*18",
       "Non Terminals:.*2",
       "Types:.*1",
@@ -86,7 +84,7 @@ public class TestPascalExpandedParser extends AbstractGenerationBase {
 
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp(Language.pascal, "expandedparser");
+    super.setUp(Language.pascal, "packedparser");
   }
 
 
@@ -98,11 +96,11 @@ public class TestPascalExpandedParser extends AbstractGenerationBase {
 
   @Test
   public void test01GeneratePackedParser() throws ParsingException, AnalysisException, OutputException {
-    generateLanguageFile(tabularParserArguments);
+    generateLanguageFile(packedParserArguments);
 
-    checkRegularExpressions(tmpIncludeFile, languageTabularIncludeChecks);
-    checkRegularExpressions(tmpLanguageFile, languageTabularParserChecks);
-    checkRegularExpressions(tmpGrammarFile, grammarTabularParserChecks);
+    checkRegularExpressions(tmpIncludeFile, languagePackedIncludeChecks);
+    checkRegularExpressions(tmpLanguageFile, languagePackedParserChecks);
+    checkRegularExpressions(tmpGrammarFile, grammarPackedParserChecks);
   }
 
 }

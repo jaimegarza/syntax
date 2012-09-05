@@ -89,6 +89,11 @@ public class C extends BaseLanguageSupport {
   }
 
   @Override
+  public boolean getDefaultIncludeFlag() {
+    return true;
+  }
+  
+  @Override
   public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent());
     environment.output.printf("// %s\n", comment);

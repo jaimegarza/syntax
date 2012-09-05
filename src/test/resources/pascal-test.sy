@@ -2,7 +2,7 @@
 {Program that gets compiled and executed by free pascal}
 PROGRAM pascaltest;
 USES sysutils;
-{$I expandedparser.inc}
+{$I declarations.inc}
 {$DEFINE DEBUG}
 VAR
     number : LONGINT;

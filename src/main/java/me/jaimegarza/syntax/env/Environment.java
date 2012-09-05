@@ -194,6 +194,7 @@ public class Environment extends Options {
       this.fileNames = cmd.getArgList();
       setSourceFile();
       setOutputFile();
+      setIncludeFile();
       setReportFile();
     } catch (ParseException e) {
       System.out.println("Command line error: " + e.getMessage());
@@ -520,8 +521,28 @@ public class Environment extends Options {
    * Compute the report file
    * @throws ParseException if the report file cannot be computed
    */
+  private void setIncludeFile() throws ParseException {
+    this.include = this.output;
+    if (externalInclude) {
+      File includeFile = getFile(2, false, "include file");
+      if (includeFile == null) {
+        includeFile = new File(replaceExtension(outputFile.getAbsolutePath(), language.getIncludeExtensionSuffix()));
+      }
+      this.includeFile = includeFile;
+      try {
+        this.include = new FormattingPrintStream(this, FileUtils.openOutputStream(this.includeFile));
+      } catch (IOException e) {
+        throw new ParseException("Cannot open file " + includeFile);
+      }
+    }
+  }
+
+  /**
+   * Compute the report file
+   * @throws ParseException if the report file cannot be computed
+   */
   private void setReportFile() throws ParseException {
-    File reportFile = getFile(2, false, "report file");
+    File reportFile = getFile(3, false, "report file");
     if (reportFile == null) {
       reportFile = new File(replaceExtension(outputFile.getAbsolutePath(), ".txt"));
     }
@@ -548,12 +569,6 @@ public class Environment extends Options {
       this.outputFile = outputFile;
       try {
         output = new FormattingPrintStream(this, FileUtils.openOutputStream(outputFile));
-        if (externalInclude) {
-          this.includeFile = new File(replaceExtension(outputFile.getPath(), language.getIncludeExtensionSuffix()));
-          this.include = new FormattingPrintStream(this, FileUtils.openOutputStream(this.includeFile));
-        } else {
-          this.include = this.output;
-        }
       } catch (IOException e) {
         throw new ParseException("Cannot open file " + outputFile);
       }

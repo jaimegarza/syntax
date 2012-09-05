@@ -71,6 +71,11 @@ public class Pascal extends BaseLanguageSupport {
   }
   
   @Override
+  public boolean getDefaultIncludeFlag() {
+    return true;
+  }
+  
+  @Override
   public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent());
     environment.output.printf("//%s\n", comment);
@@ -507,29 +512,29 @@ public class Pascal extends BaseLanguageSupport {
     if (environment.isPacked()) {
       environment.output.printf(  "  PACTION = ^ACTION;\n"
                                   + "  ACTION = RECORD\n"
-                                  + "    symbol:SmallInt;\n"
-                                  + "    state:SmallInt;\n"
+                                  + "    symbol:LongInt;\n"
+                                  + "    state:LongInt;\n"
                                   + "  end;\n"
                                   + "\n");
     }
     environment.output.printf("  PGOTOS = ^GOTOS;\n"
                               + "  GOTOS = RECORD\n"
-                                + "    origin:SmallInt;\n"
-                                + "    destination:SmallInt;\n"
+                                + "    origin:LongInt;\n"
+                                + "    destination:LongInt;\n"
                                 + "  end;\n"
                                 + "\n");
     environment.output.printf("  PPARSER = ^PARSER;\n"
                               + "  PARSER = RECORD\n"
-                                + "    position:SmallInt;\n"
-                                + "    defa:SmallInt;\n"
-                                + "    elements:SmallInt;\n"
-                                + "    msg:SmallInt;\n"
+                                + "    position:LongInt;\n"
+                                + "    defa:LongInt;\n"
+                                + "    elements:LongInt;\n"
+                                + "    msg:LongInt;\n"
                                 + "  end;\n"
                                 + "\n");
     environment.output.printf("  PGRAMMAR = ^GRAMMAR;\n"
                               + "  GRAMMAR = RECORD\n"
-                                + "    symbol:SmallInt;\n"
-                                + "    reductions:SmallInt;\n"
+                                + "    symbol:LongInt;\n"
+                                + "    reductions:LongInt;\n"
                                 + "  end;\n");
     // reserve a place for where the size of the table will be written
     // fPos = ftell(environment.output);
@@ -695,18 +700,16 @@ public class Pascal extends BaseLanguageSupport {
         environment.output.printf(",\n");
       }
     }
-    if (environment.isPacked()) {
-      environment.output.printf("\nConst\n  NON_TERMINALS = %d;\n", runtime.getNonTerminals().size() - 1);
-      environment.output.printf("\n  StxNonTerminals : array [0..NON_TERMINALS] of INTEGER = (\n");
-      int i = 1;
-      for (NonTerminal id : runtime.getNonTerminals()) {
-        if (i == runtime.getNonTerminals().size()) {
-          environment.output.printf("  %d, (* %s *));\n\n", id.getToken(), id.getName());
-        } else {
-          environment.output.printf("  %d, (* %s *)\n", id.getToken(), id.getName());
-        }
-        i++;
+    environment.output.printf("\nConst\n  NON_TERMINALS = %d;\n", runtime.getNonTerminals().size() - 1);
+    environment.output.printf("\n  StxNonTerminals : array [0..NON_TERMINALS] of INTEGER = (\n");
+    int i = 1;
+    for (NonTerminal id : runtime.getNonTerminals()) {
+      if (i == runtime.getNonTerminals().size()) {
+        environment.output.printf("  %d  (* %s *));\n\n", id.getToken(), id.getName());
+      } else {
+        environment.output.printf("  %d, (* %s *)\n", id.getToken(), id.getName());
       }
+      i++;
     }
     environment.output.println();
   }

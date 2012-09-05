@@ -5,7 +5,7 @@
    *)
 
   (* ****************************************************************
-    Pascal Skeleton Parser FOR matrix tables
+    Pascal Skeleton Parser FOR packed tables
 
     This is not a sample program, but rather the parser skeleton
     to be included in the generated code.
@@ -72,10 +72,20 @@ END;
 *)
 FUNCTION StxAction(state:INTEGER; symbol:LONGINT) : LONGINT;
 VAR
-    index : INTEGER;
+    position : INTEGER;
+    i        : INTEGER;
 BEGIN
-    index := StxGetTokenIndex(symbol);
-    StxAction := StxParsingTable[state][index];
+    position := StxParsingTable[state].position;
+    
+    { Look in actions if there is a transaction with the token }
+    for i :=0 TO StxParsingTable[state].elements-1 DO
+      if   StxActionTable[position+i].symbol = symbol
+      then begin
+           StxAction := StxActionTable[position+i].state;
+           exit;
+           end;
+    { otherwise }
+    StxAction := StxParsingTable[state].defa;
 END;
 
 (*
@@ -84,10 +94,21 @@ END;
 *)
 FUNCTION StxGoto(state:INTEGER; symbol:INTEGER): INTEGER;
 VAR
-    index : INTEGER;
+    position: INTEGER;
 BEGIN
-    index := symbol;
-    StxGoTo := StxParsingTable[state][index];
+    { Search in gotos if there is a state transition }
+    position := symbol;
+    while StxGotoTable[position].origin <> -1 do
+        begin
+        if   StxGotoTable[position].origin = state
+        then begin
+             StxGoTo := StxGotoTable[position].destination;
+             exit;
+             end;
+        position := position + 1;
+        end;
+    { default }
+    StxGoTo := StxGotoTable[position].destination;
 END;
 
 (*
@@ -117,7 +138,7 @@ FUNCTION StxErrorMessage: STRING;
 VAR
     msgIndex : INTEGER;
 BEGIN
-    msgIndex := StxParsingError[StxState];
+    msgIndex := StxParsingTable[StxState].msg;
     IF   msgIndex >= 0
     THEN StxErrorMessage := StxErrorTable[msgIndex]
     ELSE StxErrorMessage := 'Syntax error';
