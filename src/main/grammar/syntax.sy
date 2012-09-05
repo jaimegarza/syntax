@@ -1,0 +1,1088 @@
+%{
+/* 
+ * Copyright 1985,1989,1997,2006 Jaime Garza. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   1. Redistributions of source code must retain the above copyright notice, 
+ *      this list of conditions and the following disclaimer. 
+ *   2. Redistributions in binary form must reproduce the above copyright 
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution. 
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE FREEBSD PROJECT ``AS IS'' AND ANY EXPRESS 
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ * DISCLAIMED. IN NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#ifdef WIN32
+#include <io.h>
+#endif
+#include <string.h>
+#include <ctype.h>
+
+#define NOACTIONS
+#include "Sintax.h"
+#include "Parser.h"
+
+#pragma warning (disable:4715)
+
+PIDENT NewID ( PIDENT pTabla, IDSTR id);
+PIDENT AddID ( PIDENT tabla, PIDENT p);
+PIDENT LookID ( PIDENT tabla, IDSTR s);
+int NewRule(void);
+int NewItem(PIDENT elem);
+void cdecl Error(int line, int error, ...);
+int SayToUser(void);
+int DeclAction(void);
+int DeclUnion(void);
+PTDEF NewType(IDSTR id);
+int RuleAction(int regla, int elems, char *id);
+int RuleEndAction(void);
+int TokenAction(void);
+int TokenEndAction(void);
+PREGEXNODE AlternateNode(PREGEXNODE left, PREGEXNODE right);
+PREGEXNODE SequentialNode(PREGEXNODE left, PREGEXNODE right);
+PREGEXNODE ZeroOrOneNode(PREGEXNODE operand);
+PREGEXNODE OneOrManyNode(PREGEXNODE operand);
+PREGEXNODE ZeroOrManyNode(PREGEXNODE operand);
+PREGEXNODE CharNode(PREGEXNODE node);
+PREGEXNODE AnyNode(void);
+PREGEXNODE AddTree(PREGEXNODE node);
+void SetEndToken(PREGEXNODE pNode, char *token);
+
+char    c;
+char    s[81];
+char    snt[81];
+int     pstack;
+int     lestado;
+int     terminals;
+int     noterminals;
+int     actLine;
+BOOL    bError = 0;
+BOOL    bCurly = 0;
+BOOL    bEqual = 0;
+BOOL    bMarcas = 0;
+BOOL    bRegEx = 0;
+PTDEF   pType;
+
+PIDENT  pNTtable;
+PIDENT  pTtable;
+PIDENT  pRGrammar;
+PITEM   pRule;
+PRULE   pSintax;
+TOKEN   tSym;
+PIDENT  pGStart;
+int     must_close;
+int     tok_num;
+int     PrecAct = 0;
+PRULE   pTope;
+PTDEF   pCurType = NULL;
+int     bActFinales;
+int     bActionDone = FALSE;
+int     bErrorToken = FALSE;
+
+
+extern int              fileIn;
+extern int              nLine;
+extern int              fVerbose;
+extern int              RulePrec;
+extern ASOCIATIVIDAD    RuleAsoc;
+extern PTDEF            pType;
+extern int              RuleCounter;
+extern char             snt[];
+extern char             szSource[];
+
+RWORD RWord[] = {
+    {"token",   TOK_TERM},
+    {"term",    TOK_TERM},
+    {"left",    TOK_LEFT},
+    {"nonassoc",TOK_BINARY},
+    {"binary",  TOK_BINARY},
+    {"right",   TOK_RIGHT},
+    {"prec",    TOK_PREC},
+    {"start",   TOK_START},
+    {"type",    TOK_TYPE},
+    {"union",   TOK_UNION},
+    {"name",    TOK_NAME},
+    {"error",   TOK_ERRDEF},
+    {"lexer",   TOK_LEXER},
+};
+
+    PIDENT  where;
+    char *  idnt;
+    PRULE   stx;
+    static  int firsttok = TRUE;
+    PITEM   aRule;
+    int     i,j;
+    char    regla[20];
+
+int DeclareOneNonTerminal(char *idnt, char *tkn);
+int NameOneNonTerminal(char *ntr, char *name);
+int DeclareRules(char *name);
+
+%}
+
+%token            TOK_MARCA     256: "'%%'"
+%token            TOK_START     257: "'%start'"
+%token  <s>       TOK_TOKEN     258: "Token"
+%token            TOK_TYPE      259: "'%type'"
+%token            TOK_UNION     260: "'%union'"
+%token  <s.id>    TOK_TYPENAME  261: "Type definition"
+%token            TOK_TERM      262: "'%token'"
+%token            TOK_LEFT      263: "'%left'"
+%token            TOK_RIGHT     264: "'%right'"
+%token            TOK_BINARY    265: "'%binary'"
+%token            TOK_ERRDEF    266: "'%error'"
+%token  <s.value> TOK_NUM       267: "Number"
+%token            TOK_PREC      268: "'%prec'"
+%token            TOK_NAME      269: "'%name'"
+%token            TOK_ERROR     270: "Error"
+%token            TOK_LEXER     271: "%lexer"
+
+%token <node>     TOK_RX_PIPE   272: "'|'"
+%token            TOK_RX_LPAR   273: "'('"
+%token            TOK_RX_RPAR   274: "')'"
+%token <node>     TOK_RX_STAR   275: "'*'" 
+%token <node>     TOK_RX_PLUS   276: "'+'" 
+%token <node>     TOK_RX_HUH    277: "'?'" 
+%token <node>     TOK_RX_ANY    278: "'.'"
+%token <node>     TOK_RX_CHARS  279: "Character or set of characters"
+
+%token            ';'              : "Semicolon"
+%token            ':'              : "Colon"
+%token            ','              : "Comma"
+%token            '|'              : "Rule separator ('|')"
+%token            '('              : "Opening parenthesis"
+%token            ')'              : "Closing parenthesis"
+%token            '/'              : "Regular expression marker ('/')"
+
+%type   <s.value> Numero;
+%type   <s>       Precedencia;
+%type   <s>       ErrInfo;
+%type   <node>    TAction;
+
+%type <node>      BasicElement;
+%type <node>      ConcatElement;
+%type <node>      RegExp;
+
+%name Declaracion                   : "a declaration";
+%name Acciones                      : "code section";
+%name Precedencia                   : "a token definition";
+%name Simbolo                       : "token, precedence declaration or '='";
+%name PRegla                        : "parser rule definition";
+%name TAction                       : "lexical token definition";
+
+%name RegExp                        : "regular expression";
+%name ConcatElement                 : "operator expression";
+%name BasicElement                  : "basic element";
+
+%union {
+    STACK s;
+    PREGEXNODE node;
+}
+
+%start Descriptor
+
+%error ';'
+
+%%
+Descriptor   :  Declaraciones =TokenEndAction(); TOK_MARCA Producciones Acciones
+             |  =TokenEndAction(); TOK_MARCA Producciones Acciones
+             ;
+
+Acciones     :                              = {
+                                                if(!RuleEndAction())
+                                                    return FALSE;
+                               
+                                                bActFinales = FALSE;
+                                            }
+             |  TOK_MARCA                   = {
+                                                if(!RuleEndAction())
+                                                    return FALSE;
+                                                bActFinales = TRUE;
+                                            }
+             ;
+
+Declaraciones:  Declaraciones Declaracion
+             |  Declaracion
+             ;
+
+Declaracion  :  ';'
+             |  TOK_START TOK_TOKEN         = {
+                                                if(pGStart){
+                                                    Error(LINE_SIS, ERR_START2, pGStart->id);
+                                                    return FALSE;
+                                                }
+                                                if(!(where = LookID(pTtable, $2.id))){
+                                                    if(!(where = LookID(pNTtable, $2.id))){
+                                                        if( !(pNTtable = NewID(pNTtable, $2.id))){
+                                                            Error(LINE_SIS, ERR_NOM);
+                                                            return FALSE;
+                                                        }
+                                                        where = LookID(pNTtable, $2.id);
+                                                    }
+                                                    where->count--;
+                                                    pGStart = where;
+                                                }else{
+                                                    Error(LINE_SIS, ERR_START, $2.id);
+                                                    return FALSE;
+                                                }
+                                            }
+             |  TOK_LEXCODE TOK_TOKEN 
+             |  TOK_TYPE TOK_TYPENAME Tokens
+             |  TOK_NAME TokenNames
+             |  TOK_UNION                   = if(!DeclUnion()) return FALSE;
+             |  PrecDef Definicion          = pCurType = NULL;
+             |  '{'                         = if(!DeclAction()) return FALSE;
+             |  TOK_LEXER Equals TOK_TOKEN
+             ;
+
+PrecDef      :  TOK_TERM                    = {
+                                                RuleAsoc = 1;
+                                                bErrorToken = FALSE;
+                                            }
+             |  TOK_LEFT                    = {
+                                                RulePrec++;
+                                                RuleAsoc = 1;
+                                                bErrorToken = FALSE;
+                                            }
+             |  TOK_RIGHT                   = {
+                                                RulePrec++;
+                                                RuleAsoc = 2;
+                                                bErrorToken = FALSE;
+                                            }
+             |  TOK_BINARY                  = {
+                                                RulePrec++;
+                                                RuleAsoc = 3;
+                                                bErrorToken = FALSE;
+                                            }
+             |  TOK_ERRDEF                  = {
+                                                RuleAsoc = 0;
+                                                bErrorToken = TRUE;
+                                            }
+             ;
+
+Tokens       :  Tokens TOK_TOKEN            = return DeclareOneNonTerminal(StxStack[pStxStack-2].s.id, $2.id);
+             |  Tokens ',' TOK_TOKEN        = return DeclareOneNonTerminal(StxStack[pStxStack-3].s.id, $3.id);
+             |  TOK_TOKEN                   = return DeclareOneNonTerminal(StxStack[pStxStack-1].s.id, $1.id);
+             ;
+
+TokenNames   :  TokenNames TOK_TOKEN ':' TOK_TOKEN       = return NameOneNonTerminal($2.id, $4.id);
+             |  TokenNames ',' TOK_TOKEN ':' TOK_TOKEN   = return NameOneNonTerminal($3.id, $5.id);
+             |  TOK_TOKEN ':' TOK_TOKEN                  = return NameOneNonTerminal($1.id, $3.id);
+             ;
+
+Definicion   :  Tipo Precedencias
+             ;
+
+Precedencias :  Precedencias ',' Precedencia
+             |  Precedencias Precedencia
+             |  Precedencia
+             ;
+
+Precedencia  :  TOK_TOKEN Numero ErrInfo TAction = {
+                                                if($2 != -1)
+                                                    $$.value = $2;
+                                                if(!(where = LookID(pTtable, $1.id))){
+                                                    if( !(pTtable = NewID(pTtable, $1.id))){
+                                                        Error(LINE_SIS, ERR_NOM);
+                                                        return FALSE;
+                                                    }
+                                                    where = LookID(pTtable, $1.id);
+                                                }
+                                                where->count--;
+                                                if(RuleAsoc){
+                                                    if(where->associative != ASC_NO){
+                                                        Error(LINE_SIS, ERR_PRECASOC);
+                                                        return FALSE;
+                                                    }
+                                                    where->precedence  = RulePrec;
+                                                    where->associative = RuleAsoc;
+                                                }
+                                                if(bErrorToken)
+                                                    where->is_error = bErrorToken;
+                                                if(pCurType)
+                                                    where->type = pCurType;
+                                                if($$.value >= 0){
+                                                    PIDENT cual;
+                                                    if(where->token != -1)
+                                                        Error(LINE_SIS, ERR_TOKREDEF, where->id);
+                                                    for(cual = pTtable; cual; cual=cual->next)
+                                                        if(cual != where && cual->token == $$.value){
+                                                            Error(LINE_SIS, ERR_TOKREUSED, $$.value, cual->id);
+                                                            return FALSE;
+                                                        }
+                                                    where->token = $$.value;
+                                                }
+                                                if ($3.id[0]) {
+                                                    strcpy(where->name, $3.id);
+                                                }
+                                                if ($4 != NULL) {
+                                                    SetEndToken($4, where->id);
+                                                }
+                                            }
+             ;
+
+Numero       :  TOK_NUM
+             |                              = $$ = -1;
+             ;
+
+ErrInfo      : ':' TOK_TOKEN                =  strcpy($$.id, $2.id);
+             |
+             ;
+
+TAction      : Equals TOK_TOKEN             = $$ = NULL;
+             | Slash RegExp Slash           = $$ = AddTree($2);
+             |                              = $$ = NULL;
+             ;
+
+Slash        : '/' TOK_TOKEN                
+             ;
+
+RegExp        : RegExp ConcatElement        = $$ = SequentialNode($1, $2);
+              | RegExp TOK_RX_PIPE ConcatElement = $$ = AlternateNode($1, $3);
+              | ConcatElement
+              ;
+         
+ConcatElement : BasicElement TOK_RX_STAR    = $$ = ZeroOrManyNode($1);
+              | BasicElement TOK_RX_PLUS    = $$ = OneOrManyNode($1);
+              | BasicElement TOK_RX_HUH     = $$ = ZeroOrOneNode($1);
+              | BasicElement
+              ;
+              
+BasicElement  : TOK_RX_LPAR RegExp TOK_RX_RPAR = $$ = $2;
+              | TOK_CHARS                      = CharNode($$);
+              | TOK_RX_ANY                     = AnyNode();
+              ;
+
+Equals       : '='                          = TokenAction();
+             ;
+
+Tipo         :  TOK_TYPENAME                = {
+                                                if( !(pCurType = NewType($1))){
+                                                    Error(LINE_SIS, ERR_NOM);
+                                                    return FALSE;
+                                                }
+                                            }
+             |                              = pCurType = NULL;
+             ;
+
+
+Producciones :  Producciones TOK_TOKEN ':' Reglas ';'  = return DeclareRules($2.id);
+             |  TOK_TOKEN ':' Reglas ';'               = return DeclareRules($1.id);
+             ;
+
+Reglas       :  Reglas '|' PRegla           = {
+                                                if(!NewRule()){
+                                                    Error(LINE_SIS, ERR_NOM);
+                                                    return FALSE;
+                                                }
+                                                bActionDone = FALSE;
+                                            }
+             |  PRegla                      = {
+                                                if(!NewRule()){
+                                                    Error(LINE_SIS, ERR_NOM);
+                                                    return FALSE;
+                                                }
+                                                stx = pSintax;
+                                                while (stx->next)
+                                                    stx = stx->next;
+                                                pTope = stx;
+                                                bActionDone = FALSE;
+                                            }
+             ;
+
+PRegla       :  Regla
+             |                              = {
+                                                pRule = NULL;
+                                                bActionDone = FALSE;
+                                            }
+             ;
+
+Regla        :  Regla Simbolo
+             |  Simbolo
+             ;
+
+Simbolo      :  TOK_TOKEN                    = {
+                                                            if(!$1.id[0])
+                                                                break;
+                                                            if(firsttok){
+                                                                RulePrec = RuleAsoc = 0;
+                                                                firsttok = FALSE;
+                                                            }
+                                                            if(bActionDone){
+                                                                aRule = pRule;
+                                                                pRule = NULL;
+                                                                i = RulePrec;
+                                                                j = RuleAsoc;
+                                                                RulePrec = 0;
+                                                                if(!NewRule()){
+                                                                    Error(LINE_SIS, ERR_NOM);
+                                                                    return FALSE;
+                                                                }
+                                                                RulePrec = i;
+                                                                RuleAsoc = j;
+                                                                pRule = aRule;
+                                                                for(stx = pSintax; stx->next; stx=stx->next);
+                                                                sprintf(regla, "Sys$Prod%d", RuleCounter-1);
+                                                                if( !(pNTtable = NewID(pNTtable, regla))){
+                                                                    Error(LINE_SIS, ERR_NOM);
+                                                                    return FALSE;
+                                                                }
+                                                                where = pNTtable;
+                                                                while (strcmp(where->id, regla))
+                                                                    where = where->next;
+                                                                where->used = NOTERMINAL;
+                                                                stx->id = where;
+                                                                where->count++;
+                                                                where->precedence = TRUE; /* usado como no terminal */
+                                                                if(!NewItem(where)){
+                                                                    Error(LINE_SIS, ERR_NOM);
+                                                                    return FALSE;
+                                                                }
+                                                                bActionDone = FALSE;
+                                                            }
+                                                            if(!(where = LookID(pNTtable, $1.id))){
+                                                                if(where = LookID(pTtable,$1.id)){
+                                                                    RulePrec = where->precedence;
+                                                                    RuleAsoc = where->associative;
+                                                                }else{
+                                                                    if($1.must_close && $1.value >= 0){
+                                                                        if( !(pTtable = NewID(pTtable, $1.id))){
+                                                                            Error(LINE_SIS, ERR_NOM);
+                                                                            return FALSE;
+                                                                        }
+                                                                        where = LookID(pTtable, $1.id);
+                                                                        if($1.value >=0){
+                                                                            PIDENT cual;
+                                                                            for(cual = pTtable; cual; cual=cual->next)
+                                                                                if(cual != where && cual->token == $1.value){
+                                                                                    Error(LINE_SIS, ERR_TOKREUSED, $1.value, cual->id);
+                                                                                    return FALSE;
+                                                                                }
+                                                                            where->token = $1.value;
+                                                                            where->used = TERMINAL;
+                                                                        }
+                                                                    }else{
+                                                                        if(!(pNTtable = NewID(pNTtable, $1.id))){
+                                                                            Error(LINE_SIS, ERR_NOM);
+                                                                            return FALSE;
+                                                                        }
+                                                                        noterminals++;
+                                                                        for(where = pNTtable; strcmp(where->id, $1.id); where = where->next);
+                                                                        where->used = NOTERMINAL;
+                                                                        where->count++;
+                                                                    }
+                                                                }
+                                                            }
+                                                            if(!NewItem(where)){
+                                                                Error(LINE_SIS, ERR_NOM);
+                                                                return FALSE;
+                                                            }
+                                                        }
+             |  TOK_PREC TOK_TOKEN                      = {
+                                                            if(!(where = LookID(pNTtable, $2.id))){
+                                                                if(!(where = LookID(pTtable,$2.id))){
+                                                                    Error(LINE_SIS, ERR_BADTOKEN2, $2.id);
+                                                                    return FALSE;
+                                                                }else{
+                                                                    RulePrec = where->precedence;
+                                                                    RuleAsoc = where->associative;
+                                                                }
+                                                            }else{
+                                                                Error(LINE_SIS, ERR_BADTOKEN2, $2.id);
+                                                                return FALSE;
+                                                            }
+                                                        }
+             |  '='                                     = {
+                                                            for(aRule = pRule, i = 0; aRule; aRule=aRule->next, i++);
+                                                            if(!RuleAction(RuleCounter, i, snt))
+                                                                return FALSE;
+                                                            bActionDone = TRUE;
+                                                        }
+             ;
+
+%%
+
+int DeclareOneNonTerminal(char *idnt, char *tkn)
+{
+    if( where = LookID(pTtable, tkn)){
+        Error(LINE_SIS, ERR_BADTOKEN3, tkn);
+        return FALSE;
+    } else {
+        if(!(where = LookID(pNTtable,tkn))){
+            if( !(pNTtable = NewID(pNTtable, tkn))){
+                Error(LINE_SIS, ERR_NOM);
+                return FALSE;
+            }
+            noterminals++;
+            where = pNTtable;
+            while (strcmp(where->id,tkn))
+                where = where->next;
+        }else
+            where->count--;
+        if(!(where->type = NewType(idnt))){
+            Error(LINE_SIS, ERR_NOM);
+            return FALSE;
+        }
+    }
+}
+
+int NameOneNonTerminal(char *ntr, char *name)
+{
+    if( where = LookID(pTtable, ntr)){
+        Error(LINE_SIS, ERR_BADTOKEN4, ntr);
+        return FALSE;
+    } else {
+        if(!(where = LookID(pNTtable,ntr))){
+            if( !(pNTtable = NewID(pNTtable, ntr))){
+                Error(LINE_SIS, ERR_NOM);
+                return FALSE;
+            }
+            noterminals++;
+            where = pNTtable;
+            while (strcmp(where->id,ntr))
+                where = where->next;
+        }else
+            where->count--;
+        strcpy(where->name, name);
+    }
+}
+
+int DeclareRules(char *name)
+{
+    if( where = LookID(pTtable, name)){
+        Error(LINE_SIS, ERR_BADTOKEN, name);
+        return FALSE;
+    } else {
+        if(!(where = LookID(pNTtable,name))){
+            if( !(pNTtable = NewID(pNTtable, name))){
+                Error(LINE_SIS, ERR_NOM);
+                return FALSE;
+            }
+            noterminals++;
+            where = pNTtable;
+            while (strcmp(where->id,name))
+                where = where->next;
+        }else
+            where->count--;
+        where->precedence = TRUE; /* usado como no terminal */
+    }
+    stx = pTope;
+    while (stx ){
+        if(!stx->id)
+            stx->id = where;
+        stx = stx->next;
+    }
+    /* prec y assoc para NTERM no importa (eso creo por ahora) */
+    where->used = NOTERMINAL;
+    bActionDone = FALSE;
+}  
+
+char GetCar(void)
+{
+    if(read(fileIn,&c,1)<1)
+        return 0;
+
+    if(c == '\n'){
+        nLine++;
+        if(fVerbose)
+            printf("Lines : %05d\r", nLine);
+    }
+
+    if(c == 26)
+        return 0;
+
+    return(c);
+}
+
+char DecodeOctal()
+{
+	int iCount = 3;
+	char c2 = 0;
+
+	while (iCount) {
+		c2 *= 8;
+
+		if (c >= '0' && c <= '7') {
+			c2 += c - '0';
+            c = GetCar();
+        } else if (c == '\0') {
+            return c2;
+		} else {
+            break;
+		}
+
+		iCount--;
+	}
+
+	return c2;
+}
+
+char DecodeControlChar()
+{
+    char c2;
+	c = GetCar();
+
+	if (c == '\0') {
+        return '\0';
+	}
+
+	if (c >= 'a' && c <= 'z') {
+        c2 = c;
+        c = GetCar();
+		return c2 - ('a' - 1);
+	} else if (c >= 'A' && c <= 'Z') {
+        c2 = c;
+        c = GetCar();
+		return c2 - ('A' - 1);
+	} else {
+        return 'c' - 'a';
+	}
+}
+
+char DecodeHex()
+{
+	int iCount = 2;
+	char c2 = 0;
+
+	c = GetCar();
+
+	while (iCount) {
+		c2 *= 16;
+
+		if (c >= '0' && c <= '9')
+		{
+			c2 += c - '0';
+		} else if (c >= 'a' && c <= 'f') {
+			c2 += 10 + (c - 'a');
+		} else if (c >= 'A' && c <= 'F') {
+			c2 += 10 + (c - 'A');
+		} else if (c == '\0') {
+            return '\0';
+		} else {
+            return 'x' - 'a';
+		}
+
+		iCount--;
+	}
+
+	return c2;
+}
+
+char DecodeEscape()
+{
+    char c2;
+	switch (c) {
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+			return DecodeOctal();
+		case 'a':
+            c = GetCar();
+			return '\a';
+		case 'b':
+            c = GetCar();
+			return '\b';
+		case 'c':
+            c = GetCar();
+			return DecodeControlChar ();
+		case 'e':
+            c = GetCar();
+			return '\\';
+		case 'f':
+            c = GetCar();
+			return '\f';
+		case 'n':
+            c = GetCar();
+			return '\n';
+		case 'r':
+            c = GetCar();
+			return '\r';
+		case 't':
+            c = GetCar();
+			return '\t';
+		case 'v':
+            c = GetCar();
+			return '\v';
+		case 'x':
+            c = GetCar();
+			return DecodeHex();
+		default:
+            c2 = c;
+            c = GetCar();
+			return c2;
+	}
+}
+
+
+TOKEN GetNormalSym(void)
+{
+    int l;
+    char c2;
+    char s2[81];
+    int  bFin;
+
+    strncpy(s2, s, 80);
+    s2[80] = 0;
+    s[0] = '\0';
+
+    if(bMarcas >= 2)
+        return 0;
+
+    if(bCurly){
+        bCurly = 0;
+        return ';' ;
+    }
+
+    if(bEqual){
+        bEqual = 0;
+        s[0] = 0;
+        return TOK_TOKEN;
+    }
+
+    while(1){
+        while ( c == ' ' || c == '\t' || c == '\n')
+            c = GetCar();
+        if(c == '/'){
+            if( (c=GetCar()) == '*'){
+                c = GetCar();
+                bFin = 0;
+                while(!bFin){
+                    while(c == '*')
+                        if((c = GetCar()) == '/')
+                            bFin = 1;
+                    c = GetCar();
+                }
+            }else{
+                lseek(fileIn, -1L, SEEK_CUR);
+                c = '/';
+                break;
+            }
+        }else
+            break;
+    }
+
+    if ( !c )
+        return 0;
+
+    if( c == '%' || c == '\\'){
+        c = GetCar();
+        switch(c){
+            case '0':
+                c = GetCar();
+                return TOK_TERM;
+            case '<':
+                c = GetCar();
+                return TOK_LEFT;
+            case '2':
+                c = GetCar();
+                return TOK_BINARY;
+            case '>':
+                c = GetCar();
+                return TOK_RIGHT;
+            case '%':
+            case '\\':
+                c = GetCar();
+                bMarcas++;
+                return TOK_MARCA;
+            case '=':
+                c = GetCar();
+                return TOK_PREC;
+            case '@':
+                c = GetCar();
+                return TOK_NAME;
+            case '{':
+                c = GetCar();
+                bCurly = 1;
+                return (TOKEN)'{';
+            case '!':
+                c = GetCar();
+                return TOK_ERRDEF;
+        }
+        l = 0;
+        while(isalpha(c)){
+            if(l<80){
+                s[l] = c;
+                s[++l] = '\0';
+            }
+            c = GetCar();
+        }
+        for(l=0 ; l < sizeof(RWord) / sizeof(RWORD); l++)
+            if(!stricmp(s, RWord[l].scWord)){
+                if(RWord[l].tSym == TOK_UNION)
+                    bCurly = 1;
+                return RWord[l].tSym;
+            }
+        bError = 1;
+        Error(LINE_SIS, ERR_BADWORD, s);
+        return TOK_ERROR;
+    }
+
+    if(c == ';'){
+        c = GetCar();
+        return ';' ;
+    }
+
+    if(c == ','){
+        c = GetCar();
+        return ',' ;
+    }
+
+    if(c == ':'){
+        strcpy(snt, s2);
+        c = GetCar();
+        return ':' ;
+    }
+
+    if(c == '|'){
+        c = GetCar();
+        return '|' ;
+    }
+
+    if(c == '='){
+        c = GetCar();
+        bEqual = 1;
+        return '=' ;
+    }
+
+    if(c == '{'){
+        bEqual = 1;
+        return '=' ;
+    }
+
+    if(c == '<'){
+        c = GetCar();
+        l = 0;
+        while( c && c != '>' && c != '\n'){
+            if(l<80){
+                s[l] = c;
+                s[++l] = '\0';
+            }
+            c = GetCar();
+        }
+        if( c != '>'){
+            bError = 1;
+            Error(LINE_SIS, ERR_BADTYPE);
+            return TOK_ERROR;
+        }
+        c = GetCar();
+        return TOK_TYPENAME;
+    }
+
+
+    if ( c == '/' ){
+        bRegEx = 1;
+        bEqual = 1;
+        c = GetCar();
+        return '/';
+    }
+
+    if(isdigit(c)){
+        while(isdigit(c)){
+            s[l=strlen(s)] = c;
+            s[++l] = 0;
+            c = GetCar();
+        }
+        tok_num = atoi(s);
+        return TOK_NUM;
+    }
+
+    must_close = 0;
+    if( c == '\'' || c == '"'){
+        c2 = c;
+        must_close=1;
+        c = GetCar();
+    }else
+        c2 = ':';
+
+    do{ /* TOKEN */
+        s[l=strlen(s)] = c;
+        s[++l] = '\0';
+        if(!(c = GetCar()))
+            break;
+        if(!must_close && strchr("%\\;,:|={< \t\n", c))
+            break;
+    }while (c != c2);
+
+    if(must_close && c != c2){
+        bError = 1;
+        Error(LINE_SIS, ERR_BADQUOTE);
+        return TOK_ERROR;
+    }
+    tok_num = -1;
+    if(!strcmp(s, "\\a"))
+        tok_num = '\a';
+    else if(!strcmp(s, "\\b"))
+        tok_num = '\b';
+    else if(!strcmp(s, "\\n"))
+        tok_num = '\n';
+    else if(!strcmp(s, "\\t"))
+        tok_num = '\t';
+    else if(!strcmp(s, "\\f"))
+        tok_num = '\f';
+    else if(!strcmp(s, "\\r"))
+        tok_num = '\r';
+    else if(!strncmp(s, "\\x", 2)){
+        char *p = s+2;
+        tok_num = 0;
+        while(1)
+            if(*p >= '0' && *p <= '9')
+                tok_num = tok_num * 16 + *p++-'0';
+            else if(*p >= 'A' && *p <= 'F')
+                tok_num = tok_num * 16 + *p++-'A'+10;
+            else if(*p >= 'a' && *p <= 'f')
+                tok_num = tok_num * 16 + *p++-'a'+10;
+            else
+                break;
+    }else if(!strncmp(s, "\\0", 2)){
+        char *p = s+2;
+        tok_num = 0;
+        while(*p >= '0' && *p <= '7')
+            tok_num = tok_num * 8 + *p++-'0';
+    }
+
+    if(must_close){
+        c = GetCar();
+        if(strlen(s) == 1)
+            tok_num = s[0];
+    }
+
+    return TOK_TOKEN;
+}
+
+int GetRegexSym(void) {
+    char c2;
+
+    if(bEqual){
+        bEqual = 0;
+        s[0] = 0;
+        return TOK_TOKEN;
+    }
+
+    if (c == '|') {c = GetCar(); return TOK_RX_PIPE;}
+    if (c == '(') {c = GetCar(); return TOK_RX_LPAR;}
+    if (c == ')') {c = GetCar(); return TOK_RX_RPAR;}
+    if (c == '*') {c = GetCar(); return TOK_RX_STAR;}
+    if (c == '+') {c = GetCar(); return TOK_RX_PLUS;}
+    if (c == '?') {c = GetCar(); return TOK_RX_HUH;}
+    if (c == '.') {c = GetCar(); return TOK_RX_ANY;}
+    if (c == '/') {
+        bRegEx = 0;
+        bEqual = 1;
+        c = GetCar();
+        return '/';
+    }
+
+    if (c == '\\') {
+        c = GetCar();
+        c2 = DecodeEscape();
+        if (c2 == 0) {
+            return EOS;
+        }
+        StxValue.node = malloc(sizeof(REGEXNODE));
+        StxValue.node->parent = NULL;
+        StxValue.node->child1 = NULL;
+        StxValue.node->child2 = NULL;
+        StxValue.node->nodeType = NODE_LEX;
+        StxValue.node->ranges = malloc(sizeof(REGEXRANGE));
+        StxValue.node->ranges->next = NULL;
+        StxValue.node->ranges->prev = NULL;
+        StxValue.node->ranges->charStart = c2;
+        StxValue.node->ranges->charEnd = c2;
+        return TOK_CHARS;
+    }
+
+    if (c != '\0') {
+        StxValue.node = malloc(sizeof(REGEXNODE));
+        StxValue.node->parent = NULL;
+        StxValue.node->child1 = NULL;
+        StxValue.node->child2 = NULL;
+        StxValue.node->nodeType = NODE_LEX;
+        StxValue.node->ranges = malloc(sizeof(REGEXRANGE));
+        StxValue.node->ranges->next = NULL;
+        StxValue.node->ranges->prev = NULL;
+        StxValue.node->ranges->charStart = c;
+        StxValue.node->ranges->charEnd = c;
+        c = GetCar();
+        return TOK_CHARS;
+    }
+
+    return EOS; 
+}
+
+
+int StxScan(void)
+{
+    int rc;
+    
+    if (bRegEx) {
+      rc = GetRegexSym();
+	  if (fVerbose) {
+        printf("RegexScanner: %d\n", rc);
+	  }
+    } else {
+      rc = GetNormalSym();
+      StxValue.s.value = tok_num;
+      StxValue.s.must_close = must_close;
+      strcpy(StxValue.s.id, s);
+	  if (fVerbose) {
+        printf("StdScanner: %d [%s]\n", rc, s);
+	  }
+    }
+    return rc;
+}
+
+int StxError(int StxState, int StxSym, int pStxStack)
+{
+    int msg = StxParsingTable[StxState].msg;
+    if (msg >= 0) {
+        Error(LINE_SIS, ERR_STX, StxState, StxErrorTable[msg]);
+    } else {
+        fprintf(stderr, "%s(%05d) : Unknown error on state %d\n", szSource, nLine+1, StxState);
+    }
+    bError = 1;
+    return 0; /* with actions, it recovers weird.  Need to change the action stuff to the scanner */
+}
+
+int Revisa(void)
+{
+    c = GetCar( );
+    lestado =
+    terminals =
+    noterminals = 0;
+    pNTtable = NULL;
+    pTtable = NULL;
+    pSintax = NULL;
+    pRule = NULL;
+    if(!(pTtable = NewID(NULL,"$"))){
+        Error(LINE_SIS, ERR_NOM);
+        return 1;
+    }
+    pTtable->count = 0;
+    pTtable->token = 0;
+    if (!StxParse() || bError)
+        return TRUE;
+    pRGrammar = NULL;
+    if(!SayToUser())
+        return TRUE;
+    return FALSE;
+}
