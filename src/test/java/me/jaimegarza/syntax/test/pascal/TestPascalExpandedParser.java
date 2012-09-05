@@ -43,8 +43,7 @@ import org.testng.annotations.Test;
 public class TestPascalExpandedParser extends AbstractGenerationBase {
 
   static final String tabularParserArguments[] = {
-      "-v",
-      "-g",
+      //"-v",
       "--algorithm",
       "l",
       "--language",

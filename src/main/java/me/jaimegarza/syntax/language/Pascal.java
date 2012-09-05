@@ -73,7 +73,9 @@ public class Pascal extends BaseLanguageSupport {
   @Override
   public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent());
-    environment.output.printf("%s: Begin {%s}\n", label, comment);
+    environment.output.printf("//%s\n", comment);
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("%s: Begin\n", label);
     indent(environment.output, environment.getIndent() + 1);
   }
   
