@@ -1,0 +1,231 @@
+%{
+{Program that gets compiled and executed by free pascal}
+PROGRAM pascaltest;
+USES sysutils;
+{$I expandedparser.inc}
+{$DEFINE DEBUG}
+VAR
+    number : LONGINT;
+%}
+
+%union
+  number:LONGINT;
+%
+
+%lexer =
+  WHILE ($c = ' ') OR ($c = CHR(9)) DO $+;
+  writeln('Char is "', $c, '"');
+%
+
+%left             TOK_AND      256:"AND" =  if $c = '&' THEN BEGIN $+; $r(TOK_AND); END;%
+%left             TOK_OR       257:"OR"  =  if $c = '|' THEN BEGIN $+; $r(TOK_OR); END;% 
+%right            TOK_NOT      258:"NOT" =  if $c = '!' THEN BEGIN $+; $r(TOK_NOT); END;%
+%left             TOK_LE       259:"'<='"
+                  TOK_LT       260:"'<'"
+                  TOK_GE       261:"'>='"
+                  TOK_GT       262:"'>'"
+                  TOK_NE       263:"'<>'"
+                  TOK_EQ       264:"'='" = 
+  IF   $c = '='
+  THEN BEGIN 
+       $+; 
+       $r (TOK_EQ);
+       END
+  ELSE 
+  IF   $c = '<'
+  THEN BEGIN 
+       $+;
+       IF   $c = '='
+       THEN BEGIN 
+            $+;
+            $r(TOK_LE);
+       END
+       ELSE
+       IF   $c = '>'
+       THEN BEGIN 
+            $+;
+            $r(TOK_NE);
+       END;
+       $r(TOK_LT);
+  END
+  ELSE
+  IF   $c = '>'
+  THEN BEGIN 
+       $+;
+       IF   $c = '='
+       THEN BEGIN 
+            $+;
+            $r(TOK_GE);
+       END;
+       $r(TOK_GT);
+       END;
+%
+
+%left             '+' : "plus"   =  IF   $c = '+' THEN BEGIN $+; $r(ORD('+')); END;%
+                , '-' : '"minus"'=  IF   $c = '-' THEN BEGIN $+; $r(ORD('-')); END;%
+%left             '*' =  IF   $c = '*' THEN BEGIN $+; $r(ORD('*')); END;%
+                , '/' =  IF   $c = '/' THEN BEGIN $+; $r(ORD('/')); END;%
+
+%right            TOK_UMINUS:"unary minus"  
+
+%token            '(' =  IF   $c = '(' THEN BEGIN $+; $r(ORD('(')); END;%
+                  ')' =  IF   $c = ')' THEN BEGIN $+; $r(ORD(')')); END;%
+
+%token   <number> TOK_NUMBER:"number" = 
+  IF   ($c >= '0') AND ($c <= '9')
+  THEN BEGIN 
+       number := 0;
+       WHILE ($c >= '0') AND ($c <= '9') DO
+             BEGIN 
+             number := number * 10 + ORD($c) - ORD('0');
+             $+;
+             END;
+       $v.number := number;
+       $r(TOK_NUMBER);
+       END;
+%
+
+%type    <number> Expression
+
+%start Expression
+
+%lexer = 
+%
+
+
+%%
+Expression   :  Expression TOK_AND Expression = IF ($1 <> 0) AND ($3 <> 0) THEN $$ := 1 ELSE $$ := 0;%
+             |  Expression TOK_OR Expression  = IF ($1 <> 0) OR ($3 <> 0) THEN $$ := 1 ELSE $$ := 0;%
+             |  TOK_NOT Expression            = IF ($2 <> 0) THEN $$ := 0 ELSE $$ := 1;%
+             |  Expression TOK_LE Expression  = IF $1 <= $3 THEN $$ := 1 ELSE $$ := 0;%
+             |  Expression TOK_LT Expression  = IF $1 < $3 THEN $$ := 1 ELSE $$ := 0;%
+             |  Expression TOK_GE Expression  = IF $1 >= $3 THEN $$ := 1 ELSE $$ := 0;%
+             |  Expression TOK_GT Expression  = IF $1 > $3 THEN $$ := 1 ELSE $$ := 0;%
+             |  Expression TOK_NE Expression  = IF $1 <> $3 THEN $$ := 1 ELSE $$ := 0;%
+             |  Expression TOK_EQ Expression  = IF $1 = $3 THEN $$ := 1 ELSE $$ := 0;%
+             |  Expression '+' Expression     = $$ := $1 + $3;%
+             |  Expression '-' Expression     = $$ := $1 - $3;%
+             |  Expression '*' Expression     = $$ := $1 * $3;%
+             |  Expression '/' Expression     = $$ := $1 DIV $3;%
+             |  '-' Expression %prec TOK_UMINUS = $$ := -$2;%
+             |  '(' Expression ')'            = $$ := $2;%
+             |  TOK_NUMBER
+             ;
+%%
+
+// END OF GRAMMAR
+
+VAR
+    charNum : INTEGER = 1;
+
+CONST
+    expression = '(1 + 3) *4 / 5 + -20';
+
+FUNCTION StxNextChar: CHAR;
+BEGIN
+    IF   charNum <= LENGTH(expression) 
+    THEN BEGIN
+         writeln('Char ', expression[charNum]);
+         StxNextChar := expression[charNum];
+         charNum := charNum + 1;
+         END
+    ELSE StxNextChar := CHR(EOS);
+END;
+
+FUNCTION StxError(StxState:INTEGER; StxSym: INTEGER; pStxStack: INTEGER; aMessage:STRING):INTEGER;
+BEGIN
+    writeln('An error occurred in state ', StxState, ' with token ', StxSym, ' on the position ', pStxStack);
+    writeln(aMessage);
+{$IFDEF DEBUG}
+    StxPrintStack();
+{$ENDIF}
+    StxError := ERROR_RE_ATTEMPT;
+END;
+  
+FUNCTION StxToString(value:TSTACK):STRING;
+BEGIN
+  StxToString := IntToStr(value.number);
+END;
+
+FUNCTION GetTotal() :INTEGER; 
+BEGIN
+    EXIT(StxGetResult().number);
+END;
+
+{$IFDEF SCANNER_MODE}
+TYPE
+  PPARAMETER = ^PARAMETER;
+  PARAMETER = RECORD
+    token: integer;
+    value: integer;
+    result: integer;
+  END;
+
+VAR
+  parameters: ARRAY[0..13] OF PARAMETER = (
+    ('(', 0, 0),
+    (TOK_NUMBER, 1, 1),
+    ('+', 0, 0),
+    (TOK_NUMBER, 3, 3),
+    (')', 0, 0),
+    ('*', 0, 0),
+    (TOK_NUMBER, 4, 4),
+    ('/', 0, 0),
+    (TOK_NUMBER, 5, 5),
+    ('+', 0, 0),
+    ('-', 0, 0),
+    (TOK_NUMBER, 20, 20),
+    (0, 0, -17),
+    (-1,0,0));
+
+FUNCTION arrayContains(array: ARRAY OF INTEGER, value: INTEGER, count: INTEGER): INTEGER 
+VAR
+    i: INTEGER;
+BEGIN
+    FOR i := 0 TO count-1 DO
+        IF  array[i] = value THEN EXIT(1);
+    arrayContains := 0;
+END;
+
+VAR
+    p: INTEGER
+    count : INTEGER;
+    t:INTEGER;
+    value:TSTACK;
+BEGIN
+    
+    StxInit;
+    
+    i := 0;
+    while parameters[i].token != -1 do
+          begin
+          int *tokens = StxValidTokens(&count);
+        IF   !arrayContains(tokens, p->token, count) {
+            printf("Token %d ain't there\n", p->token);
+            exit (1);
+        }
+        value.number = p->value;
+        IF   !StxParse(p->token, value) {
+            printf("Error when parsing symbol %d\n", p->token);
+            exit (1);
+        }
+        t = GetTotal();
+        IF   t != p->result {
+            printf("Result is not %d\n", p->result);
+            exit (1);
+        }
+        p++;
+    }
+    t = GetTotal();
+    printf("Total: %d\n", t);
+    IF   t != -17 {
+        printf("total does not match\n");
+        exit (1);
+     }
+    exit (0);
+END.
+{$ELSE}
+BEGIN
+    IF   StxParse() THEN writeln('Total=', GetTotal);
+END.
+{$ENDIF}

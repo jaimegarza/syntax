@@ -42,7 +42,7 @@ import org.testng.annotations.Test;
 
 public class TestCExpandedScanner extends AbstractGenerationBase {
 
-  static final String packedParserArgs[] = {
+  static final String tabularParserArgs[] = {
       // "-v",
       "--algorithm",
       "l",
@@ -100,7 +100,7 @@ public class TestCExpandedScanner extends AbstractGenerationBase {
 
   @Test
   public void test01GeneratePackedParser() throws ParsingException, AnalysisException, OutputException {
-    generateLanguageFile(packedParserArgs);
+    generateLanguageFile(tabularParserArgs);
 
     checkRegularExpressions(tmpIncludeFile, includePackedParserChecks);
     checkRegularExpressions(tmpLanguageFile, languagePackedParserChecks);

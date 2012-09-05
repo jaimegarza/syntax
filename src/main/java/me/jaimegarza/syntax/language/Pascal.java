@@ -32,7 +32,9 @@ import java.io.IOException;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
+import me.jaimegarza.syntax.code.Fragments;
 import me.jaimegarza.syntax.definition.Action;
+import me.jaimegarza.syntax.definition.Driver;
 import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.NonTerminal;
@@ -69,9 +71,9 @@ public class Pascal extends BaseLanguageSupport {
   }
   
   @Override
-  public void generateCaseStart(int lineNumber, String label) {
+  public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent());
-    environment.output.printf("%s: Begin\n", label);
+    environment.output.printf("%s: Begin {%s}\n", label, comment);
     indent(environment.output, environment.getIndent() + 1);
   }
   
@@ -146,12 +148,36 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   public void generateLexerHeader() {
+    environment.include.println("{$MACRO ON}");
+    if (environment.getDriver() == Driver.PARSER) {
+      environment.include.println("{$DEFINE PARSER_MODE}");
+    } else {
+      environment.include.println("{$DEFINE SCANNER_MODE}");
+      environment.include.println("{$DEFINE ACCEPTED:=1}");
+      environment.include.println("{$DEFINE SHIFTED:=2}");
+      environment.include.println("{$DEFINE PARSING_ERROR:=3}");
+      environment.include.println("{$DEFINE INTERNAL_ERROR:=4}");;
+    }
+    if (environment.isPacked()) {
+      environment.include.println("{$DEFINE PACKED_TABLES}");
+    } else {
+      environment.include.println("{$DEFINE MATRIX_TABLES}");
+    }
+    if (!runtime.isStackTypeDefined()) {
+      environment.include.println("TYPE");
+      environment.include.println("  TSTACK = integer;");
+      environment.include.println("  PTSTACK = ^TSTACK;");
+    }
     environment.output.printf("\n")
                       .printf("{ Lexical Analyzer }\n")
                       .printf("\n")
-                      .printf("VAR StxChar:char;\n")
+                      .printf("FUNCTION StxNextChar:char; FORWARD;\n")
                       .printf("\n")
-                      .printf("function StxLexer():int;\n")
+                      .printf("VAR\n")
+                      .printf("  StxChar:char;\n")
+                      .printf("  StxValue:TSTACK;\n")
+                      .printf("\n")
+                      .printf("function StxLexer:longint;\n")
                       .printf("begin\n");
   }
 
@@ -166,15 +192,18 @@ public class Pascal extends BaseLanguageSupport {
   @Override
   public void generateCodeGeneratorHeader() {
     environment.output.printf("\n")
+     
                       .printf("{ Code generator }\n")
                       .printf("\n")
-                      .printf("Var\n")
-                      .printf("  {$define STXCODE_DEFINED}\n")
-                      .printf("  StxStack : Array [0..512] of TStack;\n")
-                      .printf("  pStxStack: Integer;\n")
+                      .printf("CONST\n")
+                      .printf("    STACK_DEPTH = 5000;\n")
                       .printf("\n")
-                      .printf("function StxCode(rule:integer):boolean;\n")
-                      .printf("begin\n");
+                      .printf("VAR\n")
+                      .printf("    StxStack : Array [0..STACK_DEPTH] of TStack;\n")
+                      .printf("    pStxStack: Integer;\n")
+                      .printf("\n")
+                      .printf("FUNCTION StxCode(rule:INTEGER):BOOLEAN;\n")
+                      .printf("BEGIN\n");
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("Case rule Of\n");
   }
@@ -188,6 +217,25 @@ public class Pascal extends BaseLanguageSupport {
     environment.output.printf("END;(* StxCode *)\n");
   }
 
+  @Override
+  public void generateVoidCodeGenerator() {
+    environment.output.printf("\n")
+    .printf("{ Code generator }\n")
+    .printf("\n")
+    .printf("CONST\n")
+    .printf("    STACK_DEPTH = 5000;\n")
+    .printf("\n")
+    .printf("VAR\n")
+    .printf("  StxStack : Array [0..512] of TStack;\n")
+    .printf("  pStxStack: Integer;\n")
+    .printf("\n")
+    .printf("FUNCTION StxCode(rule:INTEGER):BOOLEAN;\n")
+    .printf("BEGIN\n");
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("StxCode := true;\n");
+    environment.output.printf("END;(* StxCode *)\n");
+  }
+  
   @Override
   public void generateRecoveryTableHeader(int numberOfErrorTokens) {
         environment.output.printf("\nConst\n  RECOVERS = %d;\n"
@@ -208,13 +256,17 @@ public class Pascal extends BaseLanguageSupport {
                               + "  {$define TSTACK_DEFINED}\n"
                               + "  PTStack = ^TStack;\n"
                               + "  TStack = Record\n"
-                              + "    case integer of");
+                              + "    case integer of\n");
     level = 0;
     hasCharacters = false;
     while (runtime.currentCharacter != '%' && runtime.currentCharacter != '\\') {
+      if (runtime.currentCharacter == '\r') {
+        lexer.getCharacter();
+        continue;
+      }
       if (runtime.currentCharacter == '\n') {
         if (hasCharacters) {
-          environment.output.printf(");");
+          environment.output.printf(");\n");
         }
         hasCharacters = false;
       } else {
@@ -223,8 +275,8 @@ public class Pascal extends BaseLanguageSupport {
           level++;
         }
         hasCharacters = true;
+        environment.output.print(runtime.currentCharacter);
       }
-      environment.output.print(runtime.currentCharacter);
       lexer.getCharacter();
     }
     lexer.getCharacter();
@@ -244,16 +296,16 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   public void generateTokensHeader(int terminals) {
-    environment.output.printf("\nConst\n  TOKENS = %d;\n", terminals - 1);
-    environment.output.printf("\n  StxTokens : array [0..TOKENS] of Integer = (\n");
+    environment.include.printf("\nConst\n  TOKENS = %d;\n", terminals);
+    environment.output.printf("\nVar\n  StxTokens : array [0..TOKENS-1] of Longint = (\n");
   }
 
   @Override
   public void generateToken(Terminal id, boolean isLast) {
     if (isLast) {
-      environment.output.printf("    %d\n (* %s (%s) *) );\n", id.getToken(), id.getName(), id.getFullName());
+      environment.output.printf("    %d); // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
     } else {
-      environment.output.printf("    %d,\n (* %s (%s) *)", id.getToken(), id.getName(), id.getFullName());
+      environment.output.printf("    %d, // %s (%s)\n", id.getToken(), id.getName(), id.getFullName());
     }
   }
 
@@ -272,8 +324,116 @@ public class Pascal extends BaseLanguageSupport {
       }
     }
     environment.include.printf("\n");
+    environment.include.printf("{Token information structure}\n");
+    environment.include.printf("TYPE\n");
+    environment.include.printf("  PTOKENDEF = ^TOKENDEF;\n");
+    environment.include.printf("  TOKENDEF = RECORD\n");
+    environment.include.printf("    name:STRING;\n");
+    environment.include.printf("    fullName:STRING;\n");
+    environment.include.printf("    token:LONGINT;\n");
+    environment.include.printf("    reserved:BOOLEAN;\n");
+    environment.include.printf("  END;\n\n");
+    environment.output.printf("\nVAR\n");
+    environment.output.printf("  StxTokenDefs: array [0..%d] of TOKENDEF = (\n", runtime.getTerminals().size()-1);
+    int i = 0;
+    for (Terminal id : runtime.getTerminals()) {
+      if (!id.getVariable().equals("_")) {
+        environment.output.printf("  {%3d}  (name:'%s'; fullName:'%s'; token:%d; reserved:TRUE)", i, id.getVariable(), escapeDoubleQuotes(id.getFullName()), id.getToken());
+      } else {
+        environment.output.printf("  {%3d}  (name:'%s'; fullName:'%s'; token:%d; reserved:FALSE)", i, id.getName(), escapeDoubleQuotes(id.getFullName()), id.getToken());
+      }
+      i++;
+      if (i < runtime.getTerminals().size()) {
+        environment.output.print(",");
+      }
+      environment.output.println();
+    }
+    environment.output.printf(");\n");
   }
 
+  @Override
+  protected String escapeDoubleQuotes(String error) {
+    return error.replaceAll("\\'", "''");
+  }
+
+  @Override
+  protected boolean lexerDollar(Lexer lexer) throws IOException {
+    lexer.getCharacter();
+    if (runtime.currentCharacter == '+') {
+      lexer.getCharacter();
+      environment.output.printFragment("getc");
+      return true;
+    } else if (runtime.currentCharacter == 'c') {
+      lexer.getCharacter();
+      environment.output.printFragment("currentChar");
+      return true;
+    } else if (runtime.currentCharacter == 'v') {
+      lexer.getCharacter();
+      environment.output.printFragment(Fragments.LEXICAL_VALUE);
+      return true;
+    } else if (runtime.currentCharacter == 'r') {
+      lexerReturnValue(lexer);
+      return true;
+    }
+    environment.output.print('$');
+    return false; 
+  }
+
+  private void lexerReturnValue(Lexer lexer) throws IOException {
+    String follows = "";
+    lexer.getCharacter();
+    while (runtime.currentCharacter == ' ') {
+      follows = lexerAccumulateCurrentCharacter(lexer, follows);
+    }
+    if (runtime.currentCharacter == '(') {
+      String returnValue = "";
+      int level = 0;
+      lexer.getCharacter();
+      while ((runtime.currentCharacter != ')' || level > 0) && runtime.currentCharacter != 0) {
+        if (runtime.currentCharacter == '\'') {
+          returnValue = readLexerString(lexer, returnValue, '\'');
+        } else if (runtime.currentCharacter == '"') {
+          returnValue  = readLexerString(lexer, returnValue, '"');
+        } else if (runtime.currentCharacter == '(') {
+          returnValue = lexerAccumulateCurrentCharacter(lexer, returnValue);
+          level++;
+        } else if (runtime.currentCharacter == ')') {
+          if (level > 0) {
+            returnValue = lexerAccumulateCurrentCharacter(lexer, returnValue);
+          }
+          level--;
+        } else {
+          returnValue = lexerAccumulateCurrentCharacter(lexer, returnValue);
+        }
+      }
+      if (runtime.currentCharacter == ')') {
+        lexer.getCharacter();
+      } else {
+        environment.error(runtime.lineNumber, "Unfinished return value.  Recognized %s.", returnValue);
+      }
+      environment.output.printFragment(Fragments.RETURN_VALUE, returnValue);
+    } else {
+      environment.output.printf("StxLexer :=%s", follows);
+    }
+  }
+
+  private String readLexerString(Lexer lexer, String s, char separator) throws IOException {
+    s = lexerAccumulateCurrentCharacter(lexer, s);
+    while (runtime.currentCharacter != separator && runtime.currentCharacter != 0) {
+      s = lexerAccumulateCurrentCharacter(lexer, s);
+    }
+    if (runtime.currentCharacter == separator) {
+      s = lexerAccumulateCurrentCharacter(lexer, s);
+    }
+    return s;
+  }
+
+  private String lexerAccumulateCurrentCharacter(Lexer lexer, String s) throws IOException {
+    s = s + runtime.currentCharacter;
+    lexer.getCharacter();
+    return s;
+  }
+  
   @Override
   public boolean generateLexerCode(Lexer lexer) throws IOException {
     boolean end = false;
@@ -314,7 +474,7 @@ public class Pascal extends BaseLanguageSupport {
           break;
 
         case '\n':
-          environment.output.print(runtime.currentCharacter);
+          environment.output.printf("%c", runtime.currentCharacter);
           lexer.getCharacter();
           indent(environment.output, environment.getIndent() + 1);
           continue;
@@ -324,7 +484,7 @@ public class Pascal extends BaseLanguageSupport {
           return false;
 
       }
-      if (!bStart) {
+      if (!bStart || runtime.currentCharacter != '{') {
         environment.output.print(runtime.currentCharacter);
       }
       if (runtime.currentCharacter > ' ') {
@@ -337,10 +497,13 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   public void printCodeHeader() {
+    environment.output.printf("\nCONST\n")
+                      .printf("  ACCEPT = %d;\n", Integer.MAX_VALUE)
+                      .printf("\n");
+    environment.output.printf("\n"
+                            + "TYPE\n");
     if (environment.isPacked()) {
-      environment.output.printf("\n"
-                                + "Type\n"
-                                  + "  PACTION = ^ACTION;\n"
+      environment.output.printf(  "  PACTION = ^ACTION;\n"
                                   + "  ACTION = RECORD\n"
                                   + "    symbol:SmallInt;\n"
                                   + "    state:SmallInt;\n"
@@ -368,12 +531,12 @@ public class Pascal extends BaseLanguageSupport {
                                 + "  end;\n");
     // reserve a place for where the size of the table will be written
     // fPos = ftell(environment.output);
-    environment.output.printf("\nConst\n  FINAL = %d;\n" + "  SYMBS = %5d;\n", runtime.getStates().length,
-        runtime.getTerminals().size() + runtime.getNonTerminals().size() - 2);
-    environment.output.printf("Type\n" + "  TABLEROWS = 0..FINAL;\n" + "  TABLECOLS = 0..SYMBS;\n" + "\n");
+    environment.include.printf("\nConst\n  FINAL = %d;\n" + "  SYMBS = %d;\n", runtime.getStates().length,
+        runtime.getTerminals().size() + runtime.getNonTerminals().size() - 1);
+    environment.output.printf("\n  TABLEROWS = 0..FINAL-1;\n" + "  TABLECOLS = 0..SYMBS-1;\n" + "\n");
     if (!environment.isPacked()) {
-      environment.output.printf("{Parsing Table}\n"
-                                + "    StxParsingTable : array [TABLEROWS,TABLECOLS] of Integer = (\n");
+      environment.output.printf("VAR\n  {Parsing Table}\n"
+                                + "  StxParsingTable : array [TABLEROWS,TABLECOLS] of LongInt = (\n");
     }
   }
 
@@ -388,7 +551,11 @@ public class Pascal extends BaseLanguageSupport {
         column = 0;
       }
       column++;
-      environment.output.printf("%4d", parserLine[index]);
+      if (parserLine[index] == Integer.MAX_VALUE) {
+        environment.output.print("ACCEPT");
+      } else {
+        environment.output.printf("%6d", parserLine[index]);
+      }      
       if (index < symbolCounter) {
         environment.output.printf(",");
       }
@@ -405,23 +572,26 @@ public class Pascal extends BaseLanguageSupport {
     if (environment.isPacked() == true) {
       return;
     }
+    environment.output.println();
     indent(environment.output, environment.getIndent()-1);
     environment.output.printf("{Parsing Errors}\n");
     indent(environment.output, environment.getIndent()-1);
-    environment.output.printf("    StxParsingError : array [TABLEROWS] of Integer = (\n");
+    environment.output.printf("StxParsingError : array [TABLEROWS] of Integer = (\n");
     int i = 0;
     for (State I : runtime.getStates()) {
       indent(environment.output, environment.getIndent());
       if (i == runtime.getStates().length - 1) {
-        environment.output.printf(" {State %3d} %s  (* %s *)\n", i, I.getMessage(), getErrorMessage(I));
+        environment.output.printf(" {%3d} %s  (* %s *)\n", i, I.getMessage(), getErrorMessage(I));
         indent(environment.output, environment.getIndent()-1);
         environment.output.printf(");\n\n");
       } else {
-        environment.output.printf(" {State %3d} %s, (* %s *)\n", i, I.getMessage(), getErrorMessage(I));
+        environment.output.printf(" {%3d} %s, (* %s *)\n", i, I.getMessage(), getErrorMessage(I));
       }
       i++;
     }
-  }  @Override
+  }  
+  
+  @Override
   public void printParsingTableHeader() {
     environment.output.printf("\n" + "  StxParsingTable : array [TABLEROWS] of PARSER = (\n");
   }
@@ -440,7 +610,10 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   public void printErrorTableHeader() {
-    environment.output.printf("\n" + "  StxErrorTable : array [0..%d] of String = (\n", runtime.getErrorMessages().size() - 1);
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("{Error Messages}\n");
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("StxErrorTable : array [0..%d] of String = (\n", runtime.getErrorMessages().size() - 1);
   }
 
   @Override
@@ -506,7 +679,7 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   public void printGrammarTable() {
-    environment.output.printf("\n");
+    environment.output.printf("\n{Grammar Table}\n");
     int numberOfRules = runtime.getRules().size();
     environment.output.printf("  StxGrammarTable : Array [0..%d] of GRAMMAR = (\n", numberOfRules - 1);
     int index = 0;
@@ -533,5 +706,6 @@ public class Pascal extends BaseLanguageSupport {
         i++;
       }
     }
+    environment.output.println();
   }
 }

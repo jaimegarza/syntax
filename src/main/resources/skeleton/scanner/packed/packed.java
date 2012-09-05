@@ -86,7 +86,7 @@
     System.out.println("<--Top Of Stack (" + stackTop + ")");
     System.out.print("Values: [");
     for(i=0;i<=stackTop;i++) {
-      System.out.print("|" + stack[i] + "| ");
+      System.out.print("|" + toString(stack[i]) + "| ");
     }
     System.out.println("<--Top Of Stack (" + stackTop + ")\n");
   }

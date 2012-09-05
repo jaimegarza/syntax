@@ -1,249 +1,300 @@
-(*
+  (*
+   *
+   * Begin of Skeleton
+   *
+   *)
 
-Parser para archivos en PASCAL para tablas en forma matricial.
-SINTAXPA.PAS
+  (* ****************************************************************
+    Pascal Skeleton Parser FOR matrix tables
 
-Este programa no es de ejemplo.
-Es el fuente del parser que se copia a sus archivos de salida.
-Procure no modificarlo.
+    This is not a sample program, but rather the parser skeleton
+    to be included in the generated code.
+    Modify at your own risk.
 
-Jaime Garza V zquez
-M‚xico, 1990
+    Copyright (c), 1985-2012 Jaime Garza
+  ***************************************************************** *)
+CONST
+  ERROR_FAIL = 0;
+  ERROR_RE_ATTEMPT = 1;
 
-*)
+(* Global variables *)
+VAR
+    sStxStack   : Array[0..STACK_DEPTH] of integer; (* SState stack. Internal use                     *)
+    StxSym      : LongInt;                          (* Actual scanner symbol. Internal usage          *)
+    StxState    : integer;                          (* Current automaton state. Internal usage        *)
+    StxErrors   : Integer;                          (* Counts the number of errors.  User can read    *)
+    StxErrorFlag: integer;                          (* Recuperation machinery state. Internal usage   *)
 
-(* define la constante de no empacado *)
-{$DEFINE STX_NOEMPACADO}
-
-(* Define el tipo del stack si no se ha definido *)
-{$IFNDEF TSTACK}
-TYPE
-	TSTACK = integer;
-	PTSTACK = ^TSTACK;
+(* These functions must be provided by the user *)
+FUNCTION StxError(StxState:INTEGER; StxSym:INTEGER; pStxStack:INTEGER; aMessage:STRING):INTEGER; FORWARD;
+{$IFDEF DEBUG}
+FUNCTION StxToString(value:TSTACK):STRING; FORWARD;
 {$ENDIF}
 
-(* Si no hubo generaci¢n de c¢digo usar esta funci¢n *)
-{$IFNDEF STXCODE}
+(*
+    returns the name of a token, given the token number
+*)
+FUNCTION StxGetTokenName(token:INTEGER) : STRING;
 VAR
-	StxStack:ARRAY [0..149] OF TSTACK;
-	pStxStack:INTEGER;
-
-FUNCTION StxCodigo(regla:INTEGER):BOOLEAN;
+    i : INTEGER;
 BEGIN
-	StxCodigo := TRUE;
-END;(* StxCodigo *)
-{$ENDIF}
+    FOR i := 0 TO TOKENS-1 DO
+        BEGIN
+        IF   StxTokenDefs[i].token = token
+        THEN BEGIN
+             StxGetTokenName := StxTokenDefs[i].name;
+             EXIT;
+             END;
+        END;
+    StxGetTokenName := 'UNKNOWN TOKEN';
+END;
 
-(* Variables globales *)
+(*
+    Find the index of a token
+*)
+FUNCTION StxGetTokenIndex(token:LONGINT) : INTEGER;
 VAR
-	StxValor	: TSTACK;	(* El valor adicional del scanner. Para usuario   *)
-	sStxStack	: Array[0..149] of integer; (* Stack de estados. Uso interno  *)
-	StxSym		: integer;	(* El s¡mbolo actual del scanner. Uso interno	  *)
-	StxEstado	: integer;	(* El estado actual del aut¢mata. Uso interno	  *)
-	StxErrorFlag: integer;	(* Estado del recuperador de errores. Uso interno *)
-
-(* Estas funciones las debe proveer el usuario *)
-FUNCTION StxScan:INTEGER; FORWARD;
-FUNCTION StxError(StxEstado:INTEGER, StxSym:INTEGER, pStxStack:INTEGER):INTEGER; FORWARD;
+    i : INTEGER;
+BEGIN
+    FOR i := 0 TO TOKENS-1 DO
+        BEGIN
+        IF StxTokenDefs[i].token = token 
+        THEN BEGIN
+             StxGetTokenIndex := i;
+             EXIT;
+             END;
+        END;
+    StxGetTokenIndex := -1;
+END;
 
 (*
-	Esta funci¢n llama al scanner
-	Convierte el valor de retorno del scanner (un token) en
-	la columna correspondiente en la tabla de parsing.
-
-	El arreglo StxTokens Contiene los valores de los tokens esperados.
+  This routine maps a state and a token to a new state on the action table  
 *)
-
-FUNCTION StxScanner:INTEGER;
-Var
-	sym, i : integer;
-Begin
-	sym := StxScan;
-
-	for i:=0 to TOKENS-1
-		if	 sym = StxTokens[i]
-		then exit;
-	if	 i = TOKENS
-	then StxScanner := 0
-	else StxScanner := i;
-End;
+FUNCTION StxAction(state:INTEGER; symbol:LONGINT) : LONGINT;
+VAR
+    index : INTEGER;
+BEGIN
+    index := StxGetTokenIndex(symbol);
+{$IFDEF DEBUG}
+    writeln('action index = ', index);
+{$ENDIF}
+    StxAction := StxParsingTable[state][index];
+END;
 
 (*
-	Esta funcion imprime por la salida estandar el contenido
-	del stack de parsing
+  This routine maps a origin state to a destination state
+  using the symbol position 
+*)
+FUNCTION StxGoto(state:INTEGER; symbol:INTEGER): INTEGER;
+VAR
+    index : INTEGER;
+BEGIN
+    index := symbol;
+    StxGoTo := StxParsingTable[state][index];
+END;
+
+(*
+  This routine prints the contents of the parsing stack 
 *)
 {$IFDEF DEBUG}
-PROCEDURE PrintStack;
-var
-	i:integer;
-Begin
-	writeln('Stack pointer = ', pStxStack);
-	write('Estados: [');
-	for i:=0 to pStxStack
-		write(' ', sStxStack[i]);
-	writeln(']');
-End;
+PROCEDURE StxPrintStack;
+VAR
+    i:integer;
+BEGIN
+    writeln('Stack pointer = ', pStxStack);
+    write('States: [');
+    FOR i:=0 to pStxStack DO
+        write(sStxStack[i], ' ');
+    writeln(']<--Top Of Stack (', pStxStack, ')');
+    write('Values: [');
+    FOR i:=0 to pStxStack DO
+        write('|', StxToString(StxStack[i]),'| ');
+    writeln(']<--Top Of Stack (', pStxStack, ')');
+END;
 {$ENDIF}
 
 (*
-	Realiza un shift.
-	Pone un estado nuevo en el tope del stack.
+    Get the error message FOR the current state
 *)
-FUNCTION StxShift(sym:integer, estado:integer):BOOLEAN;
-Begin
-	if	 pStxStack >= 149
-	then StxShift := FALSE
-	else Begin
-		 pStxStack := pStxStack + 1;
-		 sStxStack[pStxStack] := estado;
-		 StxStack[pStxStack] := StxValor;
-		 StxEstado := estado;
-		 StxShift := TRUE;
-{$IFDEF DEBUG}
-		 writeln('Shift a ', estado, ' con ', sym);
-		 PrintStack;
-{$ENDIF}
-		 End;
-End;
+FUNCTION StxErrorMessage: STRING;
+VAR
+    msgIndex : INTEGER;
+BEGIN
+    msgIndex := StxParsingError[StxState];
+    IF   msgIndex >= 0
+    THEN StxErrorMessage := StxErrorTable[msgIndex]
+    ELSE StxErrorMessage := 'Syntax error';
+END;
 
 (*
-	Reconoce una regla y la saca del stack de estados
+   Does a shift operation.  Puts a new state on the top of the stack 
 *)
-FUNCTION StxReduce(sym:integer, regla:integer):BOOLEAN;
-Begin
+FUNCTION StxShift(sym:LongInt; state:integer):BOOLEAN;
+BEGIN
+    IF   pStxStack >= STACK_DEPTH-1
+    THEN StxShift := FALSE
+    ELSE BEGIN
+         pStxStack := pStxStack + 1;
+         sStxStack[pStxStack] := state;
+         StxStack[pStxStack] := StxValue;
+         StxState := state;
+         StxShift := TRUE;
 {$IFDEF DEBUG}
-	writeln('Reduce con regla ', regla, ' con s¡mbolo ', sym);
+         writeln('Shift to ', state, ' with ', sym);
+         StxPrintStack;
 {$ENDIF}
-	if	 Not StxCodigo(regla)
-	then StxReduce := FALSE
-	else Begin
-		 pStxStack := pStxStack - StxTablaGramatica[regla].reducciones;
-		 sStxStack[pStxStack+1] :=
-			StxTablaParser[sStxStack[pStxStack],
-					StxTablaGramatica[regla].simbolo];
-		 pStxStack := pStxStack+1;
-		 StxEstado := sStxStack[pStxStack];
-		 StxReduce := TRUE;
-{$IFDEF DEBUG}
-		 PrintStack;
-{$ENDIF}
-		 End;
-End;
+         END;
+END;
 
 (*
-	Recuperar de un error de sintaxis quitando s¡mbolos del stack
-	y de la cadena.
-	StxRecupera contiene los tokens que sirven de delimitadores de error.
+    Recognizes a rule an removes all its elements from the stack
+*)
+FUNCTION StxReduce(sym:LongInt; rule:integer):BOOLEAN;
+BEGIN
+{$IFDEF DEBUG}
+    writeln('Reduce on rule ', rule, ' with symbol ', sym);
+{$ENDIF}
+    IF   Not StxCode(rule)
+    THEN StxReduce := FALSE
+    ELSE BEGIN
+         pStxStack := pStxStack - StxGrammarTable[rule].reductions;
+         sStxStack[pStxStack+1] :=
+            StxGoto(sStxStack[pStxStack], StxGrammarTable[rule].symbol);
+         pStxStack := pStxStack+1;
+         StxState := sStxStack[pStxStack];
+         StxReduce := TRUE;
+{$IFDEF DEBUG}
+         StxPrintStack;
+{$ENDIF}
+         END;
+END;
+
+(*
+    Recover from a syntax error removing stack states/symbols, and removing
+    input tokens.  The array StxRecover contains the tokens that bound
+    the error 
 *)
 FUNCTION StxRecover: BOOLEAN;
-Var
-	i, acc : integer;
-	encontrado : boolean;
-Begin
-	StxRecover := TRUE;
-	case StxErrorFlag of
-		0, 1, 2: (* tres intentos de recuperaci¢n antes de tirar el symbolo *)
-			Begin
-			if	 StxErrorFlag = 0
-			then begin
-				 if   not StxError(StxEstado, StxSym, pStxStack)
-				 then begin
-					  StxRecover := FALSE;
-					  exit;
-					  end;
-				 end;
+VAR
+    i, acc : INTEGER;
+    found  : BOOLEAN;
+BEGIN
+    StxRecover := TRUE;
+    CASE StxErrorFlag OF
+        0, 1, 2: (* three attempts before dropping the symbol *)
+            BEGIN
+            IF   StxErrorFlag = 0
+            THEN BEGIN
+                 IF   StxError(StxState, StxSym, pStxStack, StxErrorMessage()) = ERROR_FAIL 
+                 THEN BEGIN
+                      StxRecover := FALSE;
+                      EXIT;
+                      END;
+                 END;
 
-			StxErrorFlag := 3; (* Quitar el simbolo *)
+            StxErrorFlag := 3; (* remove the symbol *)
 
-			while pStxStack >= 0
-				begin
-				(* buscar si el estado en el tope del stack tiene
-				   transicion con alguno de los StxRecupera *)
-				encontrado := FALSE;
-				for i:=0 to RECUPERADORES-1
-					begin
-					acc := StxTablaParser[StxEstado, StxRecupera[i]];
-					if	 acc > 0 (* shift valido *)
-					then begin
-						 StxRecover := StxShift(StxRecupera[i], acc);
-						 encontrado := TRUE;
-						 exit;
-						 end;
-					end;
-				if	 not encontrado
-				then begin
+            WHILE pStxStack >= 0 DO
+                BEGIN
+                (* Look if the state on the stack's top has a transition with one of
+                  the recovering elements in StxRecoverTable *)
+                found := FALSE;
+                FOR i:=0 to RECOVERS-1 DO
+                    BEGIN
+                    acc := StxAction(StxState, StxRecoverTable[i]);
+                    IF   acc > 0 (* shift valido *)
+                    THEN BEGIN
+                         StxRecover := StxShift(StxRecoverTable[i], acc);
+                         found := TRUE;
+                         EXIT;
+                         END;
+                    END;
+                IF   NOT found
+                THEN BEGIN
 {$IFDEF DEBUG}
-					 writeln('Recupera quitando estado ', StxEstado,
-							 ' pasa a estado ', sStxStack[pStxStack-1]);
+                     writeln('Recover removing state ', StxState,
+                             ' and go to state ', sStxStack[pStxStack-1]);
 {$ENDIF}
-					 pStxStack := pStxStack - 1;
-					 StxEstado := sStxStack[pStxStack];
-					 end; (*IF*)
-					 pStxStack := 0;
-					 StxRecover := FALSE;
-				end; (*WHILE*)
-			end; (*CASE 0, 1 y 2*)
+                     pStxStack := pStxStack - 1;
+                     StxState := sStxStack[pStxStack];
+                     END; (*IF*)
+                END; (*WHILE*)
+                pStxStack := 0;
+                StxRecover := FALSE;
+            END; (*CASE 0, 1 y 2*)
 
-		3: (* Es necesario tirar el Sym actual *)
-			Begin
+        3: (* I need to drop the current token *)
+            BEGIN
 {$IFDEF DEBUG}
-			writeln('Recupera quitando s¡mbolo ', StxSym);
+            writeln('Recover removing symbol ', StxSym);
 {$ENDIF}
-			if	 StxSym = 0 (* Fin de cadena *)
-			then StxRecover := FALSE;
-			else StxSym := StxScanner;
-			End; (* CASE *)
-	End; (* CASE *)
-End; (* StxRecover *)
+            IF   StxSym = 0 (* End of input string *)
+            THEN StxRecover := FALSE
+            ELSE BEGIN
+                 StxSym := StxLexer;
+                 StxRecover := TRUE;
+                 END;
+            END; (* CASE *)
+    END; (* CASE *)
+END; (* StxRecover *)
 
-(* Rutina principal del parser
-	Usa a Shift, Reduce y Recupera *)
+(*
+    Main parser routine, uses Shift, Reduce and Recover 
+*)
 FUNCTION StxParse: BOOLEAN;
-Begin
-	pStxStack := 0;
-	sStxStack[0] := 0;
-	StxSym := StxScanner;
-	StxEstado := 0;
-	StxErrorFlag := 0;
+VAR
+    action: LongInt;
+BEGIN
+    pStxStack := 0;
+    sStxStack[0] := 0;
+    StxChar := StxNextChar;
+    StxSym := StxLexer;
+    StxState := 0;
+    StxErrorFlag := 0;
 
-	while TRUE do
-		Begin
-		if	 StxTablaParser[StxEstado,StxSym] = 999
-		then Begin
-			 StxParse := TRUE;
-			 Exit;
-			 End;
+    WHILE TRUE do
+        BEGIN
+        action := StxAction(StxState, StxSym);
+        IF   action = ACCEPT
+        THEN BEGIN
+{$IFDEF DEBUG}
+             writeln('Accepted');
+{$ENDIF}
+             StxParse := TRUE;
+             EXIT;
+             END
+        ELSE IF   action > 0
+        THEN BEGIN
+             IF   Not StxShift(StxSym, action)
+             THEN BEGIN
+                  StxParse := FALSE;
+                  EXIT;
+             END;
+             StxSym := StxLexer;
+             IF   StxErrorFlag > 0
+             THEN StxErrorFlag := StxErrorFlag - 1; (* properly recovering from error *)
+             END
+        ELSE IF   action < 0
+        THEN BEGIN
+             IF   Not StxReduce(StxSym, -action)
+             THEN BEGIN
+                  StxParse := FALSE;
+                  EXIT;
+                  END;
+              END
+        ELSE BEGIN (* error *)
+             IF   not StxRecover
+             THEN BEGIN
+                  StxParse := FALSE;
+                  EXIT;
+                  END;
+             END;
+        END; (* while *)
+END;
 
-		if	 StxTablaParser[StxEstado,StxSym] >0
-		then Begin
-			 if   Not StxShift(StxSym, StxTablaParser[StxEstado,StxSym])
-			 then Begin
-				  StxParse := FALSE;
-				  exit;
-				  End;
-			 StxSym := StxScanner;
-			 if   StxErrorFlag > 0
-			 then StxErrorFlag := StxErrorFlag - 1; (* se recupero bien de un error *)
-			 End;
+FUNCTION StxGetResult : TSTACK;
+BEGIN
+    StxGetResult := StxStack[pStxStack];
+END;
 
-		if	 StxTablaParser[StxEstado,StxSym] <0
-		then Begin
-			 if   Not StxReduce(StxSym, -StxTablaParser[StxEstado,StxSym])
-			 then Begin
-				  StxParse := FALSE;
-				  exit;
-				  End;
-			 End;
-
-		if	 StxTablaParser[StxEstado,StxSym] = 0
-		then Begin
-			 if   not StxRecover
-			 then Begin
-				  StxParse := FALSE;
-				  Exit;
-				  End;
-			 End;
-		End;
-End;
-
-(* Fin del parser *)
+(* End of parser *)

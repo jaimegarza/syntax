@@ -33,9 +33,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Stack;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.ParsingException;
@@ -48,6 +45,8 @@ import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.env.Environment;
+
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * Parser for a grammar.<p>
@@ -1525,13 +1524,13 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
    * Found a rule action.  Copy it to the output stream as-is
    * @param ruleNumber the rule index
    * @param elementCount the elements in the rule
-   * @param nonTerminalId the left hand symbol of the rule
+   * @param nonTerminalName the left hand symbol of the rule
    */
-  private boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalId) throws IOException {
+  private boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) throws IOException {
     generateCodeGeneratorHeader();
-    generateCaseStatement(ruleNumber);
+    generateCaseStatement(ruleNumber, nonTerminalName + " -> " + runtimeData.currentRuleItems.toString());
     
-    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalId)) {
+    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName)) {
       return false;
     }
     
@@ -1552,8 +1551,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
    * Output the case for a given rule
    * @param ruleNumber is the rule number to be emitted in the case statement
    */
-  private void generateCaseStatement(int ruleNumber) {
-    environment.language.generateCaseStart(ruleNumber, Integer.toString(ruleNumber + 1));
+  private void generateCaseStatement(int ruleNumber, String comment) {
+    environment.language.generateCaseStart(ruleNumber, Integer.toString(ruleNumber + 1), comment);
   }
 
   /**
@@ -1586,6 +1585,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
   private void generateCodeGeneratorFooter() {
     if (runtimeData.ruleActionCount != 0) {
       environment.language.generateCodeGeneratorFooter();
+    } else {
+      environment.language.generateVoidCodeGenerator();
     }
   }
 
@@ -1649,6 +1650,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
             default:
               environment.output.print("$$");
           }
+        } else {
+          environment.output.print('$');
         }
       }
       environment.output.print(runtimeData.currentCharacter);

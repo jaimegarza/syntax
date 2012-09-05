@@ -56,7 +56,8 @@ public class Fragments_pascal extends ListResourceBundle {
       {Fragments.STXSTACK, "StxStack[pStxStack{0}]"},
       {Fragments.CURRENT_CHAR, "StxChar"},
       {Fragments.LEXICAL_VALUE, "StxValue"},
-      {Fragments.GETC, "StxChar := StxNextChar()"},
+      {Fragments.GETC, "StxChar := StxNextChar"},
+      {Fragments.RETURN_VALUE, "StxLexer := {0}; exit"},
   };
 
 }

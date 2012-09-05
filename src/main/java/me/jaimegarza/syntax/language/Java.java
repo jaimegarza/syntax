@@ -73,9 +73,9 @@ public class Java extends BaseLanguageSupport {
   }
 
   @Override
-  public void generateCaseStart(int lineNumber, String label) {
+  public void generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent() + 1);
-    environment.output.printf("case %s: ", label);
+    environment.output.printf("case %s: // %s", label, comment);
     indent(environment.output, environment.getIndent() + 1);
   }
   
@@ -134,6 +134,25 @@ public class Java extends BaseLanguageSupport {
     environment.output.printf("return 1; // OK\n");
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("}\n");
+  }
+  
+  @Override
+  public void generateVoidCodeGenerator() {
+    environment.output.printf("\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("// Code Generator\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("int stackTop;\n\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("int generateCode(int rule) {\n");
+    indent(environment.output, environment.getIndent() + 1);
+    environment.output.printf("return 1;\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("}\n\n");
   }
 
   @Override
@@ -318,11 +337,11 @@ public class Java extends BaseLanguageSupport {
     for (State I : runtime.getStates()) {
       indent(environment.output, environment.getIndent());
       if (i == runtime.getStates().length - 1) {
-        environment.output.printf(" /* State %3d */ %s  // %s\n", i, I.getMessage(), getErrorMessage(I));
+        environment.output.printf(" /* %3d */ %s  // %s\n", i, I.getMessage(), getErrorMessage(I));
         indent(environment.output, environment.getIndent()-1);
         environment.output.printf("};\n\n");
       } else {
-        environment.output.printf(" /* State %3d */ %s, // %s\n", i, I.getMessage(), getErrorMessage(I));
+        environment.output.printf(" /* %3d */ %s, // %s\n", i, I.getMessage(), getErrorMessage(I));
       }
       i++;
     }
@@ -409,6 +428,8 @@ public class Java extends BaseLanguageSupport {
   @Override
   public void printErrorTableHeader() {
     environment.output.printf("\n");
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("// Error Messages\n");
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("private String errorTable[] = {\n");
   }
@@ -575,24 +596,6 @@ public class Java extends BaseLanguageSupport {
       indent(environment.output, environment.getIndent() - 1);
       environment.output.printf("public static class LexicalValue {\n");
       indent(environment.output, environment.getIndent() - 1);
-      environment.output.printf("}\n\n");
-    }
-    if (runtime.getRules().size() == 0) {
-      /* header */
-      environment.output.printf("\n");
-      indent(environment.output, environment.getIndent());
-      environment.output.printf("// Code Generator\n");
-      indent(environment.output, environment.getIndent());
-      environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
-      indent(environment.output, environment.getIndent());
-      environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
-      indent(environment.output, environment.getIndent());
-      environment.output.printf("int stackTop;\n\n");
-      indent(environment.output, environment.getIndent());
-      environment.output.printf("int generateCode(int rule) {\n");
-      indent(environment.output, environment.getIndent() + 1);
-      environment.output.printf("return 1;\n");
-      indent(environment.output, environment.getIndent());
       environment.output.printf("}\n\n");
     }
   }
