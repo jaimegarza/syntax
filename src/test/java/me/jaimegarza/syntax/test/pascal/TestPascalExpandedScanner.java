@@ -40,7 +40,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestPascalExpandedParser extends AbstractGenerationBase {
+public class TestPascalExpandedScanner extends AbstractGenerationBase {
 
   static final String tabularParserArguments[] = {
       //"-v",
@@ -50,6 +50,8 @@ public class TestPascalExpandedParser extends AbstractGenerationBase {
       "pascal",
       "--packing",
       "tabular",
+      "--driver",
+      "scanner",
       "classpath:pascal-test.sy",
       "${file.language}",
       "${file.include}",
@@ -57,7 +59,7 @@ public class TestPascalExpandedParser extends AbstractGenerationBase {
   };
 
   private static final String languageTabularIncludeChecks[] = {
-    "\\$DEFINE PARSER_MODE",
+    "\\$DEFINE SCANNER_MODE",
     "TOKENS = 18",
     "FINAL = 34",
     "SYMBS = 19",
@@ -86,7 +88,7 @@ public class TestPascalExpandedParser extends AbstractGenerationBase {
 
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp(Language.pascal, "expandedparser");
+    super.setUp(Language.pascal, "expandedscanner");
   }
 
 

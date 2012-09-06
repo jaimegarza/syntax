@@ -24,18 +24,6 @@
 #define STX_ERROR {ErrorFlag = -1; return FALSE;}
 #endif
 
-/* Create generation information if no user code entered */
-#ifndef STXCODE_DEFINED
-int pStxStack;
-TSTACK StxStack[150];
-
-int StxCode(int dummy)
-{
-    return 1;
-}
-#endif
-
-
 /* Global variables */
 TSTACK            StxValue;               /* Scanner OUT value. Intended for scanner writer */
 char              StxChar;                /* The curent character                           */
@@ -114,7 +102,7 @@ char * StxErrorMessage() {
     } else {
       return "Syntax error";
     }
-  }
+}
 
 /*
    Does a shift operation.  Puts a new state on the top of the stack 
@@ -216,17 +204,17 @@ int StxParse(void)
     StxErrorFlag = 0;
     StxErrors = 0;
 
-    while(1) {
+    while(1 == 1) {
         action = StxAction(StxState, StxSym);
-        if(action == 2147483647) {
+        if(action == ACCEPT) {
 #ifdef DEBUG
             printf("Program Accepted\n");
 #endif
-            return 1;
+            return ACCEPTED;
         }
-            
+
         if(action > 0) {
-            if(!StxShift(StxSym, action))
+            if(StxShift(StxSym, action) == 0)
                 return 0;
             StxSym = StxLexer();
             if(StxErrorFlag > 0)

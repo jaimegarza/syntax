@@ -77,7 +77,7 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
       case pascal:
         tmpLanguageFile = createTmpFile(basename + ".pas", "output implementation file");
         tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
-        tmpIncludeFile = createTmpFile("declarations.inc", "include file");
+        tmpIncludeFile = createTmpFile(basename + ".inc", "include file");
         break;
     }
   }

@@ -1,0 +1,20 @@
+name: Syntax Unit Test Suite
+threadCount: 4
+tests:
+  - name: unit-testing
+    excludedGroups: [tdd]
+    classes:
+        - me.jaimegarza.syntax.test.TestBundle
+        - me.jaimegarza.syntax.test.c.TestCExpandedParser
+        - me.jaimegarza.syntax.test.c.TestCExpandedScanner
+        - me.jaimegarza.syntax.test.c.TestCPackedParser
+        - me.jaimegarza.syntax.test.c.TestCPackedScanner
+        - me.jaimegarza.syntax.test.java.TestJavaExpandedParser
+        - me.jaimegarza.syntax.test.java.TestJavaExpandedScanner
+        - me.jaimegarza.syntax.test.java.TestJavaPackedParser
+        - me.jaimegarza.syntax.test.java.TestJavaPackedScanner
+        - me.jaimegarza.syntax.test.pascal.TestPascalExpandedParser
+        - me.jaimegarza.syntax.test.pascal.TestPascalExpandedScanner
+        - me.jaimegarza.syntax.test.pascal.TestPascalPackedParser
+        - me.jaimegarza.syntax.test.pascal.TestPascalPackedScanner
+        - me.jaimegarza.syntax.test.TestExternalCompilers
