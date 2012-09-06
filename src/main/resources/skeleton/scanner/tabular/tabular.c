@@ -4,37 +4,23 @@
    *
    */
 
-/*/        
-
-    C Skeleton Parser for compact tables
+  /* ****************************************************************
+    C Skeleton Parser for matrix tables
 
     This is not a sample program, but rather the parser skeleton
-    top be included in the generated code.
+    to be included in the generated code.
     Modify at your own risk.
 
     Copyright (c), 1985-2012 Jaime Garza
+  ***************************************************************** */
 
-/*/
-
-/* Define this as a packed parser */
-#define STX_PACKED
+/* Define this as a matrix parser */
+#define STX_TABULAR
 
 /* Force an error */
 #ifndef STX_ERROR
 #define STX_ERROR {ErrorFlag = -1; return FALSE;}
 #endif
-
-/* Create generation information if no user code entered */
-#ifndef STXCODE_DEFINED
-int pStxStack;
-TSTACK StxStack[150];
-
-int StxCode(int dummy)
-{
-    return 1;
-}
-#endif
-
 
 /* Global variables */
 TSTACK            StxValue;               /* Scanner OUT value. Intended for scanner writer */
@@ -62,7 +48,7 @@ char * StxToString(TSTACK value);
 int StxAction(int state, int symbol)
 {
     int index = StxGetTokenIndex(symbol);
-    return StxParsingTable[StxState][index];
+    return StxParsingTable[state][index];
 }
 
 /*

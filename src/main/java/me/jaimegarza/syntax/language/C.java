@@ -117,12 +117,14 @@ public class C extends BaseLanguageSupport {
   public void generateLexerHeader() {
     if (environment.getDriver() == Driver.PARSER) {
       environment.include.println("#define PARSER_MODE");
+      environment.include.println("#define ACCEPTED 1");
+      environment.include.println("#define INTERNAL_ERROR 0");;
     } else {
       environment.include.println("#define SCANNER_MODE");
       environment.include.println("#define ACCEPTED 1");
       environment.include.println("#define SHIFTED 2");
       environment.include.println("#define PARSING_ERROR 3");
-      environment.include.println("#define INTERNAL_ERROR 4");;
+      environment.include.println("#define INTERNAL_ERROR 0");;
     }
     if (environment.isPacked()) {
       environment.include.println("#define PACKED_TABLES");
@@ -182,7 +184,9 @@ public class C extends BaseLanguageSupport {
   @Override
   public void generateVoidCodeGenerator() {
     environment.output.printf("\n")
-      .printf("/* Code Generator */\n")
+      .printf("\n")
+      .printf("#define STACK_DEPTH 5000\n")
+      .printf("\n")
       .printf("\n")
       .printf("TSTACK StxStack[STACK_DEPTH];\n")
       .printf("int pStxStack;\n")

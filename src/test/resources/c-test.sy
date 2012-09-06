@@ -214,5 +214,6 @@ int main(char *argv)
     if (StxParse()) {
         printf("Total=%d\n", GetTotal());
     }
+    exit (0);
 }
 #endif

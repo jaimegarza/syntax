@@ -275,10 +275,20 @@ BEGIN
         THEN BEGIN
              IF   Not StxReduce(StxSym, -action)
              THEN BEGIN
-                  StxParse := FALSE;
-                  EXIT;
-                  END;
-              END
+                  IF   StxErrorFlag = -1
+                  THEN BEGIN
+                       IF   NOT StxRecover
+                       THEN BEGIN
+                            StxParse := FALSE;
+                            EXIT;
+                            END;
+                       END
+                  ELSE BEGIN
+                       StxParse := FALSE;
+                       EXIT;
+                       END;
+                  END
+             END
         ELSE BEGIN (* error *)
              IF   not StxRecover
              THEN BEGIN

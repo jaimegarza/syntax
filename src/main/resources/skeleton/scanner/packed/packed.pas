@@ -257,22 +257,35 @@ BEGIN
 END; (* StxRecover *)
 
 (*
-    Main parser routine, uses Shift, Reduce and Recover 
+  Initialize the scanner
 *)
-FUNCTION StxParse: BOOLEAN;
-VAR
-    action: LongInt;
+PROCEDURE StxInit
 BEGIN
     pStxStack := 0;
     sStxStack[0] := 0;
-    StxChar := StxNextChar;
-    StxSym := StxLexer;
     StxState := 0;
-    StxErrorFlag := 0;
+END;
+  
+(*
+    Main parser routine, uses Shift, Reduce and Recover 
+*)
+FUNCTION StxParse(symbol:LONGINT; value:TSTACK): INTEGER;
+VAR
+    action: LongInt;
+BEGIN
+    StxSym := StxGetTokenIndex(symbol);
+    StxValue := value;
 
-    WHILE TRUE do
+{$IFDEF DEBUG}
+        writeln('Starting to parse symbol ', symbol, '(', StxSym,')');
+        StxPrintStack();
+{$ENDIF}
+    WHILE TRUE do (* forever with break and return below *)
         BEGIN
-        action := StxAction(StxState, StxSym);
+        action := StxAction(StxState, symbol);
+{$IFDEF DEBUG}
+        writeln('Action: ', action);
+{$ENDIF}
         IF   action = ACCEPT
         THEN BEGIN
 {$IFDEF DEBUG}
@@ -285,39 +298,58 @@ BEGIN
         THEN BEGIN
              IF   Not StxShift(StxSym, action)
              THEN BEGIN
-                  StxParse := FALSE;
+                  StxParse := INTERNAL_ERROR;
                   EXIT;
              END;
-             StxSym := StxLexer;
-             IF   StxErrorFlag > 0
-             THEN StxErrorFlag := StxErrorFlag - 1; (* properly recovering from error *)
+             StxParse := SHIFTED;
+             EXIT;
              END
         ELSE IF   action < 0
         THEN BEGIN
              IF   Not StxReduce(StxSym, -action)
              THEN BEGIN
-                  IF   StxErrorFlag = -1
-                  THEN BEGIN
-                       IF   NOT StxRecover
-                       THEN BEGIN
-                            StxParse := FALSE;
-                            EXIT;
-                            END;
-                       END
-                  ELSE BEGIN
-                       StxParse := FALSE;
-                       EXIT;
-                       END;
-                  END
-              END
-        ELSE BEGIN (* error *)
-             IF   not StxRecover
-             THEN BEGIN
-                  StxParse := FALSE;
+                  StxParse := INTERNAL_ERROR;
                   EXIT;
                   END;
+              END
+        ELSE BEGIN (* error *)
+             StxParse := PARSING_ERROR;
+             EXIT;
              END;
         END; (* while *)
+END;
+
+(*
+ give me the available actions that can be taken.  I am also returning reduces.
+*)
+FUNCTION StxValidTokens(VAR count:INTEGER) : ARRAY OF INTEGER;
+VAR
+  position: INTEGER;
+  index   : INTEGER;
+  i       : INTEGER;
+  actions : ARRAY OF INTEGER;
+BEGIN
+    position := StxParsingTable[StxState].position;
+
+    SetLength(actions, StxParsingTable[StxState].elements);
+    index := 0;
+{$IFDEF DEBUG}
+    write ('Valid actions:[');
+{$ENDIF}
+    for i := 0 TO StxParsingTable[StxState].elements-1 DO
+        BEGIN
+{$IFDEF DEBUG}
+        if i > 0 then write(', ');
+        write(StxActionTable[position+i].symbol);
+{$ENDIF}
+        actions[index] := StxActionTable[position+i].symbol;
+        index := index + 1;
+        END;
+{$IFDEF DEBUG}
+    writeln (']');
+{$ENDIF}
+    count := StxParsingTable[StxState].elements;
+    StxValidToken := actions;
 END;
 
 FUNCTION StxGetResult : TSTACK;

@@ -158,12 +158,14 @@ public class Pascal extends BaseLanguageSupport {
     environment.include.println("{$MACRO ON}");
     if (environment.getDriver() == Driver.PARSER) {
       environment.include.println("{$DEFINE PARSER_MODE}");
+      environment.include.println("{$DEFINE ACCEPTED:=1}");
+      environment.include.println("{$DEFINE INTERNAL_ERROR:=0}");;
     } else {
       environment.include.println("{$DEFINE SCANNER_MODE}");
       environment.include.println("{$DEFINE ACCEPTED:=1}");
       environment.include.println("{$DEFINE SHIFTED:=2}");
       environment.include.println("{$DEFINE PARSING_ERROR:=3}");
-      environment.include.println("{$DEFINE INTERNAL_ERROR:=4}");;
+      environment.include.println("{$DEFINE INTERNAL_ERROR:=0}");;
     }
     if (environment.isPacked()) {
       environment.include.println("{$DEFINE PACKED_TABLES}");

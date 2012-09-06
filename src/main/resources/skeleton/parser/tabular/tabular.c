@@ -14,25 +14,13 @@
     Copyright (c), 1985-2012 Jaime Garza
   ***************************************************************** */
 
-  /* Define this as a packed parser */
+  /* Define this as a matrix parser */
 #define STX_TABULAR
 
 /* Force an error */
 #ifndef STX_ERROR
 #define STX_ERROR {ErrorFlag = -1; return FALSE;}
 #endif
-
-/* Create generation information if no user code entered */
-#ifndef STXCODE_DEFINED
-int pStxStack;
-TSTACK StxStack[150];
-
-int StxCode(int dummy)
-{
-    return 1;
-}
-#endif
-
 
 /* Global variables */
 TSTACK            StxValue;               /* Scanner OUT value. Intended for scanner writer */
