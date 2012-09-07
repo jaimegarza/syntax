@@ -15,7 +15,7 @@ sub execute # (cmd)
   my $s = `$cmd  2>&1`;
   my $exitCode = $?;
   
-  print "executing command: $command\n";
+  print "executing command: $cmd\n";
   if ($exitCode > 0) 
   {
       print "executing $cmd did exit with code: $exitCode.  Results:

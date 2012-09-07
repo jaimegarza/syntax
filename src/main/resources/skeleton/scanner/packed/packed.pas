@@ -259,7 +259,7 @@ END; (* StxRecover *)
 (*
   Initialize the scanner
 *)
-PROCEDURE StxInit
+PROCEDURE StxInit;
 BEGIN
     pStxStack := 0;
     sStxStack[0] := 0;
@@ -291,7 +291,7 @@ BEGIN
 {$IFDEF DEBUG}
              writeln('Accepted');
 {$ENDIF}
-             StxParse := TRUE;
+             StxParse := ACCEPTED;
              EXIT;
              END
         ELSE IF   action > 0
@@ -319,15 +319,18 @@ BEGIN
         END; (* while *)
 END;
 
+TYPE
+  StxTokenArray = ARRAY OF INTEGER;
+  
 (*
  give me the available actions that can be taken.  I am also returning reduces.
 *)
-FUNCTION StxValidTokens(VAR count:INTEGER) : ARRAY OF INTEGER;
+FUNCTION StxValidTokens(VAR count:INTEGER) : StxTokenArray;
 VAR
   position: INTEGER;
   index   : INTEGER;
   i       : INTEGER;
-  actions : ARRAY OF INTEGER;
+  actions : StxTokenArray;
 BEGIN
     position := StxParsingTable[StxState].position;
 
@@ -349,7 +352,7 @@ BEGIN
     writeln (']');
 {$ENDIF}
     count := StxParsingTable[StxState].elements;
-    StxValidToken := actions;
+    StxValidTokens := actions;
 END;
 
 FUNCTION StxGetResult : TSTACK;
