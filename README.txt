@@ -11,7 +11,7 @@ LR parsers.  Over time I have added:
 - Error messages per %error definition
 - Output for java
 - Output for C
-- Output for Delphi Pascal
+- Output for Free Pascal/Delphi Pascal
 - Translated to JAVA from its 1985 apple basic, and 2006 C codebase.
 - Ability to compile with LALR (yacc) or SLR, more compact and simple,
   albeit a little more restrictive
@@ -31,8 +31,7 @@ I am planning to add in future releases of the 4.0 codebase:
 - Honalee algorithm (low priority)
 - Support the concept of %external for sectional inclusions, 
   encapsulation and reuse.
-- Support for lexic-driven parsers (explained below)
-
+s
 -----------------------------------------------------------------------
 
 LEXICAL-DRIVEN PARSERS
