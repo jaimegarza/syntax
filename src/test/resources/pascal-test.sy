@@ -156,73 +156,77 @@ END;
 TYPE
   PPARAMETER = ^PARAMETER;
   PARAMETER = RECORD
-    token: integer;
+    token: LongInt;
     value: integer;
     result: integer;
   END;
 
 VAR
   parameters: ARRAY[0..13] OF PARAMETER = (
-    ('(', 0, 0),
-    (TOK_NUMBER, 1, 1),
-    ('+', 0, 0),
-    (TOK_NUMBER, 3, 3),
-    (')', 0, 0),
-    ('*', 0, 0),
-    (TOK_NUMBER, 4, 4),
-    ('/', 0, 0),
-    (TOK_NUMBER, 5, 5),
-    ('+', 0, 0),
-    ('-', 0, 0),
-    (TOK_NUMBER, 20, 20),
-    (0, 0, -17),
-    (-1,0,0));
+    (token:ORD('(')  ; value:0; result:0),
+    (token:TOK_NUMBER; value:1; result:1),
+    (token:ORD('+')  ; value:0; result:0),
+    (token:TOK_NUMBER; value:3; result:3),
+    (token:ORD(')')  ; value:0; result:0),
+    (token:ORD('*')  ; value:0; result:0),
+    (token:TOK_NUMBER; value:4; result:4),
+    (token:ORD('/')  ; value:0; result:0),
+    (token:TOK_NUMBER; value:5; result:5),
+    (token:ORD('+')  ; value:0; result:0),
+    (token:ORD('-')  ; value:0; result:0),
+    (token:TOK_NUMBER; value:20;result: 20),
+    (token:0         ; value:0; result:-17),
+    (token:-1        ; value:0; result:0));
 
-FUNCTION arrayContains(array: ARRAY OF INTEGER, value: INTEGER, count: INTEGER): INTEGER 
+FUNCTION arrayContains(tokenArray: StxTokenArray; value: INTEGER; count: INTEGER): BOOLEAN; 
 VAR
     i: INTEGER;
 BEGIN
     FOR i := 0 TO count-1 DO
-        IF  array[i] = value THEN EXIT(1);
-    arrayContains := 0;
+        IF  tokenArray[i] = value THEN EXIT(TRUE);
+    arrayContains := FALSE;
 END;
 
 VAR
-    p: INTEGER
     count : INTEGER;
     t:INTEGER;
     value:TSTACK;
+    validTokens: StxTokenArray;
+    i: INTEGER;
 BEGIN
     
     StxInit;
     
     i := 0;
-    while parameters[i].token != -1 do
-          begin
-          int *tokens = StxValidTokens(&count);
-        IF   !arrayContains(tokens, p->token, count) {
-            printf("Token %d ain't there\n", p->token);
-            exit (1);
-        }
-        value.number = p->value;
-        IF   !StxParse(p->token, value) {
-            printf("Error when parsing symbol %d\n", p->token);
-            exit (1);
-        }
-        t = GetTotal();
-        IF   t != p->result {
-            printf("Result is not %d\n", p->result);
-            exit (1);
-        }
-        p++;
-    }
-    t = GetTotal();
-    printf("Total: %d\n", t);
-    IF   t != -17 {
-        printf("total does not match\n");
-        exit (1);
-     }
-    exit (0);
+    while parameters[i].token <> -1 do
+          BEGIN
+          validTokens := StxValidTokens(count);
+          IF   NOT arrayContains(validTokens, parameters[i].token, count)
+          THEN BEGIN
+               writeln('Token ', parameters[i].token, ' ain''t there');
+               HALT (1);
+               END;
+          value.number := parameters[i].value;
+          IF   StxParse(parameters[i].token, value) = INTERNAL_ERROR
+          THEN BEGIN
+               writeln('Error when parsing symbol ', parameters[i].token);
+               HALT (2);
+               END;
+          t := GetTotal();
+          IF   t <> parameters[i].result
+          THEN BEGIN
+               writeln('Result is not ', parameters[i].result);
+               HALT (3);
+               END;
+          i := i + 1;
+          END;
+    t := GetTotal();
+    writeln('Total=', t);
+    IF   t <> -17 
+    THEN BEGIN
+         writeln('total does not match');
+         HALT (4);
+         END;
 END.
 {$ELSE}
 BEGIN
