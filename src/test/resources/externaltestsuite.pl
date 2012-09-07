@@ -1,4 +1,4 @@
-#! /bin/perl
+#! /usr/bin/perl
 
 testOneFile("expandedparser.c", "c", "gcc");
 testOneFile("packedparser.c", "c", "gcc");

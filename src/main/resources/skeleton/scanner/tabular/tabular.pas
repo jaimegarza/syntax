@@ -313,7 +313,7 @@ VAR
 BEGIN
     c := 0;
     for i := 0 to TOKENS-1 DO
-      if StxParsingTable[StxState][i] <> 0 then c ++;
+      if StxParsingTable[StxState][i] <> 0 then c := c+1;
 
     SetLength(actions, c);
     index := 0;
@@ -334,7 +334,7 @@ BEGIN
     writeln (']');
 {$ENDIF}
     count := c;
-    StxValidToken := actions;
+    StxValidTokens := actions;
 END;
 
 FUNCTION StxGetResult : TSTACK;
