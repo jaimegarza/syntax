@@ -61,7 +61,8 @@ package me.jaimegarza.syntax.algorithm;
  * impractically too large.
  * <p>
  * 
- * TODO: Perhaps add LR and/or Honalee
+ * TODO: P4-Add LR mode
+ * TODO: P5-Add Honalee algorithm
  * 
  * @see {@link me.jaimegarza.syntax.generator.StructuralAnalyzer} for the creation
  *   of follow ups

@@ -34,9 +34,6 @@ import me.jaimegarza.syntax.generator.CodeWriter;
 import me.jaimegarza.syntax.generator.StructuralAnalyzer;
 import me.jaimegarza.syntax.generator.TableGenerator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
  * Main entry point to syntax
  *
@@ -57,7 +54,7 @@ import org.apache.commons.logging.LogFactory;
  * - Eject the output table in a compressed mode (yacc) or a matrix, for readability.
  * - Unlike yacc, the output is properly formated and readable.
  * 
- * TODO: suport the concept of %external to be able to modularize a parser
+ * TODO: P2-suport the concept of %external to be able to modularize a parser
  *       into multiple sub parsers.  The parsers may not be LR.  They can actually
  *       be LR (i.e. JavaCC, antlr).  Or they can be LR as well (Cup, BYacc -j).
  *       LR-LL parser combinations are also called LC (left corner) parsers and
@@ -69,11 +66,11 @@ import org.apache.commons.logging.LogFactory;
  *       <li>Triggering errors (perhaps on exceptions
  *       <li>naming objects with prefixes so that I can link to syntax parsers
  *       </ol>
- * TODO: Include a regular expression mode for tokens (For LEX-like recognition)
+ * TODO: P1-Include a regular expression mode for tokens (For LEX-like recognition)
  *       Lexical actions could then be entered in regex format with a predefined
  *       code structure 
- * TODO: Add maven artifact
- * TODO: Add ant task
+ * TODO: P3-Add maven artifact
+ * TODO: P3-Add ant task
  * 
  * @author jaimegarza@gmail.com
  *
@@ -81,8 +78,6 @@ import org.apache.commons.logging.LogFactory;
 public class Syntax {
 
   private Environment environment;
-
-  public final Log LOG = LogFactory.getLog(this.getClass());
 
   /**
    * Initialize syntax with the environment.
@@ -107,11 +102,14 @@ public class Syntax {
     try {
       executeInternal();
     } catch (AnalysisException e) {
-      LOG.error("Internal error: " + e.getMessage(), e);
+      System.err.println("Internal error: " + e.getMessage());
+      e.printStackTrace(System.err);
     } catch (ParsingException e) {
-      LOG.error("Parsing error: " + e.getMessage(), e);
+      System.err.println("Parsing error: " + e.getMessage());
+      e.printStackTrace(System.err);
     } catch (OutputException e) {
-      LOG.error("Output error: " + e.getMessage(), e);
+      System.err.println("Output error: " + e.getMessage());
+      e.printStackTrace(System.err);
     }
   }
 

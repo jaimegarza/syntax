@@ -29,9 +29,15 @@
 package me.jaimegarza.syntax.env;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
@@ -49,6 +55,7 @@ import me.jaimegarza.syntax.language.BaseLanguageSupport;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.language.LanguageSupport;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
+import me.jaimegarza.syntax.util.PathUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -57,11 +64,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Examines the command line resources and encapsulates the resulting
@@ -69,6 +71,8 @@ import org.apache.commons.logging.LogFactory;
  * <p>
  * In addition to that it offers the private output, report and source
  * fields to use as PrintWriters and BufferedReaders.
+ * 
+ * TODO: P1-Remove external dependencies for ease of integration with build systems
  */
 @SuppressWarnings("unused")
 public class Environment extends Options {
@@ -82,8 +86,6 @@ public class Environment extends Options {
   private static final boolean OPTIONAL_VALUE = true;
   private static final boolean NOT_REQUIRED = false;
   private static final boolean REQUIRED = true;
-
-  private final Log LOG = LogFactory.getLog(this.getClass());
 
   private String relatedTitle;
   private String[] args;
@@ -147,17 +149,20 @@ public class Environment extends Options {
    * close files
    */
   public void release() {
-    if (source != null) {
-      IOUtils.closeQuietly(source);
+    close("source", source);
+    close("output", output);
+    close("include", include);
+    close("report", report);
+  }
+  
+  private void close (String name, Closeable c) {
+    if (c == null) {
+      return;
     }
-    if (output != null) {
-      IOUtils.closeQuietly(output);
-    }
-    if (include != null) {
-      IOUtils.closeQuietly(include);
-    }
-    if (report != null) {
-      IOUtils.closeQuietly(report);
+    try {
+      c.close();
+    } catch (IOException e) {
+      System.out.println(name + " file was not properly closed.  Ignoring.");
     }
   }
   
@@ -494,7 +499,7 @@ public class Environment extends Options {
     if (filename == null) {
       return null;
     }
-    return FilenameUtils.getFullPath(filename) + FilenameUtils.getBaseName(filename) + extension;
+    return PathUtils.getFilePathWithSeparator(filename) + PathUtils.getFileNameNoExtension(filename) + extension;
   }
 
   /**
@@ -511,7 +516,7 @@ public class Environment extends Options {
       this.reportFile = new File(replaceExtension(sourceFile.getPath(), ".txt"));
     }
     try {
-      source = new BufferedReader(new InputStreamReader(FileUtils.openInputStream(sourceFile)));
+      source = new BufferedReader(new InputStreamReader(openFileForRead(sourceFile)));
     } catch (IOException e) {
       throw new ParseException("Cannot open file " + sourceFile);
     }
@@ -530,7 +535,7 @@ public class Environment extends Options {
       }
       this.includeFile = includeFile;
       try {
-        this.include = new FormattingPrintStream(this, FileUtils.openOutputStream(this.includeFile));
+        this.include = new FormattingPrintStream(this, openFileForWrite(this.includeFile));
       } catch (IOException e) {
         throw new ParseException("Cannot open file " + includeFile);
       }
@@ -550,7 +555,7 @@ public class Environment extends Options {
       this.reportFile = reportFile;
     }
     try {
-      this.report = new FormattingPrintStream(this, FileUtils.openOutputStream(this.reportFile));
+      this.report = new FormattingPrintStream(this, openFileForWrite(this.reportFile));
     } catch (IOException e) {
       throw new ParseException("Cannot open file " + reportFile);
     }
@@ -568,7 +573,7 @@ public class Environment extends Options {
     if (outputFile != null) {
       this.outputFile = outputFile;
       try {
-        output = new FormattingPrintStream(this, FileUtils.openOutputStream(outputFile));
+        output = new FormattingPrintStream(this, openFileForWrite(outputFile));
       } catch (IOException e) {
         throw new ParseException("Cannot open file " + outputFile);
       }
@@ -586,6 +591,50 @@ public class Environment extends Options {
     System.err.printf("%s(%05d) : ", sourceFile, line == -1 ? parsedLine + 1 : line);
     System.err.printf(msg + "\n", args);
 
+  }
+  
+  /**
+   * Open a file for reading, if possible
+   * @param file is the file descriptor to be opened
+   * @return the input stream
+   * @throws IOException on error
+   */
+  private InputStream openFileForRead(File file) throws IOException {
+    if (file.exists()) {
+        if (file.isDirectory()) {
+            throw new IOException("File " + file + " is a directory.  Exiting.");
+        }
+        if (file.canRead() == false) {
+            throw new IOException("File " + file + " cannot be opened for reading.  Exiting.");
+        }
+    } else {
+        throw new FileNotFoundException("File " + file + " does not exist. Exiting.");
+    }
+    return new FileInputStream(file);
+  }
+  /**
+   * Open a file for writing, destroying the contents, if possible
+   * @param file is the file descriptor to be opened
+   * @return the output stream
+   * @throws IOException on error
+   */
+  private OutputStream openFileForWrite(File file) throws IOException {
+    if (file.exists()) {
+        if (file.isDirectory()) {
+            throw new IOException("File " + file + " is a directory.  Exiting.");
+        }
+        if (file.canWrite() == false) {
+            throw new IOException("File " + file + " cannot be opened for writing.  Exiting.");
+        }
+    } else {
+      File parent = file.getParentFile();
+      if (parent != null) {
+          if (!parent.mkdirs() && !parent.isDirectory()) {
+              throw new IOException("Directory " + parent + " cannot be created. Exiting.");
+          }
+      }
+    }
+    return new FileOutputStream(file, false);
   }
 
   /**

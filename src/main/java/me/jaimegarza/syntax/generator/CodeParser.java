@@ -45,12 +45,11 @@ import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.env.Environment;
-
-import org.apache.commons.io.FilenameUtils;
+import me.jaimegarza.syntax.util.PathUtils;
 
 /**
  * Parser for a grammar.<p>
- * TODO: This parser will be replaced for a generated one (which
+ * TODO: P1-This parser will be replaced for a generated one (which
  * probably will be created from this one)
  *
  * Phases:
@@ -1629,11 +1628,11 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
           switch (runtimeData.currentCharacter) {
             case 'b':
               getCharacter();
-              environment.output.print(FilenameUtils.getBaseName(environment.getOutputFile().getAbsolutePath()));
+              environment.output.print(PathUtils.getFileNameNoExtension(environment.getOutputFile().getAbsolutePath()));
               break;
             case 'n':
               getCharacter();
-              environment.output.print(FilenameUtils.getName(environment.getOutputFile().getAbsolutePath()));
+              environment.output.print(PathUtils.getFileName(environment.getOutputFile().getAbsolutePath()));
               break;
             case 'f':
               getCharacter();
@@ -1641,11 +1640,11 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
               break;
             case 'e':
               getCharacter();
-              environment.output.print(FilenameUtils.getExtension(environment.getOutputFile().getAbsolutePath()));
+              environment.output.print(PathUtils.getFileExtension(environment.getOutputFile().getAbsolutePath()));
               break;
             case 'p':
               getCharacter();
-              environment.output.print(FilenameUtils.getPath(environment.getOutputFile().getAbsolutePath()));
+              environment.output.print(PathUtils.getFilePath(environment.getOutputFile().getAbsolutePath()));
               break;
             default:
               environment.output.print("$$");
