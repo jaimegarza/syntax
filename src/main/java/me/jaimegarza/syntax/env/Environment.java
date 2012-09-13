@@ -57,14 +57,6 @@ import me.jaimegarza.syntax.language.LanguageSupport;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 import me.jaimegarza.syntax.util.PathUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
 /**
  * Examines the command line resources and encapsulates the resulting
  * options in getter methods.
@@ -75,7 +67,7 @@ import org.apache.commons.cli.ParseException;
  * TODO: P1-Remove external dependencies for ease of integration with build systems
  */
 @SuppressWarnings("unused")
-public class Environment extends Options {
+public class Environment {
   private static final String CLASSPATH_PREFIX = "classpath:";
 
   private static final long serialVersionUID = -4212115971332112220L;
@@ -179,9 +171,8 @@ public class Environment extends Options {
    * Parse the command line arguments
    */
   private void parse() {
-    CommandLineParser parser = new GnuParser();
     try {
-      cmd = parser.parse(this, args);
+      cmd.parse();
       if (getHelp()) {
         printHelp();
         System.exit(0);
@@ -196,12 +187,12 @@ public class Environment extends Options {
       setPacking();
       setExternalInclude();
       setDriver();
-      this.fileNames = cmd.getArgList();
+      this.fileNames = cmd.getParameters();
       setSourceFile();
       setOutputFile();
       setIncludeFile();
       setReportFile();
-    } catch (ParseException e) {
+    } catch (CommandLineParseException e) {
       System.out.println("Command line error: " + e.getMessage());
       printHelp();
       System.exit(1);
@@ -220,18 +211,16 @@ public class Environment extends Options {
    * @param argName the argument name when it has an arg, for the help
    */
   private void add(String shortOption, String longOption, boolean hasArg, boolean isValueOptional, boolean isRequired,
-      String description, String argName) {
-    Option option = new Option(shortOption, longOption, hasArg, description);
-    option.setOptionalArg(isValueOptional);
-    option.setRequired(isRequired);
-    option.setArgName(argName);
-    addOption(option);
+      String description, String name) {
+    CommandLineOption option = new CommandLineOption(shortOption, longOption, hasArg, isRequired, description, name);
+    cmd.addOption(option);
   }
 
   /**
    * initialize the compilation options.
    */
   private void init() {
+    cmd = new CommandLine(args);
     add("h", "help", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "displays the usage of the tool", "");
     add("l", "language", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Setup the syntax and output to be either java|c|pascal, default c", "language");
@@ -259,10 +248,11 @@ public class Environment extends Options {
    * Check to see if an option is present
    * @param option the option by string
    * @return true if provided
+   * @throws CommandLineParseException on error
    */
-  private boolean has(String option) {
+  private boolean has(String option) throws CommandLineParseException {
     if (cmd != null) {
-      return cmd.hasOption(option);
+      return cmd.hasFlag(option);
     }
     return false;
   }
@@ -272,8 +262,9 @@ public class Environment extends Options {
    * @param option the option by string
    * @param defaultValue is the value returned if option not given
    * @return the option value
+   * @throws CommandLineParseException 
    */
-  private String get(String option, String defaultValue) {
+  private String get(String option, String defaultValue) throws CommandLineParseException {
     if (cmd != null) {
       return cmd.getOptionValue(option, defaultValue);
     }
@@ -282,16 +273,17 @@ public class Environment extends Options {
 
   /**
    * @return true if help is requested
+   * @throws CommandLineParseException on error
    */
-  private boolean getHelp() {
+  private boolean getHelp() throws CommandLineParseException {
     return has("h");
   }
 
   /**
    * compute the language from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setLanguage() throws ParseException {
+  private void setLanguage() throws CommandLineParseException {
     String value = get("l", "c");
     for (Language l: Language.values()) {
       if (l.support().getId().equalsIgnoreCase(value) ||
@@ -301,11 +293,11 @@ public class Environment extends Options {
       }
     }
     if (this.languageEnum == null) {
-      throw new ParseException("Option -a|--algorithm is not valid :" + value);
+      throw new CommandLineParseException("Option -a|--algorithm is not valid :" + value);
     }
     this.language = this.languageEnum.support();
     if (this.language == null) {
-      throw new ParseException("language " + value + " was no instantiated.");
+      throw new CommandLineParseException("language " + value + " was no instantiated.");
     }
     ((BaseLanguageSupport) this.language).setEnvironment(this);
     this.locale = new Locale(language.getLanguageCode());
@@ -315,9 +307,9 @@ public class Environment extends Options {
 
   /**
    * compute the algorithm from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setAlgorithm() throws ParseException {
+  private void setAlgorithm() throws CommandLineParseException {
     String value = get("a", "l");
     if (value.equalsIgnoreCase("s") || value.equalsIgnoreCase("slr")) {
       this.algorithmEnum = Algorithm.SLR;
@@ -326,31 +318,31 @@ public class Environment extends Options {
       this.algorithmEnum = Algorithm.LALR;
       this.algorithm = new LalrAlgorithmicSupport(this);
     } else {
-      throw new ParseException("Option -a|--algorithm is not valid :" + value);
+      throw new CommandLineParseException("Option -a|--algorithm is not valid :" + value);
     }
   }
 
   /**
    * compute the packed/unpacked nature of table from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
 
-  private void setPacking() throws ParseException {
+  private void setPacking() throws CommandLineParseException {
     String value = get("p", "p");
     if (value.equalsIgnoreCase("p") || value.equalsIgnoreCase("packed")) {
       this.packed = true;
     } else if (value.equalsIgnoreCase("t") || value.equalsIgnoreCase("tabular")) {
       this.packed = false;
     } else {
-      throw new ParseException("Option -p|--packing is not valid :" + value);
+      throw new CommandLineParseException("Option -p|--packing is not valid :" + value);
     }
   }
 
   /**
    * compute the external file requirements from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setExternalInclude() throws ParseException {
+  private void setExternalInclude() throws CommandLineParseException {
     String value = get("x", Boolean.toString(language.getDefaultIncludeFlag()));
     if (value.equalsIgnoreCase("true") ||
         value.equalsIgnoreCase("yes") ||
@@ -363,79 +355,79 @@ public class Environment extends Options {
                  value.equalsIgnoreCase("0")) {
       this.externalInclude = false;
     } else {
-      throw new ParseException("Option -x|--external is not valid :" + value);
+      throw new CommandLineParseException("Option -x|--external is not valid :" + value);
     }
   }
 
   /**
    * compute the driver to be used
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setDriver() throws ParseException {
+  private void setDriver() throws CommandLineParseException {
     String value = get("d", "parser");
     if (value.equalsIgnoreCase("p") || value.equalsIgnoreCase("parser")) {
       this.driver = Driver.PARSER;
     } else if (value.equalsIgnoreCase("s") || value.equalsIgnoreCase("scanner")) {
       this.driver = Driver.SCANNER;
     } else {
-      throw new ParseException("Option -d|--driver is not valid :" + value);
+      throw new CommandLineParseException("Option -d|--driver is not valid :" + value);
     }
   }
 
   /**
    * compute the verbosity from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setVerbose() throws ParseException {
+  private void setVerbose() throws CommandLineParseException {
     this.verbose = has("v");
   }
 
   /**
    * compute the debugging output from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setDebug() throws ParseException {
+  private void setDebug() throws CommandLineParseException {
     this.debug = has("g");
   }
 
   /**
    * compute the need to output #line on C files from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setEmitLine() throws ParseException {
+  private void setEmitLine() throws CommandLineParseException {
     this.emitLine = !has("n");
   }
 
   /**
    * compute the margin from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setMargin() throws ParseException {
+  private void setMargin() throws CommandLineParseException {
     int value = 0;
     try {
       value = Integer.parseInt(get("m", "8000"));
     } catch (NumberFormatException e) {
-      throw new ParseException("Option -m|--margin is not valid :" + value);
+      throw new CommandLineParseException("Option -m|--margin is not valid :" + value);
     }
     if (value <= 80) {
-      throw new ParseException("Option -m|--margin should be greater than 80 :" + value);
+      throw new CommandLineParseException("Option -m|--margin should be greater than 80 :" + value);
     }
     this.margin = value;
   }
 
   /**
    * compute the indentation from options
-   * @throws ParseException if the option cannot be computed
+   * @throws CommandLineParseException if the option cannot be computed
    */
-  private void setIndent() throws ParseException {
+  private void setIndent() throws CommandLineParseException {
     int value = 0;
     try {
       value = Integer.parseInt(get("i", "2"));
     } catch (NumberFormatException e) {
-      throw new ParseException("Option -i|--indent is not valid :" + value);
+      throw new CommandLineParseException("Option -i|--indent is not valid :" + value);
     }
     if (value < 2) {
-      throw new ParseException("Option -m|--margin should be greater than 2 :" + value);
+      throw new CommandLineParseException("Option -m|--margin should be greater than 2 :" + value);
     }
     this.indent = value;
   }
@@ -444,8 +436,7 @@ public class Environment extends Options {
    * print the usage of the program
    */
   private void printHelp() {
-    HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp("Syntax [options] filename.sy", this);
+    cmd.usage("java -jar syntax-<version-num>-bin.jar [options] filename.sy\noptions:\n");
   }
 
   /**
@@ -466,12 +457,12 @@ public class Environment extends Options {
    * @param isRequired if it has to be there
    * @param argumentName the name of the option
    * @return the file
-   * @throws ParseException if the option cannot be read
+   * @throws CommandLineParseException if the option cannot be read
    */
-  private File getFile(int index, boolean isRequired, String argumentName) throws ParseException {
+  private File getFile(int index, boolean isRequired, String argumentName) throws CommandLineParseException {
     if (index >= fileNames.size()) {
       if (isRequired) {
-        throw new ParseException("filename for  " + argumentName + "was not provided");
+        throw new CommandLineParseException("filename for  " + argumentName + "was not provided");
       }
       return null;
     }
@@ -504,9 +495,9 @@ public class Environment extends Options {
 
   /**
    * Compute the source file
-   * @throws ParseException if the source file cannot be computed
+   * @throws CommandLineParseException if the source file cannot be computed
    */
-  private void setSourceFile() throws ParseException {
+  private void setSourceFile() throws CommandLineParseException {
     this.sourceFile = getFile(0, true, "source file");
     if (sourceFile != null) {
       this.outputFile = new File(replaceExtension(sourceFile.getPath(), language.getExtensionSuffix()));
@@ -518,15 +509,15 @@ public class Environment extends Options {
     try {
       source = new BufferedReader(new InputStreamReader(openFileForRead(sourceFile)));
     } catch (IOException e) {
-      throw new ParseException("Cannot open file " + sourceFile);
+      throw new CommandLineParseException("Cannot open file " + sourceFile);
     }
   }
 
   /**
    * Compute the report file
-   * @throws ParseException if the report file cannot be computed
+   * @throws CommandLineParseException if the report file cannot be computed
    */
-  private void setIncludeFile() throws ParseException {
+  private void setIncludeFile() throws CommandLineParseException {
     this.include = this.output;
     if (externalInclude) {
       File includeFile = getFile(2, false, "include file");
@@ -537,16 +528,16 @@ public class Environment extends Options {
       try {
         this.include = new FormattingPrintStream(this, openFileForWrite(this.includeFile));
       } catch (IOException e) {
-        throw new ParseException("Cannot open file " + includeFile);
+        throw new CommandLineParseException("Cannot open file " + includeFile);
       }
     }
   }
 
   /**
    * Compute the report file
-   * @throws ParseException if the report file cannot be computed
+   * @throws CommandLineParseException if the report file cannot be computed
    */
-  private void setReportFile() throws ParseException {
+  private void setReportFile() throws CommandLineParseException {
     File reportFile = getFile(3, false, "report file");
     if (reportFile == null) {
       reportFile = new File(replaceExtension(outputFile.getAbsolutePath(), ".txt"));
@@ -557,15 +548,15 @@ public class Environment extends Options {
     try {
       this.report = new FormattingPrintStream(this, openFileForWrite(this.reportFile));
     } catch (IOException e) {
-      throw new ParseException("Cannot open file " + reportFile);
+      throw new CommandLineParseException("Cannot open file " + reportFile);
     }
   }
 
   /**
    * Compute the output file
-   * @throws ParseException if the output file cannot be computed
+   * @throws CommandLineParseException if the output file cannot be computed
    */
-  private void setOutputFile() throws ParseException {
+  private void setOutputFile() throws CommandLineParseException {
     File outputFile = getFile(1, false, "output file");
     if (outputFile == null) {
       outputFile = new File(replaceExtension(sourceFile.getAbsolutePath(), language.getExtensionSuffix()));
@@ -575,7 +566,7 @@ public class Environment extends Options {
       try {
         output = new FormattingPrintStream(this, openFileForWrite(outputFile));
       } catch (IOException e) {
-        throw new ParseException("Cannot open file " + outputFile);
+        throw new CommandLineParseException("Cannot open file " + outputFile);
       }
 
     }

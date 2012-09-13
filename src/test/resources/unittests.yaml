@@ -5,6 +5,7 @@ tests:
     excludedGroups: [tdd]
     classes:
         - me.jaimegarza.syntax.test.TestBundle
+        - me.jaimegarza.syntax.test.TestCommandLine
         - me.jaimegarza.syntax.test.c.TestCExpandedParser
         - me.jaimegarza.syntax.test.c.TestCExpandedScanner
         - me.jaimegarza.syntax.test.c.TestCPackedParser
