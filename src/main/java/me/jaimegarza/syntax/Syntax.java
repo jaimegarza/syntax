@@ -69,8 +69,8 @@ import me.jaimegarza.syntax.generator.TableGenerator;
  * TODO: P1-Include a regular expression mode for tokens (For LEX-like recognition)
  *       Lexical actions could then be entered in regex format with a predefined
  *       code structure 
- * TODO: P3-Add maven artifact
- * TODO: P3-Add ant task
+ * TODO: P1-Add maven artifact.  This way I acn compile syntax with syntax
+ * TODO: P5-Add ant task
  * 
  * @author jaimegarza@gmail.com
  *

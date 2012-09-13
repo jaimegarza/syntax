@@ -64,7 +64,6 @@ import me.jaimegarza.syntax.util.PathUtils;
  * In addition to that it offers the private output, report and source
  * fields to use as PrintWriters and BufferedReaders.
  * 
- * TODO: P1-Remove external dependencies for ease of integration with build systems
  */
 @SuppressWarnings("unused")
 public class Environment {
