@@ -784,7 +784,8 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     }
     NonTerminal nonTerminal = runtimeData.findNonTerminalByName(name);
     if (nonTerminal == null) {
-      runtimeData.getNonTerminals().add(new NonTerminal(name));
+      nonTerminal = new NonTerminal(name);
+      runtimeData.getNonTerminals().add(nonTerminal);
     } else {
       nonTerminal.setCount(nonTerminal.getCount() - 1);
     }
