@@ -90,8 +90,7 @@ public class Environment {
   private int indent;
   private boolean packed;
   private boolean externalInclude;
-  @SuppressWarnings("rawtypes")
-  private List fileNames;
+  private List<String> fileNames;
   private File sourceFile;
   private File outputFile;
   private File includeFile;
