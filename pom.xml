@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>me.jaimegarza</groupId>
   <artifactId>syntax</artifactId>
-  <version>4.0.0</version>
+  <version>4.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <!-- needed for Sonatype OSS repository https://oss.sonatype.org -->
