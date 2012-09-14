@@ -30,11 +30,7 @@ package me.jaimegarza.syntax.generator;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Stack;
 
-import me.jaimegarza.syntax.EmbeddedCodeProcessor;
-import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.ErrorToken;
@@ -45,7 +41,6 @@ import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.env.Environment;
-import me.jaimegarza.syntax.util.PathUtils;
 
 /**
  * Parser for a grammar.<p>
@@ -63,43 +58,42 @@ import me.jaimegarza.syntax.util.PathUtils;
  * @author jaimegarza@gmail.com
  *
  */
-public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProcessor {
-  private static final String DISTINGUISHED_SYMBOL_NAME = "$start";
-  private static final int TOK_MARCA = 256;
+public class CodeParser extends AbstractCodeParser {
+  static final int TOK_MARCA = 256;
   private static final int TOK_START = 257;
-  private static final int TOK_TOKEN = 258;
+  static final int TOK_TOKEN = 258;
   private static final int TOK_TYPE = 259;
-  private static final int TOK_UNION = 260;
-  private static final int TOK_TYPENAME = 261;
-  private static final int TOK_TERM = 262;
-  private static final int TOK_LEFT = 263;
-  private static final int TOK_RIGHT = 264;
-  private static final int TOK_BINARY = 265;
-  private static final int TOK_ERRDEF = 266;
-  private static final int TOK_NUM = 267;
-  private static final int TOK_PREC = 268;
-  private static final int TOK_NAME = 269;
-  private static final int TOK_ERROR = 270;
+  static final int TOK_UNION = 260;
+  static final int TOK_TYPENAME = 261;
+  static final int TOK_TERM = 262;
+  static final int TOK_LEFT = 263;
+  static final int TOK_RIGHT = 264;
+  static final int TOK_BINARY = 265;
+  static final int TOK_ERRDEF = 266;
+  static final int TOK_NUM = 267;
+  static final int TOK_PREC = 268;
+  static final int TOK_NAME = 269;
+  static final int TOK_ERROR = 270;
   private static final int TOK_LEXER = 271;
-  private static final int TOK_RX_PIPE = 272;
-  private static final int TOK_RX_LPAR = 273;
-  private static final int TOK_RX_RPAR = 274;
-  private static final int TOK_RX_STAR = 275;
-  private static final int TOK_RX_PLUS = 276;
-  private static final int TOK_RX_HUH = 277;
-  private static final int TOK_RX_ANY = 278;
+  static final int TOK_RX_PIPE = 272;
+  static final int TOK_RX_LPAR = 273;
+  static final int TOK_RX_RPAR = 274;
+  static final int TOK_RX_STAR = 275;
+  static final int TOK_RX_PLUS = 276;
+  static final int TOK_RX_HUH = 277;
+  static final int TOK_RX_ANY = 278;
   @SuppressWarnings("unused")
   private static final int TOK_RX_CHARS = 279;
   @SuppressWarnings("unused")
   private static final int TOK_LEXCODE = 280;
-  private static final int TOK_CHARS = 281;
+  static final int TOK_CHARS = 281;
 
-  private static final String tokenNames[] = { "TOK_MARCA", "TOK_START", "TOK_TOKEN", "TOK_TYPE", "TOK_UNION",
+  static final String tokenNames[] = { "TOK_MARCA", "TOK_START", "TOK_TOKEN", "TOK_TYPE", "TOK_UNION",
       "TOK_TYPENAME", "TOK_TERM", "TOK_LEFT", "TOK_RIGHT", "TOK_BINARY", "TOK_ERRDEF", "TOK_NUM", "TOK_PREC",
       "TOK_NAME", "TOK_ERROR", "TOK_LEXER", "TOK_RX_PIPE", "TOK_RX_LPAR", "TOK_RX_RPAR", "TOK_RX_STAR", "TOK_RX_PLUS",
       "TOK_RX_HUH", "TOK_RX_ANY", "TOK_RX_CHARS", "TOK_LEXCODE", "TOK_CHARS" };
 
-  private static final ReservedWord RWord[] = { new ReservedWord("token", TOK_TERM),
+  static final ReservedWord RWord[] = { new ReservedWord("token", TOK_TERM),
       new ReservedWord("term", TOK_TERM), new ReservedWord("left", TOK_LEFT), new ReservedWord("nonassoc", TOK_BINARY),
       new ReservedWord("binary", TOK_BINARY), new ReservedWord("right", TOK_RIGHT), new ReservedWord("prec", TOK_PREC),
       new ReservedWord("start", TOK_START), new ReservedWord("type", TOK_TYPE), new ReservedWord("union", TOK_UNION),
@@ -138,7 +132,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       new ParserGoTo(-1, 40), new ParserGoTo(87, 94), new ParserGoTo(-1, 81), new ParserGoTo(59, 73),
       new ParserGoTo(-1, 60), new ParserGoTo(-1, 62) };
 
-  private static final Parser StxParsingTable[] = { new Parser(0, -3, 13, 0), new Parser(13, 0, 1, -1),
+  static final Parser StxParsingTable[] = { new Parser(0, -3, 13, 0), new Parser(13, 0, 1, -1),
       new Parser(0, -1, 13, 0), new Parser(14, 0, 1, 1), new Parser(15, -8, 0, -1), new Parser(15, -9, 0, -1),
       new Parser(15, 0, 1, 2), new Parser(16, 0, 1, 2), new Parser(17, 0, 1, 3), new Parser(18, 0, 1, 2),
       new Parser(15, -14, 0, -1), new Parser(19, -54, 1, 3), new Parser(15, -16, 0, -1), new Parser(20, 0, 1, 4),
@@ -166,7 +160,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       new Parser(15, -46, 0, -1), new Parser(15, -47, 0, -1), new Parser(70, 0, 5, 14), new Parser(15, -43, 0, -1),
       new Parser(15, -49, 0, -1) };
 
-  private static final String StxErrorTable[] = { "Expecting a declaration", "'%%' expected", "Token expected",
+  static final String StxErrorTable[] = { "Expecting a declaration", "'%%' expected", "Token expected",
       "Type definition expected", "= expected", "Token or Comma expected", "Colon expected", "Expecting code section",
       "Expecting a token definition", "Number expected", "Token, '%prec' or = expected",
       "Semicolon or Rule separator ('|') expected", "Expecting token, precedence declaration or '='",
@@ -196,39 +190,14 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
   private static int MIN_STACK = 150;
   private static int INCR_STACK = 150;
   
-  // Lexer
-  private Stack<Character> inputChars = new Stack<Character>();
-
-
-  private StackElement StxValue = null;
+  StackElement StxValue = null;
   private int sStxStack[] = new int[MIN_STACK];
   private int pStxStack = 0;
   private StackElement[] StxStack = new StackElement[MIN_STACK];
   private int StxSym = 0;
   private int StxState = 0;
-  private int StxErrors = 0;
+  int StxErrors = 0;
   private int StxErrorFlag = 0;
-  private boolean bActionDone = false;
-  private int currentRuleIndex;
-  private Type currentType;
-
-  private int markers = 0;
-  private boolean isCurlyBrace;
-  private boolean isEqual;
-  private boolean isError;
-  private boolean isRegex;
-  private int tokenNumber;
-  private String currentNonTerminalName;
-  private boolean mustClose;
-  private boolean finalActions;
-  private boolean isErrorToken;
-  private Associativity ruleAssociativity;
-  private int rulePrecedence;
-  private int tokenActionCount;
-  private int actLine;
-  private boolean isFirstToken = true;
-  private int numberOfErrorTokens;
-
   public CodeParser(Environment environment) {
     super(environment);
   }
@@ -698,7 +667,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
   /**
    * Main parser routine, uses Shift, Reduce and Recover
    */
-  private boolean StxParse() throws IOException {
+  boolean StxParse() throws IOException {
     int action;
 
     pStxStack = 0;
@@ -744,276 +713,83 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
   }
 
   /**
-   * Declare one non terminal in the symbol table
-   * @param typeName the desired type
-   * @param name the name of the symbol
+   * Found a rule action.  Copy it to the output stream as-is
+   * @param ruleNumber the rule index
+   * @param elementCount the elements in the rule
+   * @param nonTerminalName the left hand symbol of the rule
    */
-  private boolean declareOneNonTerminal(String typeName, String name) {
-    if (runtimeData.findTerminalByName(name) != null) {
-      environment.error(-1, "Token \'%s\' cannot appear on a %%type clause.", name);
+  private boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) throws IOException {
+    generateCodeGeneratorHeader();
+    generateCaseStatement(ruleNumber, nonTerminalName + " -> " + runtimeData.currentRuleItems.toString());
+    
+    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName)) {
       return false;
     }
-    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(name);
-    if (nonTerminal == null) {
-      nonTerminal = new NonTerminal(name);
-      runtimeData.getNonTerminals().add(nonTerminal);
-    } else {
-      nonTerminal.setCount(nonTerminal.getCount() - 1);
-    }
-    Type type = new Type(typeName);
-    if (runtimeData.getTypes().contains(type)) {
-      type = runtimeData.getTypes().get(runtimeData.getTypes().indexOf(type));
-    } else {
-      runtimeData.getTypes().add(type);
-    }
-    type.addUsage(nonTerminal);
-    nonTerminal.setType(type);
+    
+    generateCaseEnd();
+    runtimeData.ruleActionCount++;
+    
     return true;
   }
 
   /**
-   * Change the display name of a non terminal
-   * @param name
-   * @param fullName
-   * @return
+   * Get next token
+   * 
+   * @return the next token, changing mode as needed
    */
-  private boolean nameOneNonTerminal(String name, String fullName) {
-    if (runtimeData.findTerminalByName(name) != null) {
-      environment.error(-1, "Token \'%s\' cannot appear on a %%name clause.", name);
-      return false;
-    }
-    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(name);
-    if (nonTerminal == null) {
-      nonTerminal = new NonTerminal(name);
-      runtimeData.getNonTerminals().add(nonTerminal);
-    } else {
-      nonTerminal.setCount(nonTerminal.getCount() - 1);
-    }
-    nonTerminal.setFullName(fullName);
-    return true;
-  }
-
-  /**
-   * This routine places the non terminal left hand of a rule
-   * @param name is the non terminal's name
-   * @return
-   */
-  private boolean setLeftHandOfLastRule(String name) {
-    if (runtimeData.findTerminalByName(name) != null) {
-      environment.error(-1, "The token \'%s\' cannot appear to the right of a rule.", name);
-      return false;
-    }
-    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(name);
-    if (nonTerminal == null) {
-      runtimeData.getNonTerminals().add(new NonTerminal(name));
-    } else {
-      nonTerminal.setCount(nonTerminal.getCount() - 1);
-    }
-    nonTerminal.setPrecedence(1); /* usado como no terminal */
-    for (int i = currentRuleIndex; i < runtimeData.getRules().size(); i++) {
-      Rule rule = runtimeData.getRules().get(i);
-      if (rule.getLeftHand() == null) {
-        rule.setLeftHand(nonTerminal);
-      }
-    }
-    bActionDone = false;
-    return true;
-  }
-
-  /**
-   * Use the character stream to decode one character from octal<p>
-   * for instance '\017'
-   * @return the octal entered character
-   */
-  private char decodeOctal() throws IOException {
-    int iCount = 3;
-    char c2 = 0;
-
-    while (iCount != 0) {
-      c2 *= 8;
-
-      if (runtimeData.currentCharacter >= '0' && runtimeData.currentCharacter <= '7') {
-        c2 += runtimeData.currentCharacter - '0';
-        getCharacter();
-      } else if (runtimeData.currentCharacter == '\0') {
-        return c2;
-      } else {
-        break;
-      }
-
-      iCount--;
-    }
-
-    return c2;
-  }
-
-  /**
-   * Use the character stream to decode a control char<p>
-   * \a - \z
-   * @return the control char
-   */
-  private char decodeControlChar() throws IOException {
-    char c2;
-    getCharacter();
-
-    if (runtimeData.currentCharacter == '\0') {
-      return '\0';
-    }
-
-    if (runtimeData.currentCharacter >= 'a' && runtimeData.currentCharacter <= 'z') {
-      c2 = runtimeData.currentCharacter;
-      getCharacter();
-      return (char) (c2 - ('a' - 1));
-    } else if (runtimeData.currentCharacter >= 'A' && runtimeData.currentCharacter <= 'Z') {
-      c2 = runtimeData.currentCharacter;
-      getCharacter();
-      return (char) (c2 - ('A' - 1));
-    } else {
-      return 'c' - 'a';
-    }
-  }
-
-  /**
-   * Use the character stream to decode a character entered with hex codes<P>
-   * for instance \x1f
-   * @return the character
-   */
-  private char decodeHex() throws IOException {
-    int iCount = 2;
-    char c2 = 0;
-
-    getCharacter();
-
-    while (iCount != 0) {
-      c2 *= 16;
-
-      if (runtimeData.currentCharacter >= '0' && runtimeData.currentCharacter <= '9') {
-        c2 += runtimeData.currentCharacter - '0';
-      } else if (runtimeData.currentCharacter >= 'a' && runtimeData.currentCharacter <= 'f') {
-        c2 += 10 + (runtimeData.currentCharacter - 'a');
-      } else if (runtimeData.currentCharacter >= 'A' && runtimeData.currentCharacter <= 'F') {
-        c2 += 10 + (runtimeData.currentCharacter - 'A');
-      } else if (runtimeData.currentCharacter == '\0') {
-        return '\0';
-      } else {
-        return 'x' - 'a';
-      }
-
-      iCount--;
-    }
-
-    return c2;
-  }
-
-  /**
-   * Use the character stream to decode the next escaped character
-   * (i.e. hex, octal, control)
-   * @return the encoded character
-   * @throws IOException
-   */
-  private char decodeEscape() throws IOException {
-    char c2;
-    switch (runtimeData.currentCharacter) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-        return decodeOctal();
-      case 'a':
-        getCharacter();
-        return 7;
-      case 'b':
-        getCharacter();
-        return '\b';
-      case 'c':
-        getCharacter();
-        return decodeControlChar();
-      case 'e':
-        getCharacter();
-        return '\\';
-      case 'f':
-        getCharacter();
-        return '\f';
-      case 'n':
-        getCharacter();
-        return '\n';
-      case 'r':
-        getCharacter();
-        return '\r';
-      case 't':
-        getCharacter();
-        return '\t';
-      case 'v':
-        getCharacter();
-        return 11;
-      case 'x':
-        getCharacter();
-        return decodeHex();
-      default:
-        c2 = runtimeData.currentCharacter;
-        getCharacter();
-        return c2;
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.Lexer#getCharacter()
-   */
-  @Override
-  public char getCharacter() throws IOException {
-    if (inputChars.size() > 0) {
-      runtimeData.currentCharacter = inputChars.pop();
-      return runtimeData.currentCharacter;
-    }
-
-    // Get one char from stream
-    runtimeData.currentCharacter = (char) environment.source.read();
-    // EOF?
-    if (runtimeData.currentCharacter == -1) {
-      return 0;
-    }
-
-    // EOL?
-    if (runtimeData.currentCharacter == '\n') {
-      runtimeData.lineNumber++;
-    }
-
-    // CTRL-Z?  <-- suspect code
-    if (runtimeData.currentCharacter == 26) {
-      return 0;
-    }
-
-    return runtimeData.currentCharacter;
-  }
+  protected int StxScan() throws IOException {
+    int rc;
   
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.Lexer#ungetCharacter(char)
-   */
-  @Override
-  public void ungetCharacter(char c) {
-    inputChars.push(c);
+    if (isRegex) {
+      rc = getRegexSymbol();
+      if (environment.isVerbose()) {
+        System.out.printf("RegexScanner: %d\n", rc);
+      }
+    } else {
+      rc = getNormalSymbol();
+      StxValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null);
+      if (environment.isDebug()) {
+        System.out.printf("* StdScanner: %s(%d) {%s}\n",
+            (rc >= 256 ? tokenNames[rc - 256] : "\"" + Character.toString((char) rc) + "\""), rc,
+            StxValue != null ? StxValue.toString() : "");
+      }
+    }
+    return rc;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.Lexer#getRegexSymbol()
+  /**
+   * report an error
+   * 
+   * @param StxState state of the error
+   * @param StxSym causing token
+   * @param pStxStack the position in the stack when the error happened
+   * @return
    */
+  protected int StxError(int StxState, int StxSym, int pStxStack) {
+    int msg = StxParsingTable[StxState].msg;
+    if (msg >= 0) {
+      environment.error(-1, "Syntax error %d :\'%s\'.", StxState, StxErrorTable[msg]);
+    } else {
+      System.err.printf("%s(%05d) : Unknown error on state %d\n", environment.getSourceFile().toString(),
+          runtimeData.lineNumber + 1, StxState);
+    }
+    isError = true;
+    return 0; /*
+               * with actions, it recovers weird. Need to change the action
+               * stuff to the scanner
+               */
+  }
+
   @Override
   public int getRegexSymbol() throws IOException {
     char c2;
-
+  
     if (isEqual) {
       isEqual = false;
       runtimeData.currentStringValue = "";
       return TOK_TOKEN;
     }
-
+  
     if (runtimeData.currentCharacter == '|') {
       getCharacter();
       return TOK_RX_PIPE;
@@ -1048,7 +824,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       getCharacter();
       return '/';
     }
-
+  
     if (runtimeData.currentCharacter == '\\') {
       getCharacter();
       c2 = decodeEscape();
@@ -1067,34 +843,30 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     return TOK_CHARS;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.Lexer#getNormalSymbol()
-   */
   @Override
   public int getNormalSymbol() throws IOException {
     char c2;
     String s2;
     boolean end;
-
+  
     s2 = runtimeData.currentStringValue;
     runtimeData.currentStringValue = "";
-
+  
     if (markers >= 2) {
       return 0;
     }
-
+  
     if (isCurlyBrace) {
       isCurlyBrace = false;
       return ';';
     }
-
+  
     if (isEqual) {
       isEqual = false;
       runtimeData.currentStringValue = "";
       return TOK_TOKEN;
     }
-
+  
     while (2 > 1) {
       while (Character.isWhitespace(runtimeData.currentCharacter)) {
         getCharacter();
@@ -1120,11 +892,11 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
         break;
       }
     }
-
+  
     if (runtimeData.currentCharacter == '\0') {
       return 0;
     }
-
+  
     if (runtimeData.currentCharacter == '%' || runtimeData.currentCharacter == '\\') {
       getCharacter();
       switch (runtimeData.currentCharacter) {
@@ -1175,39 +947,39 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       environment.error(-1, "Reserved word \'%s\' is incorrect.", runtimeData.currentStringValue);
       return TOK_ERROR;
     }
-
+  
     if (runtimeData.currentCharacter == ';') {
       getCharacter();
       return ';';
     }
-
+  
     if (runtimeData.currentCharacter == ',') {
       getCharacter();
       return ',';
     }
-
+  
     if (runtimeData.currentCharacter == ':') {
       currentNonTerminalName = s2;
       getCharacter();
       return ':';
     }
-
+  
     if (runtimeData.currentCharacter == '|') {
       getCharacter();
       return '|';
     }
-
+  
     if (runtimeData.currentCharacter == '=') {
       getCharacter();
       isEqual = true;
       return '=';
     }
-
+  
     if (runtimeData.currentCharacter == '{') {
       isEqual = true;
       return '=';
     }
-
+  
     if (runtimeData.currentCharacter == '<') {
       getCharacter();
       runtimeData.currentStringValue = "";
@@ -1223,14 +995,14 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       getCharacter();
       return TOK_TYPENAME;
     }
-
+  
     if (runtimeData.currentCharacter == '/') {
       isRegex = true;
       isEqual = true;
       getCharacter();
       return '/';
     }
-
+  
     if (Character.isDigit(runtimeData.currentCharacter)) {
       runtimeData.currentStringValue = "";
       while (Character.isDigit(runtimeData.currentCharacter)) {
@@ -1240,7 +1012,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
       tokenNumber = Integer.parseInt(runtimeData.currentStringValue);
       return TOK_NUM;
     }
-
+  
     mustClose = false;
     if (runtimeData.currentCharacter == '\'' || runtimeData.currentCharacter == '"') {
       c2 = runtimeData.currentCharacter;
@@ -1249,7 +1021,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     } else {
       c2 = ':';
     }
-
+  
     runtimeData.currentStringValue = "";
     do { /* TOKEN */
       runtimeData.currentStringValue += runtimeData.currentCharacter;
@@ -1261,7 +1033,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
         break;
       }
     } while (runtimeData.currentCharacter != c2);
-
+  
     if (mustClose && runtimeData.currentCharacter != c2) {
       isError = true;
       environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
@@ -1301,666 +1073,15 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
         tokenNumber = tokenNumber * 8 + runtimeData.currentStringValue.charAt(p++) - '0';
       }
     }
-
+  
     if (mustClose) {
       getCharacter();
       if (runtimeData.currentStringValue.length() == 1) {
         tokenNumber = runtimeData.currentStringValue.charAt(0);
       }
     }
-
+  
     return TOK_TOKEN;
-  }
-
-  /**
-   * Get next token
-   * 
-   * @return the next token, changing mode as needed
-   */
-  int StxScan() throws IOException {
-    int rc;
-
-    if (isRegex) {
-      rc = getRegexSymbol();
-      if (environment.isVerbose()) {
-        System.out.printf("RegexScanner: %d\n", rc);
-      }
-    } else {
-      rc = getNormalSymbol();
-      StxValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null);
-      if (environment.isDebug()) {
-        System.out.printf("* StdScanner: %s(%d) {%s}\n",
-            (rc >= 256 ? tokenNames[rc - 256] : "\"" + Character.toString((char) rc) + "\""), rc,
-            StxValue != null ? StxValue.toString() : "");
-      }
-    }
-    return rc;
-  }
-
-  /**
-   * report an error
-   * 
-   * @param StxState state of the error
-   * @param StxSym causing token
-   * @param pStxStack the position in the stack when the error happened
-   * @return
-   */
-  int StxError(int StxState, int StxSym, int pStxStack) {
-    int msg = StxParsingTable[StxState].msg;
-    if (msg >= 0) {
-      environment.error(-1, "Syntax error %d :\'%s\'.", StxState, StxErrorTable[msg]);
-    } else {
-      System.err.printf("%s(%05d) : Unknown error on state %d\n", environment.getSourceFile().toString(),
-          runtimeData.lineNumber + 1, StxState);
-    }
-    isError = true;
-    return 0; /*
-               * with actions, it recovers weird. Need to change the action
-               * stuff to the scanner
-               */
-  }
-
-  /****************************EMBEDDED CODE PROCESSOR **************************/
-
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#getTypeFromStream(me.jaimegarza.syntax.Lexer)
-   */
-  @Override
-  public Type getTypeFromStream(Lexer lexer) throws IOException {
-    Type type;
-    String s2;
-    s2 = runtimeData.currentStringValue;
-    lexer.getNormalSymbol();
-    type = runtimeData.findType(runtimeData.currentStringValue);
-    if (type == null) {
-      environment.error(-1, "Cannot find type '%s'.", runtimeData.currentStringValue);
-      return null;
-    }
-    runtimeData.currentStringValue = s2;
-    return type;
-  }
-
-  private RuleItem getCurrentRuleItem(int index) {
-    RuleItem item= null;
-    if (runtimeData.currentRuleItems != null && index < runtimeData.currentRuleItems.size()) {
-      item = runtimeData.currentRuleItems.get(index);
-    }
-    return item;
-  }
-  
-  @Override
-  public boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign) throws IOException {
-    int num;
-    int base;
-    num = 0;
-    if (runtimeData.currentCharacter == '0') {
-      base = 8;
-    } else {
-      base = 10;
-    }
-    while (Character.isDigit(runtimeData.currentCharacter)) {
-      num = num * base + runtimeData.currentCharacter - '0';
-      lexer.getCharacter();
-    }
-    num = num * sign - elementCount;
-    if (num > 0) {
-      environment.error(-1, "Incorrect value of \'$%d\'. Bigger than the number of elements.", num + elementCount);
-      return false;
-    }
-    if (num == 0) {
-      environment.output.printFragment("stxstack", "");
-    } else {
-      environment.output.printFragment("stxstack", String.format("%+d", num));
-    }
-    if (runtimeData.getTypes().size() != 0) {
-      if (num + elementCount <= 0 && type == null) {
-        environment.error(-1, "Cannot determine the type for \'$%d\'.", num + elementCount);
-        return false;
-      }
-      if (type == null) {
-        int ruleIndex = 0;
-        RuleItem rule = getCurrentRuleItem(0);
-        for (int i = 1; i < num + elementCount && rule != null; i++) {
-          rule = getCurrentRuleItem(++ruleIndex);
-        }
-        if (rule != null) {
-          Terminal terminal = runtimeData.findTerminalByName(rule.getSymbol().getName());
-          if (terminal != null) {
-            terminal.setCount(terminal.getCount() - 1);
-            type = terminal.getType();
-          } else {
-            NonTerminal nonTerminal = runtimeData.findNonTerminalByName(rule.getSymbol().getName());
-            if (nonTerminal != null) {
-              nonTerminal.setCount(nonTerminal.getCount() - 1);
-              type = nonTerminal.getType();
-            }
-          }
-        }
-      }
-      if (type != null) {
-        environment.output.printf(".%s", type.getName());
-      }
-    }
-    return true;
-  }
-  
-  @Override
-  public boolean generateDollarDollar(Lexer lexer, int elementCount, String nonTerminalId, Type type) throws IOException {
-    if (elementCount == 1) {
-      environment.output.printFragment("stxstack", "");
-    } else if (elementCount != 0) {
-      environment.output.printFragment("stxstack", "-" + Integer.toString(elementCount - 1));
-    } else {
-      environment.output.printFragment("stxstack", "+1");
-    }
-    if (runtimeData.getTypes().size() != 0) {
-      if (type == null) {
-        NonTerminal idp = runtimeData.findNonTerminalByName(nonTerminalId);
-        if (idp != null) {
-          idp.setCount(idp.getCount() - 1);
-          type = idp.getType();
-        }
-      }
-      if (type != null) {
-        environment.output.printf(".%s", type.getName());
-      }
-    }
-    lexer.getCharacter();
-    return true;
-  }
-
-  @Override
-  public boolean generateConstant(Lexer lexer, char characterType) throws IOException {
-    environment.output.print(runtimeData.currentCharacter);
-    while ((lexer.getCharacter()) != characterType) {
-      if (runtimeData.currentCharacter == '\0') {
-        environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
-        return false;
-      }
-      if (runtimeData.currentCharacter == '\n') {
-        environment.error(-1, "End of line reached on string literal.");
-        return false;
-      }
-      if (runtimeData.currentCharacter == '\\') {
-        environment.output.print(runtimeData.currentCharacter);
-        lexer.getCharacter();
-      }
-      environment.output.print(runtimeData.currentCharacter);
-    }
-    return true;
-  }
-
-  /*
-   * (non-Javadoc)
-   * @see me.jaimegarza.syntax.EmbeddedCodeProcessor#skipAndOutputCompositeComment(me.jaimegarza.syntax.Lexer, char, char)
-   */
-  @Override
-  public boolean skipAndOutputCompositeComment(Lexer lexer, char secondaryCharacter, char characterToFind) throws IOException {
-    boolean bBreak;
-    
-    environment.output.print(runtimeData.currentCharacter);
-    lexer.getCharacter();
-    bBreak = false;
-    while (!bBreak) {
-      if (runtimeData.currentCharacter == '\0') {
-        environment.error(-1, "Unfinished comment.");
-        return false;
-      }
-      while (runtimeData.currentCharacter == secondaryCharacter) {
-        environment.output.print(runtimeData.currentCharacter);
-        if ((lexer.getCharacter()) == characterToFind) {
-          bBreak = true;
-        }
-      }
-      environment.output.print(runtimeData.currentCharacter);
-      lexer.getCharacter();
-    }
-    return true;
-  }
-  
-  
-  /**
-   * Found a rule action.  Copy it to the output stream as-is
-   * @param ruleNumber the rule index
-   * @param elementCount the elements in the rule
-   * @param nonTerminalName the left hand symbol of the rule
-   */
-  private boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) throws IOException {
-    generateCodeGeneratorHeader();
-    generateCaseStatement(ruleNumber, nonTerminalName + " -> " + runtimeData.currentRuleItems.toString());
-    
-    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName)) {
-      return false;
-    }
-    
-    generateCaseEnd();
-    runtimeData.ruleActionCount++;
-    
-    return true;
-  }
-
-  /**
-   * A statement for code generation was found.  Finish it.
-   */
-  private void generateCaseEnd() {
-    environment.language.generateCaseEnd();
-  }
-
-  /**
-   * Output the case for a given rule
-   * @param ruleNumber is the rule number to be emitted in the case statement
-   */
-  private void generateCaseStatement(int ruleNumber, String comment) {
-    environment.language.generateCaseStart(ruleNumber, Integer.toString(ruleNumber + 1), comment);
-  }
-
-  /**
-   * Output the top of the rules if needed
-   */
-  private void generateCodeGeneratorHeader() {
-    if (runtimeData.ruleActionCount == 0) {
-      environment.language.generateCodeGeneratorHeader();
-    }
-  }
-
-  /**
-   * copy action until the next ';' or '}' that actually closes
-   */
-  private boolean generateLexerCode() throws IOException {
-    if (tokenActionCount == 0) {
-      environment.language.generateLexerHeader();
-    }
-    environment.language.emitLine(runtimeData.lineNumber + 1);
-    indent(environment.output, environment.getIndent() + 1);
-    environment.language.generateLexerCode(this);
-    environment.output.println();
-    tokenActionCount++;
-    return true;
-  }
-
-  /**
-   * Generate the ending portion of the code generation
-   */
-  private void generateCodeGeneratorFooter() {
-    if (runtimeData.ruleActionCount != 0) {
-      environment.language.generateCodeGeneratorFooter();
-    } else {
-      environment.language.generateVoidCodeGenerator();
-    }
-  }
-
-  /**
-   * Generate the bottom of the lexer
-   */
-  private void generateLexerFooter() {
-    if (tokenActionCount != 0) {
-      environment.language.generateLexerFooter();
-    }
-  }
-
-  /**
-   * During a declaration, emit the accompanying code
-   */
-  private boolean generateDeclaration() throws IOException {
-    while (Character.isWhitespace(runtimeData.currentCharacter)) {
-      getCharacter();
-    }
-    environment.language.emitLine(runtimeData.lineNumber);
-    while (runtimeData.currentCharacter != '\0') {
-      if (runtimeData.currentCharacter == '\\') {
-        if ((getCharacter()) == '}') {
-          getCharacter();
-          return true;
-        } else {
-          environment.output.print('\\');
-        }
-      } else if (runtimeData.currentCharacter == '%') {
-        if ((getCharacter()) == '}') {
-          getCharacter();
-          return true;
-        } else {
-          environment.output.print('%');
-        }
-      } else if (runtimeData.currentCharacter == '$') {
-        getCharacter();
-        if (runtimeData.currentCharacter == '$') {
-          getCharacter();
-          switch (runtimeData.currentCharacter) {
-            case 'b':
-              getCharacter();
-              environment.output.print(PathUtils.getFileNameNoExtension(environment.getOutputFile().getAbsolutePath()));
-              break;
-            case 'n':
-              getCharacter();
-              environment.output.print(PathUtils.getFileName(environment.getOutputFile().getAbsolutePath()));
-              break;
-            case 'f':
-              getCharacter();
-              environment.output.print(environment.getOutputFile().getAbsolutePath());
-              break;
-            case 'e':
-              getCharacter();
-              environment.output.print(PathUtils.getFileExtension(environment.getOutputFile().getAbsolutePath()));
-              break;
-            case 'p':
-              getCharacter();
-              environment.output.print(PathUtils.getFilePath(environment.getOutputFile().getAbsolutePath()));
-              break;
-            default:
-              environment.output.print("$$");
-          }
-        } else {
-          environment.output.print('$');
-        }
-      }
-      environment.output.print(runtimeData.currentCharacter);
-      getCharacter();
-    }
-    environment.error(-1, "End of file before \'\\}\' or \'%%}\'.");
-    return false;
-  }
-
-  /**
-   * For yacc compatibility this is called the union, but it is
-   * really a structure
-   */
-  private boolean generateStructure() throws IOException {
-    environment.language.emitLine(runtimeData.lineNumber);
-    runtimeData.setStackTypeDefined(true);
-    return environment.language.generateStructure(this);
-  }
-
-  /**
-   * new rule item with the given symbol
-   * @param elem is the symbol associated to the rule
-   * @return the new rule item
-   */
-  private RuleItem newItem(Symbol elem) {
-    RuleItem item;
-
-    item = new RuleItem(elem);
-    if (runtimeData.currentRuleItems == null) {
-      runtimeData.currentRuleItems = new LinkedList<RuleItem>();
-    }
-    runtimeData.currentRuleItems.add(item);
-    return item;
-  }
-
-  /**
-   * new rule with no elements
-   * @return the new rule
-   */
-  private Rule newEmptyRule() {
-    Rule rule;
-
-    rule = new Rule(0, actLine, 0, null);
-    runtimeData.getRules().add(rule);
-    return rule;
-  }
-
-  /**
-   * new rule with the currently recognized items
-   * @return a new rule
-   */
-  private Rule newRule() {
-    Rule rule;
-
-    rule = new Rule(0, actLine, rulePrecedence, null);
-    if (runtimeData.currentRuleItems != null) {
-      rule.getItems().addAll(runtimeData.currentRuleItems);
-      for (RuleItem item : runtimeData.currentRuleItems) {
-        item.setRule(rule);
-      }
-      runtimeData.currentRuleItems = null;
-    }
-    runtimeData.getRules().add(rule);
-    rulePrecedence = 0;
-    ruleAssociativity = Associativity.NONE;
-    return rule;
-  }
-
-  /**
-   * Starting rule.  Add it at the top.
-   * 
-   * @param root is the root symbol
-   * @return the new rule
-   */
-  private Rule newRootRule(NonTerminal root) {
-    Rule rule;
-
-    rule = new Rule(0, actLine, rulePrecedence, root);
-    if (runtimeData.currentRuleItems != null) {
-      rule.getItems().addAll(runtimeData.currentRuleItems);
-      for (RuleItem item : runtimeData.currentRuleItems) {
-        item.setRule(rule);
-      }
-      runtimeData.currentRuleItems = null;
-    }
-    runtimeData.getRules().add(0, rule);
-    rulePrecedence = 0;
-    ruleAssociativity = Associativity.NONE;
-    return rule;
-  }
-  
-  /**
-   * Check non terminals whose precedence is zero, and make them terminals.
-   */
-  private void reviewDeclarations() {
-    for (int i = 0; i < runtimeData.getNonTerminals().size(); ) {
-      NonTerminal nonTerminal = runtimeData.getNonTerminals().get(i);
-      if (nonTerminal.getPrecedence() == 0) {
-        environment.error(-1, "Warning: token \'%s\' not declared.", nonTerminal.getName());
-        runtimeData.getTerminals().add(new Terminal(nonTerminal));
-        runtimeData.getNonTerminals().remove(nonTerminal);
-      } else {
-        i++;
-      }
-    }
-  }
-
-  /**
-   * Find out my root symbol
-   */
-  private void computeRootSymbol() {
-    runtimeData.setRoot(null);
-    boolean bError = false;
-    for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
-      if (nonTerminal.getCount() == 0) {
-        if (runtimeData.getRoot() == null) {
-          runtimeData.setRoot(nonTerminal);
-        } else {
-          bError = true;
-          runtimeData.setRoot(null);
-          break;
-        }
-      }
-    }
-
-    if (runtimeData.getStart() != null) { // Was it given with %start ?
-      for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
-        if (nonTerminal.getCount() == 0 && !nonTerminal.equals(runtimeData.getStart())) {
-          Rule stx = locateRuleWithId(nonTerminal.getId());
-          environment.error(lineNumber(stx), "Warning: Symbol \'%s\' not used.", nonTerminal.getName());
-        }
-      }
-    } else {
-      if (runtimeData.getRoot() != null) {
-        Rule stx = locateRuleWithId(runtimeData.getRoot().getId());
-        environment.error(lineNumber(stx), "Assumed \'%s\' as distinguished symbol.", runtimeData.getRoot().getName());
-        runtimeData.setStart(runtimeData.getRoot());
-      } else if (bError) {
-        for (NonTerminal id : runtimeData.getNonTerminals()) {
-          if (id.getCount() == 0) {
-            Rule stx = locateRuleWithId(id.getId());
-            environment.error(lineNumber(stx), "Warning: Symbol \'%s\' not used.", id.getName());
-          }
-        }
-        environment.error(-1, "Distinguished symbol cannot be determined. Use %%start.");
-        return;
-      } else {
-        environment.error(-1, "The distinguished symbol does not exist.");
-        return;
-      }
-    }
-
-    boolean found = false;
-    for (NonTerminal nonTerminal : runtimeData.getNonTerminals()) {
-      if (nonTerminal.getName().equals(DISTINGUISHED_SYMBOL_NAME)) {
-        runtimeData.setRoot(nonTerminal);
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      NonTerminal root = new NonTerminal(DISTINGUISHED_SYMBOL_NAME);
-      runtimeData.getNonTerminals().add(root);
-      runtimeData.setRoot(root);
-    }
-    newItem(runtimeData.getStart());
-    newRootRule(runtimeData.getRoot());
-  }
-
-  /**
-   * The recovery table deals with tokens that can be used to recognize
-   * syntax context and can recover from errors.
-   */
-  private void generateTopRecoveryTable() {
-    numberOfErrorTokens = 0;
-    for (Terminal id : runtimeData.getTerminals()) {
-      if (id instanceof ErrorToken) {
-        numberOfErrorTokens++;
-      }
-    }
-    environment.language.generateRecoveryTableHeader(numberOfErrorTokens);
-  }
-
-  /**
-   * Assign ids, numbers, and print them.
-   */
-  private void finalizeSymbols() {
-    environment.report
-        .printf("## Token                                    Name                                     Value Err  Refs  Prec Assc  Type\n");
-    environment.report
-        .printf("________________________________________________________________________________________________________________________\n");
-
-    int recoveries = 0;
-    int terminals = 0;
-    for (Terminal id : runtimeData.getTerminals()) {
-      // Look for the default token for a non assigned terminal symbol
-      if (id.getToken() == -1) {
-        int tok_num = 1;
-        for (tok_num = Short.MAX_VALUE+1 ;; tok_num++) {
-          Terminal cual = runtimeData.findTerminalByToken(tok_num);
-          if (cual == null) {
-            break;
-          }
-        }
-        id.setToken(tok_num);
-      }
-      id.setId(terminals++);
-      environment.report.printf("%2d %-40s %-40s %5d %s %5d %5d %-5s ", terminals, id.getId(), id.getName(), id
-          .getToken(), id instanceof ErrorToken ? "Yes" : "No ", id.getCount(), id.getPrecedence(), id
-          .getAssociativity().displayName());
-      if (id.getType() != null) {
-        environment.report.printf("%s", id.getType().getName());
-      }
-      environment.report.printf("\n");
-      if (id instanceof ErrorToken) {
-        int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
-        ++recoveries;
-        environment.language.generateErrorToken(recoveryToken, (ErrorToken) id, recoveries >= numberOfErrorTokens);
-      }
-    }
-    
-    environment.language.generateTokensHeader(terminals);
-
-    int i = 1;
-    for (Terminal id : runtimeData.getTerminals()) {
-      environment.language.generateToken(id, i == terminals);
-      i++;
-    }
-    i = 1;
-    
-    environment.report.printf("\n");
-    environment.report
-        .printf("## Non Terminals                            Name                                     Refs  Type\n");
-    environment.report
-        .printf("__________________________________________________________________________________________________\n");
-
-    int noterminals = 0;
-    for (NonTerminal id : runtimeData.getNonTerminals()) {
-      environment.report.printf("%2d %-40s %-40s %-2d    ", noterminals + terminals, id.getId(), id.getName(),
-          id.getCount());
-      if (id.getType() != null) {
-        environment.report.printf("%s", id.getType().getName());
-      }
-      environment.report.printf("\n");
-      id.setId(noterminals + terminals);
-      noterminals++;
-      id.setFirst(null);
-      id.setFollow(null);
-    }
-    
-    environment.report.printf("\n");
-    environment.report
-        .printf("Types\n");
-    environment.report
-        .printf("_____________________________________________\n");
-
-    for (Type type : runtimeData.getTypes()) {
-      environment.report.println(type.toString());
-    }
-  }
-
-  /**
-   * set rule numbers and print
-   */
-  private void finalizeRules() {
-    environment.report.printf("\n");
-    environment.report.printf("Prec Rule  Grammar\n");
-    environment.report.printf("_____________________________________________________\n");
-    int i = 0;
-    for (Rule stx : runtimeData.getRules()) {
-      stx.setRulenum(i);
-      environment.report.printf("[%2d]  %3d. %s -> ", stx.getPrecedence(), i, stx.getLeftHand().getName());
-      for (RuleItem itm : stx.getItems()) {
-        environment.report.printf("%s ", itm.getSymbol().getName());
-      }
-      environment.report.printf("\n");
-      i = i + 1;
-    }
-  }
-
-  /**
-   * token definitions are declared as static or #define
-   */
-  private void generateTokenDefinitions() {
-    environment.language.generateTokenDefinitions();
-  }
-
-  /**
-   * Locate a rule whose left hand if is the given id
-   * @param id is the id of the non terminal on the left hand side
-   * @return
-   */
-  private Rule locateRuleWithId(int id) {
-    Rule rule = null;
-    for (int i = 0; i < runtimeData.getRules().size(); i++) {
-      rule = runtimeData.getRules().get(i);
-      if (id == rule.getLeftHandId()) {
-        break;
-      }
-    }
-    return rule;
-  }
-
-  /**
-   * @param rule is the rule's line number
-   * @return the line number of a given rule
-   */
-  private int lineNumber(Rule rule) {
-    return rule != null ? rule.getLineNumber() - 1 : -1;
   }
 
   /**
@@ -1996,7 +1117,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
   }
   
   /* Inner classes */
-  private static class Parser {
+  static class Parser {
     public int position;
     public int defa;
     public int elements;
@@ -2044,7 +1165,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     }
   }
 
-  private static class ReservedWord {
+  static class ReservedWord {
     String word;
     int token;
 
@@ -2055,7 +1176,7 @@ public class CodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProc
     }
   }
 
-  private static class StackElement {
+  static class StackElement {
     public int stateNumber;
     public int value;
     public boolean mustClose;
