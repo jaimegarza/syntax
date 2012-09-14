@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>me.jaimegarza</groupId>
   <artifactId>syntax</artifactId>
-  <version>4.0.1-SNAPSHOT</version>
+  <version>4.0.1</version>
   <packaging>jar</packaging>
 
   <!-- needed for Sonatype OSS repository https://oss.sonatype.org -->
@@ -82,6 +82,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
         <executions>
           <execution>
             <id>attach-class-files</id>
@@ -157,6 +158,19 @@
                     <versionRange>[1.0.0,)</versionRange>
                     <goals>
                       <goal>enforce</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+                <pluginExecution> 
+                  <pluginExecutionFilter>
+                    <groupId>me.jaimegarza</groupId>
+                    <artifactId>syntax-maven-plugin</artifactId>
+                    <versionRange>[1.0.0,)</versionRange>
+                    <goals>
+                      <goal>generate</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>

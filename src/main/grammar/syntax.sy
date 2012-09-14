@@ -1,141 +1,90 @@
 %{
-/* 
- * Copyright 1985,1989,1997,2006 Jaime Garza. All rights reserved.
+/*
+ ===============================================================================
+ Copyright (c) 1985, 2012, Jaime Garza
+ All rights reserved.
+ 
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+     * Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+     * Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+     * Neither the name of Jaime Garza nor the
+       names of its contributors may be used to endorse or promote products
+       derived from this software without specific prior written permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ===============================================================================
+*/
+package me.jaimegarza.syntax.generator;
+
+import java.io.IOException;
+import java.util.Arrays;
+
+import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.definition.Associativity;
+import me.jaimegarza.syntax.definition.ErrorToken;
+import me.jaimegarza.syntax.definition.NonTerminal;
+import me.jaimegarza.syntax.definition.Rule;
+import me.jaimegarza.syntax.definition.RuleItem;
+import me.jaimegarza.syntax.definition.Symbol;
+import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.definition.Type;
+import me.jaimegarza.syntax.env.Environment;
+
+/**
+ * Parser for a grammar.<p>
+ * TODO: P1-This parser will be replaced for a generated one (which
+ * probably will be created from this one)
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- *
- *   1. Redistributions of source code must retain the above copyright notice, 
- *      this list of conditions and the following disclaimer. 
- *   2. Redistributions in binary form must reproduce the above copyright 
- *      notice, this list of conditions and the following disclaimer in the
- *      documentation and/or other materials provided with the distribution. 
+ * Phases:
  * 
- * THIS SOFTWARE IS PROVIDED BY THE FREEBSD PROJECT ``AS IS'' AND ANY EXPRESS 
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
- * DISCLAIMED. IN NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * <ol>
+ *   <li><b>Code Parser</b> (This Phase)
+ *   <li>Structural Analysis
+ *   <li>Table Generation
+ *   <li>Writing Code
+ * </ol>
+ * @author jaimegarza@gmail.com
+ *
  */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <malloc.h>
-#ifdef WIN32
-#include <io.h>
-#endif
-#include <string.h>
-#include <ctype.h>
-
-#define NOACTIONS
-#include "Sintax.h"
-#include "Parser.h"
-
-#pragma warning (disable:4715)
-
-PIDENT NewID ( PIDENT pTabla, IDSTR id);
-PIDENT AddID ( PIDENT tabla, PIDENT p);
-PIDENT LookID ( PIDENT tabla, IDSTR s);
-int NewRule(void);
-int NewItem(PIDENT elem);
-void cdecl Error(int line, int error, ...);
-int SayToUser(void);
-int DeclAction(void);
-int DeclUnion(void);
-PTDEF NewType(IDSTR id);
-int RuleAction(int regla, int elems, char *id);
-int RuleEndAction(void);
-int TokenAction(void);
-int TokenEndAction(void);
-PREGEXNODE AlternateNode(PREGEXNODE left, PREGEXNODE right);
-PREGEXNODE SequentialNode(PREGEXNODE left, PREGEXNODE right);
-PREGEXNODE ZeroOrOneNode(PREGEXNODE operand);
-PREGEXNODE OneOrManyNode(PREGEXNODE operand);
-PREGEXNODE ZeroOrManyNode(PREGEXNODE operand);
-PREGEXNODE CharNode(PREGEXNODE node);
-PREGEXNODE AnyNode(void);
-PREGEXNODE AddTree(PREGEXNODE node);
-void SetEndToken(PREGEXNODE pNode, char *token);
-
-char    c;
-char    s[81];
-char    snt[81];
-int     pstack;
-int     lestado;
-int     terminals;
-int     noterminals;
-int     actLine;
-BOOL    bError = 0;
-BOOL    bCurly = 0;
-BOOL    bEqual = 0;
-BOOL    bMarcas = 0;
-BOOL    bRegEx = 0;
-PTDEF   pType;
-
-PIDENT  pNTtable;
-PIDENT  pTtable;
-PIDENT  pRGrammar;
-PITEM   pRule;
-PRULE   pSintax;
-TOKEN   tSym;
-PIDENT  pGStart;
-int     must_close;
-int     tok_num;
-int     PrecAct = 0;
-PRULE   pTope;
-PTDEF   pCurType = NULL;
-int     bActFinales;
-int     bActionDone = FALSE;
-int     bErrorToken = FALSE;
-
-
-extern int              fileIn;
-extern int              nLine;
-extern int              fVerbose;
-extern int              RulePrec;
-extern ASOCIATIVIDAD    RuleAsoc;
-extern PTDEF            pType;
-extern int              RuleCounter;
-extern char             snt[];
-extern char             szSource[];
-
-RWORD RWord[] = {
-    {"token",   TOK_TERM},
-    {"term",    TOK_TERM},
-    {"left",    TOK_LEFT},
-    {"nonassoc",TOK_BINARY},
-    {"binary",  TOK_BINARY},
-    {"right",   TOK_RIGHT},
-    {"prec",    TOK_PREC},
-    {"start",   TOK_START},
-    {"type",    TOK_TYPE},
-    {"union",   TOK_UNION},
-    {"name",    TOK_NAME},
-    {"error",   TOK_ERRDEF},
-    {"lexer",   TOK_LEXER},
-};
-
-    PIDENT  where;
-    char *  idnt;
-    PRULE   stx;
-    static  int firsttok = TRUE;
-    PITEM   aRule;
-    int     i,j;
-    char    regla[20];
-
-int DeclareOneNonTerminal(char *idnt, char *tkn);
-int NameOneNonTerminal(char *ntr, char *name);
-int DeclareRules(char *name);
-
+public class SyntaxCodeParser extends AbstractCodeParser {
 %}
 
-%token            TOK_MARCA     256: "'%%'"
+%union {
+    public int stateNumber;
+    public int value;
+    public boolean mustClose;
+    public String id;
+    public String regex;
+
+    StackElement(int state, int value, boolean mustClose, String id, String regex) {
+      super();
+      this.stateNumber = state;
+      this.value = value;
+      this.mustClose = mustClose;
+      this.id = id;
+      this.regex = regex;
+    }
+
+    @Override
+    public String toString() {
+      return "state:" + stateNumber + ", value:" + value + ", mustClose:" + mustClose + ", id:" + id;
+    }
+}
+
+%token            TOK_MARK      256: "'%%'"
 %token            TOK_START     257: "'%start'"
 %token  <s>       TOK_TOKEN     258: "Token"
 %token            TOK_TYPE      259: "'%type'"
@@ -169,21 +118,22 @@ int DeclareRules(char *name);
 %token            ')'              : "Closing parenthesis"
 %token            '/'              : "Regular expression marker ('/')"
 
-%type   <s.value> Numero;
-%type   <s>       Precedencia;
+%type   <s.value> Number;
+%type   <s>       Precedence;
 %type   <s>       ErrInfo;
-%type   <node>    TAction;
+%type   <node>    LexicAction;
 
 %type <node>      BasicElement;
 %type <node>      ConcatElement;
 %type <node>      RegExp;
 
-%name Declaracion                   : "a declaration";
-%name Acciones                      : "code section";
-%name Precedencia                   : "a token definition";
-%name Simbolo                       : "token, precedence declaration or '='";
-%name PRegla                        : "parser rule definition";
-%name TAction                       : "lexical token definition";
+%name Declarations                  : "declarations";
+%name Declaration                   : "a declaration";
+%name Actions                       : "code section";
+%name Precedence                   : "a token definition";
+%name Symbol                       : "token, precedence declaration or '='";
+%name GrammarRule                        : "parser rule definition";
+%name LexicAction                       : "lexical token definition";
 
 %name RegExp                        : "regular expression";
 %name ConcatElement                 : "operator expression";
@@ -199,28 +149,28 @@ int DeclareRules(char *name);
 %error ';'
 
 %%
-Descriptor   :  Declaraciones =TokenEndAction(); TOK_MARCA Producciones Acciones
-             |  =TokenEndAction(); TOK_MARCA Producciones Acciones
+Descriptor   :  Declarations =TokenEndAction(); TOK_MARK Productions Actions
+             |  =TokenEndAction(); TOK_MARK Productions Actions
              ;
 
-Acciones     :                              = {
+Actions      :                              = {
                                                 if(!RuleEndAction())
                                                     return FALSE;
                                
                                                 bActFinales = FALSE;
                                             }
-             |  TOK_MARCA                   = {
+             |  TOK_MARK                   = {
                                                 if(!RuleEndAction())
                                                     return FALSE;
                                                 bActFinales = TRUE;
                                             }
              ;
 
-Declaraciones:  Declaraciones Declaracion
-             |  Declaracion
+Declarations :  Declarations Declaration
+             |  Declaration
              ;
 
-Declaracion  :  ';'
+Declaration  :  ';'
              |  TOK_START TOK_TOKEN         = {
                                                 if(pGStart){
                                                     Error(LINE_SIS, ERR_START2, pGStart->id);
@@ -245,7 +195,7 @@ Declaracion  :  ';'
              |  TOK_TYPE TOK_TYPENAME Tokens
              |  TOK_NAME TokenNames
              |  TOK_UNION                   = if(!DeclUnion()) return FALSE;
-             |  PrecDef Definicion          = pCurType = NULL;
+             |  PrecDef Definition          = pCurType = NULL;
              |  '{'                         = if(!DeclAction()) return FALSE;
              |  TOK_LEXER Equals TOK_TOKEN
              ;
@@ -285,15 +235,15 @@ TokenNames   :  TokenNames TOK_TOKEN ':' TOK_TOKEN       = return NameOneNonTerm
              |  TOK_TOKEN ':' TOK_TOKEN                  = return NameOneNonTerminal($1.id, $3.id);
              ;
 
-Definicion   :  Tipo Precedencias
+Definition   :  Type Precedences
              ;
 
-Precedencias :  Precedencias ',' Precedencia
-             |  Precedencias Precedencia
-             |  Precedencia
+Precedences  :  Precedences ',' Precedence
+             |  Precedences Precedence
+             |  Precedence
              ;
 
-Precedencia  :  TOK_TOKEN Numero ErrInfo TAction = {
+Precedence   :  TOK_TOKEN Number ErrInfo LexicAction = {
                                                 if($2 != -1)
                                                     $$.value = $2;
                                                 if(!(where = LookID(pTtable, $1.id))){
@@ -336,7 +286,7 @@ Precedencia  :  TOK_TOKEN Numero ErrInfo TAction = {
                                             }
              ;
 
-Numero       :  TOK_NUM
+Number       :  TOK_NUM
              |                              = $$ = -1;
              ;
 
@@ -344,7 +294,7 @@ ErrInfo      : ':' TOK_TOKEN                =  strcpy($$.id, $2.id);
              |
              ;
 
-TAction      : Equals TOK_TOKEN             = $$ = NULL;
+LexicAction  : Equals TOK_TOKEN             = $$ = NULL;
              | Slash RegExp Slash           = $$ = AddTree($2);
              |                              = $$ = NULL;
              ;
@@ -371,7 +321,7 @@ BasicElement  : TOK_RX_LPAR RegExp TOK_RX_RPAR = $$ = $2;
 Equals       : '='                          = TokenAction();
              ;
 
-Tipo         :  TOK_TYPENAME                = {
+Type         :  TOK_TYPENAME                = {
                                                 if( !(pCurType = NewType($1))){
                                                     Error(LINE_SIS, ERR_NOM);
                                                     return FALSE;
@@ -381,18 +331,18 @@ Tipo         :  TOK_TYPENAME                = {
              ;
 
 
-Producciones :  Producciones TOK_TOKEN ':' Reglas ';'  = return DeclareRules($2.id);
-             |  TOK_TOKEN ':' Reglas ';'               = return DeclareRules($1.id);
+Productions  :  Productions TOK_TOKEN ':' Rules ';'  = return DeclareRules($2.id);
+             |  TOK_TOKEN ':' Rules ';'               = return DeclareRules($1.id);
              ;
 
-Reglas       :  Reglas '|' PRegla           = {
+Rules        :  Rules '|' GrammarRule           = {
                                                 if(!NewRule()){
                                                     Error(LINE_SIS, ERR_NOM);
                                                     return FALSE;
                                                 }
                                                 bActionDone = FALSE;
                                             }
-             |  PRegla                      = {
+             |  GrammarRule                      = {
                                                 if(!NewRule()){
                                                     Error(LINE_SIS, ERR_NOM);
                                                     return FALSE;
@@ -405,18 +355,18 @@ Reglas       :  Reglas '|' PRegla           = {
                                             }
              ;
 
-PRegla       :  Regla
+GrammarRule  :  Rule
              |                              = {
                                                 pRule = NULL;
                                                 bActionDone = FALSE;
                                             }
              ;
 
-Regla        :  Regla Simbolo
-             |  Simbolo
+Rule         :  Rule Symbol
+             |  Symbol
              ;
 
-Simbolo      :  TOK_TOKEN                    = {
+Symbol       :  TOK_TOKEN                    = {
                                                             if(!$1.id[0])
                                                                 break;
                                                             if(firsttok){
@@ -517,572 +467,388 @@ Simbolo      :  TOK_TOKEN                    = {
 
 %%
 
-int DeclareOneNonTerminal(char *idnt, char *tkn)
-{
-    if( where = LookID(pTtable, tkn)){
-        Error(LINE_SIS, ERR_BADTOKEN3, tkn);
-        return FALSE;
-    } else {
-        if(!(where = LookID(pNTtable,tkn))){
-            if( !(pNTtable = NewID(pNTtable, tkn))){
-                Error(LINE_SIS, ERR_NOM);
-                return FALSE;
-            }
-            noterminals++;
-            where = pNTtable;
-            while (strcmp(where->id,tkn))
-                where = where->next;
-        }else
-            where->count--;
-        if(!(where->type = NewType(idnt))){
-            Error(LINE_SIS, ERR_NOM);
-            return FALSE;
-        }
-    }
-}
-
-int NameOneNonTerminal(char *ntr, char *name)
-{
-    if( where = LookID(pTtable, ntr)){
-        Error(LINE_SIS, ERR_BADTOKEN4, ntr);
-        return FALSE;
-    } else {
-        if(!(where = LookID(pNTtable,ntr))){
-            if( !(pNTtable = NewID(pNTtable, ntr))){
-                Error(LINE_SIS, ERR_NOM);
-                return FALSE;
-            }
-            noterminals++;
-            where = pNTtable;
-            while (strcmp(where->id,ntr))
-                where = where->next;
-        }else
-            where->count--;
-        strcpy(where->name, name);
-    }
-}
-
-int DeclareRules(char *name)
-{
-    if( where = LookID(pTtable, name)){
-        Error(LINE_SIS, ERR_BADTOKEN, name);
-        return FALSE;
-    } else {
-        if(!(where = LookID(pNTtable,name))){
-            if( !(pNTtable = NewID(pNTtable, name))){
-                Error(LINE_SIS, ERR_NOM);
-                return FALSE;
-            }
-            noterminals++;
-            where = pNTtable;
-            while (strcmp(where->id,name))
-                where = where->next;
-        }else
-            where->count--;
-        where->precedence = TRUE; /* usado como no terminal */
-    }
-    stx = pTope;
-    while (stx ){
-        if(!stx->id)
-            stx->id = where;
-        stx = stx->next;
-    }
-    /* prec y assoc para NTERM no importa (eso creo por ahora) */
-    where->used = NOTERMINAL;
-    bActionDone = FALSE;
-}  
-
-char GetCar(void)
-{
-    if(read(fileIn,&c,1)<1)
-        return 0;
-
-    if(c == '\n'){
-        nLine++;
-        if(fVerbose)
-            printf("Lines : %05d\r", nLine);
-    }
-
-    if(c == 26)
-        return 0;
-
-    return(c);
-}
-
-char DecodeOctal()
-{
-	int iCount = 3;
-	char c2 = 0;
-
-	while (iCount) {
-		c2 *= 8;
-
-		if (c >= '0' && c <= '7') {
-			c2 += c - '0';
-            c = GetCar();
-        } else if (c == '\0') {
-            return c2;
-		} else {
-            break;
-		}
-
-		iCount--;
-	}
-
-	return c2;
-}
-
-char DecodeControlChar()
-{
-    char c2;
-	c = GetCar();
-
-	if (c == '\0') {
-        return '\0';
-	}
-
-	if (c >= 'a' && c <= 'z') {
-        c2 = c;
-        c = GetCar();
-		return c2 - ('a' - 1);
-	} else if (c >= 'A' && c <= 'Z') {
-        c2 = c;
-        c = GetCar();
-		return c2 - ('A' - 1);
-	} else {
-        return 'c' - 'a';
-	}
-}
-
-char DecodeHex()
-{
-	int iCount = 2;
-	char c2 = 0;
-
-	c = GetCar();
-
-	while (iCount) {
-		c2 *= 16;
-
-		if (c >= '0' && c <= '9')
-		{
-			c2 += c - '0';
-		} else if (c >= 'a' && c <= 'f') {
-			c2 += 10 + (c - 'a');
-		} else if (c >= 'A' && c <= 'F') {
-			c2 += 10 + (c - 'A');
-		} else if (c == '\0') {
-            return '\0';
-		} else {
-            return 'x' - 'a';
-		}
-
-		iCount--;
-	}
-
-	return c2;
-}
-
-char DecodeEscape()
-{
-    char c2;
-	switch (c) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-			return DecodeOctal();
-		case 'a':
-            c = GetCar();
-			return '\a';
-		case 'b':
-            c = GetCar();
-			return '\b';
-		case 'c':
-            c = GetCar();
-			return DecodeControlChar ();
-		case 'e':
-            c = GetCar();
-			return '\\';
-		case 'f':
-            c = GetCar();
-			return '\f';
-		case 'n':
-            c = GetCar();
-			return '\n';
-		case 'r':
-            c = GetCar();
-			return '\r';
-		case 't':
-            c = GetCar();
-			return '\t';
-		case 'v':
-            c = GetCar();
-			return '\v';
-		case 'x':
-            c = GetCar();
-			return DecodeHex();
-		default:
-            c2 = c;
-            c = GetCar();
-			return c2;
-	}
-}
-
-
-TOKEN GetNormalSym(void)
-{
-    int l;
-    char c2;
-    char s2[81];
-    int  bFin;
-
-    strncpy(s2, s, 80);
-    s2[80] = 0;
-    s[0] = '\0';
-
-    if(bMarcas >= 2)
-        return 0;
-
-    if(bCurly){
-        bCurly = 0;
-        return ';' ;
-    }
-
-    if(bEqual){
-        bEqual = 0;
-        s[0] = 0;
-        return TOK_TOKEN;
-    }
-
-    while(1){
-        while ( c == ' ' || c == '\t' || c == '\n')
-            c = GetCar();
-        if(c == '/'){
-            if( (c=GetCar()) == '*'){
-                c = GetCar();
-                bFin = 0;
-                while(!bFin){
-                    while(c == '*')
-                        if((c = GetCar()) == '/')
-                            bFin = 1;
-                    c = GetCar();
-                }
-            }else{
-                lseek(fileIn, -1L, SEEK_CUR);
-                c = '/';
-                break;
-            }
-        }else
-            break;
-    }
-
-    if ( !c )
-        return 0;
-
-    if( c == '%' || c == '\\'){
-        c = GetCar();
-        switch(c){
-            case '0':
-                c = GetCar();
-                return TOK_TERM;
-            case '<':
-                c = GetCar();
-                return TOK_LEFT;
-            case '2':
-                c = GetCar();
-                return TOK_BINARY;
-            case '>':
-                c = GetCar();
-                return TOK_RIGHT;
-            case '%':
-            case '\\':
-                c = GetCar();
-                bMarcas++;
-                return TOK_MARCA;
-            case '=':
-                c = GetCar();
-                return TOK_PREC;
-            case '@':
-                c = GetCar();
-                return TOK_NAME;
-            case '{':
-                c = GetCar();
-                bCurly = 1;
-                return (TOKEN)'{';
-            case '!':
-                c = GetCar();
-                return TOK_ERRDEF;
-        }
-        l = 0;
-        while(isalpha(c)){
-            if(l<80){
-                s[l] = c;
-                s[++l] = '\0';
-            }
-            c = GetCar();
-        }
-        for(l=0 ; l < sizeof(RWord) / sizeof(RWORD); l++)
-            if(!stricmp(s, RWord[l].scWord)){
-                if(RWord[l].tSym == TOK_UNION)
-                    bCurly = 1;
-                return RWord[l].tSym;
-            }
-        bError = 1;
-        Error(LINE_SIS, ERR_BADWORD, s);
-        return TOK_ERROR;
-    }
-
-    if(c == ';'){
-        c = GetCar();
-        return ';' ;
-    }
-
-    if(c == ','){
-        c = GetCar();
-        return ',' ;
-    }
-
-    if(c == ':'){
-        strcpy(snt, s2);
-        c = GetCar();
-        return ':' ;
-    }
-
-    if(c == '|'){
-        c = GetCar();
-        return '|' ;
-    }
-
-    if(c == '='){
-        c = GetCar();
-        bEqual = 1;
-        return '=' ;
-    }
-
-    if(c == '{'){
-        bEqual = 1;
-        return '=' ;
-    }
-
-    if(c == '<'){
-        c = GetCar();
-        l = 0;
-        while( c && c != '>' && c != '\n'){
-            if(l<80){
-                s[l] = c;
-                s[++l] = '\0';
-            }
-            c = GetCar();
-        }
-        if( c != '>'){
-            bError = 1;
-            Error(LINE_SIS, ERR_BADTYPE);
-            return TOK_ERROR;
-        }
-        c = GetCar();
-        return TOK_TYPENAME;
-    }
-
-
-    if ( c == '/' ){
-        bRegEx = 1;
-        bEqual = 1;
-        c = GetCar();
-        return '/';
-    }
-
-    if(isdigit(c)){
-        while(isdigit(c)){
-            s[l=strlen(s)] = c;
-            s[++l] = 0;
-            c = GetCar();
-        }
-        tok_num = atoi(s);
-        return TOK_NUM;
-    }
-
-    must_close = 0;
-    if( c == '\'' || c == '"'){
-        c2 = c;
-        must_close=1;
-        c = GetCar();
-    }else
-        c2 = ':';
-
-    do{ /* TOKEN */
-        s[l=strlen(s)] = c;
-        s[++l] = '\0';
-        if(!(c = GetCar()))
-            break;
-        if(!must_close && strchr("%\\;,:|={< \t\n", c))
-            break;
-    }while (c != c2);
-
-    if(must_close && c != c2){
-        bError = 1;
-        Error(LINE_SIS, ERR_BADQUOTE);
-        return TOK_ERROR;
-    }
-    tok_num = -1;
-    if(!strcmp(s, "\\a"))
-        tok_num = '\a';
-    else if(!strcmp(s, "\\b"))
-        tok_num = '\b';
-    else if(!strcmp(s, "\\n"))
-        tok_num = '\n';
-    else if(!strcmp(s, "\\t"))
-        tok_num = '\t';
-    else if(!strcmp(s, "\\f"))
-        tok_num = '\f';
-    else if(!strcmp(s, "\\r"))
-        tok_num = '\r';
-    else if(!strncmp(s, "\\x", 2)){
-        char *p = s+2;
-        tok_num = 0;
-        while(1)
-            if(*p >= '0' && *p <= '9')
-                tok_num = tok_num * 16 + *p++-'0';
-            else if(*p >= 'A' && *p <= 'F')
-                tok_num = tok_num * 16 + *p++-'A'+10;
-            else if(*p >= 'a' && *p <= 'f')
-                tok_num = tok_num * 16 + *p++-'a'+10;
-            else
-                break;
-    }else if(!strncmp(s, "\\0", 2)){
-        char *p = s+2;
-        tok_num = 0;
-        while(*p >= '0' && *p <= '7')
-            tok_num = tok_num * 8 + *p++-'0';
-    }
-
-    if(must_close){
-        c = GetCar();
-        if(strlen(s) == 1)
-            tok_num = s[0];
-    }
-
-    return TOK_TOKEN;
-}
-
-int GetRegexSym(void) {
-    char c2;
-
-    if(bEqual){
-        bEqual = 0;
-        s[0] = 0;
-        return TOK_TOKEN;
-    }
-
-    if (c == '|') {c = GetCar(); return TOK_RX_PIPE;}
-    if (c == '(') {c = GetCar(); return TOK_RX_LPAR;}
-    if (c == ')') {c = GetCar(); return TOK_RX_RPAR;}
-    if (c == '*') {c = GetCar(); return TOK_RX_STAR;}
-    if (c == '+') {c = GetCar(); return TOK_RX_PLUS;}
-    if (c == '?') {c = GetCar(); return TOK_RX_HUH;}
-    if (c == '.') {c = GetCar(); return TOK_RX_ANY;}
-    if (c == '/') {
-        bRegEx = 0;
-        bEqual = 1;
-        c = GetCar();
-        return '/';
-    }
-
-    if (c == '\\') {
-        c = GetCar();
-        c2 = DecodeEscape();
-        if (c2 == 0) {
-            return EOS;
-        }
-        StxValue.node = malloc(sizeof(REGEXNODE));
-        StxValue.node->parent = NULL;
-        StxValue.node->child1 = NULL;
-        StxValue.node->child2 = NULL;
-        StxValue.node->nodeType = NODE_LEX;
-        StxValue.node->ranges = malloc(sizeof(REGEXRANGE));
-        StxValue.node->ranges->next = NULL;
-        StxValue.node->ranges->prev = NULL;
-        StxValue.node->ranges->charStart = c2;
-        StxValue.node->ranges->charEnd = c2;
-        return TOK_CHARS;
-    }
-
-    if (c != '\0') {
-        StxValue.node = malloc(sizeof(REGEXNODE));
-        StxValue.node->parent = NULL;
-        StxValue.node->child1 = NULL;
-        StxValue.node->child2 = NULL;
-        StxValue.node->nodeType = NODE_LEX;
-        StxValue.node->ranges = malloc(sizeof(REGEXRANGE));
-        StxValue.node->ranges->next = NULL;
-        StxValue.node->ranges->prev = NULL;
-        StxValue.node->ranges->charStart = c;
-        StxValue.node->ranges->charEnd = c;
-        c = GetCar();
-        return TOK_CHARS;
-    }
-
-    return EOS; 
-}
-
-
-int StxScan(void)
-{
+  /**
+   * Get next token
+   * 
+   * @return the next token, changing mode as needed
+   */
+  protected int StxScan() throws IOException {
     int rc;
-    
-    if (bRegEx) {
-      rc = GetRegexSym();
-	  if (fVerbose) {
-        printf("RegexScanner: %d\n", rc);
-	  }
+  
+    if (isRegex) {
+      rc = getRegexSymbol();
+      if (environment.isVerbose()) {
+        System.out.printf("RegexScanner: %d\n", rc);
+      }
     } else {
-      rc = GetNormalSym();
-      StxValue.s.value = tok_num;
-      StxValue.s.must_close = must_close;
-      strcpy(StxValue.s.id, s);
-	  if (fVerbose) {
-        printf("StdScanner: %d [%s]\n", rc, s);
-	  }
+      rc = getNormalSymbol();
+      StxValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null);
+      if (environment.isDebug()) {
+        System.out.printf("* StdScanner: %s(%d) {%s}\n",
+            (rc >= 256 ? tokenNames[rc - 256] : "\"" + Character.toString((char) rc) + "\""), rc,
+            StxValue != null ? StxValue.toString() : "");
+      }
     }
     return rc;
-}
+  }
 
-int StxError(int StxState, int StxSym, int pStxStack)
-{
+  /**
+   * report an error
+   * 
+   * @param StxState state of the error
+   * @param StxSym causing token
+   * @param pStxStack the position in the stack when the error happened
+   * @return
+   */
+  protected int StxError(int StxState, int StxSym, int pStxStack) {
     int msg = StxParsingTable[StxState].msg;
     if (msg >= 0) {
-        Error(LINE_SIS, ERR_STX, StxState, StxErrorTable[msg]);
+      environment.error(-1, "Syntax error %d :\'%s\'.", StxState, StxErrorTable[msg]);
     } else {
-        fprintf(stderr, "%s(%05d) : Unknown error on state %d\n", szSource, nLine+1, StxState);
+      System.err.printf("%s(%05d) : Unknown error on state %d\n", environment.getSourceFile().toString(),
+          runtimeData.lineNumber + 1, StxState);
     }
-    bError = 1;
-    return 0; /* with actions, it recovers weird.  Need to change the action stuff to the scanner */
-}
+    isError = true;
+    return 0; /*
+               * with actions, it recovers weird. Need to change the action
+               * stuff to the scanner
+               */
+  }
 
-int Revisa(void)
-{
-    c = GetCar( );
-    lestado =
-    terminals =
-    noterminals = 0;
-    pNTtable = NULL;
-    pTtable = NULL;
-    pSintax = NULL;
-    pRule = NULL;
-    if(!(pTtable = NewID(NULL,"$"))){
-        Error(LINE_SIS, ERR_NOM);
-        return 1;
+  @Override
+  public int getRegexSymbol() throws IOException {
+    char c2;
+  
+    if (isEqual) {
+      isEqual = false;
+      runtimeData.currentStringValue = "";
+      return TOK_TOKEN;
     }
-    pTtable->count = 0;
-    pTtable->token = 0;
-    if (!StxParse() || bError)
-        return TRUE;
-    pRGrammar = NULL;
-    if(!SayToUser())
-        return TRUE;
-    return FALSE;
+  
+    if (runtimeData.currentCharacter == '|') {
+      getCharacter();
+      return TOK_RX_PIPE;
+    }
+    if (runtimeData.currentCharacter == '(') {
+      getCharacter();
+      return TOK_RX_LPAR;
+    }
+    if (runtimeData.currentCharacter == ')') {
+      getCharacter();
+      return TOK_RX_RPAR;
+    }
+    if (runtimeData.currentCharacter == '*') {
+      getCharacter();
+      return TOK_RX_STAR;
+    }
+    if (runtimeData.currentCharacter == '+') {
+      getCharacter();
+      return TOK_RX_PLUS;
+    }
+    if (runtimeData.currentCharacter == '?') {
+      getCharacter();
+      return TOK_RX_HUH;
+    }
+    if (runtimeData.currentCharacter == '.') {
+      getCharacter();
+      return TOK_RX_ANY;
+    }
+    if (runtimeData.currentCharacter == '/') {
+      isRegex = false;
+      isEqual = true;
+      getCharacter();
+      return '/';
+    }
+  
+    if (runtimeData.currentCharacter == '\\') {
+      getCharacter();
+      c2 = decodeEscape();
+      if (c2 == 0) {
+        return '\0';
+      }
+    }
+    /*
+     * StxValue.node = malloc(sizeof(REGEXNODE)); StxValue.node.parent = NULL;
+     * StxValue.node.child1 = NULL; StxValue.node.child2 = NULL;
+     * StxValue.node.nodeType = NODE_LEX; StxValue.node.ranges =
+     * malloc(sizeof(REGEXRANGE)); StxValue.node.ranges.next = NULL;
+     * StxValue.node.ranges.prev = NULL; StxValue.node.ranges.charStart = c2;
+     * StxValue.node.ranges.charEnd = c2;
+     */
+    return TOK_CHARS;
+  }
+
+  @Override
+  public int getNormalSymbol() throws IOException {
+    char c2;
+    String s2;
+    boolean end;
+  
+    s2 = runtimeData.currentStringValue;
+    runtimeData.currentStringValue = "";
+  
+    if (markers >= 2) {
+      return 0;
+    }
+  
+    if (isCurlyBrace) {
+      isCurlyBrace = false;
+      return ';';
+    }
+  
+    if (isEqual) {
+      isEqual = false;
+      runtimeData.currentStringValue = "";
+      return TOK_TOKEN;
+    }
+  
+    while (2 > 1) {
+      while (Character.isWhitespace(runtimeData.currentCharacter)) {
+        getCharacter();
+      }
+      if (runtimeData.currentCharacter == '/') {
+        if ((getCharacter()) == '*') {
+          getCharacter();
+          end = false;
+          while (!end) {
+            while (runtimeData.currentCharacter == '*') {
+              if ((getCharacter()) == '/') {
+                end = true;
+              }
+            }
+            getCharacter();
+          }
+        } else {
+          ungetCharacter(runtimeData.currentCharacter);
+          runtimeData.currentCharacter = '/';
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+  
+    if (runtimeData.currentCharacter == '\0') {
+      return 0;
+    }
+  
+    if (runtimeData.currentCharacter == '%' || runtimeData.currentCharacter == '\\') {
+      getCharacter();
+      switch (runtimeData.currentCharacter) {
+        case '0':
+          getCharacter();
+          return TOK_TERM;
+        case '<':
+          getCharacter();
+          return TOK_LEFT;
+        case '2':
+          getCharacter();
+          return TOK_BINARY;
+        case '>':
+          getCharacter();
+          return TOK_RIGHT;
+        case '%':
+        case '\\':
+          getCharacter();
+          markers++;
+          return TOK_MARK;
+        case '=':
+          getCharacter();
+          return TOK_PREC;
+        case '@':
+          getCharacter();
+          return TOK_NAME;
+        case '{':
+          getCharacter();
+          isCurlyBrace = true;
+          return '{';
+        case '!':
+          getCharacter();
+          return TOK_ERRDEF;
+      }
+      while (Character.isLetterOrDigit(runtimeData.currentCharacter)) {
+        runtimeData.currentStringValue += runtimeData.currentCharacter;
+        getCharacter();
+      }
+      for (ReservedWord rw : RWord) {
+        if (runtimeData.currentStringValue.equals(rw.word)) {
+          if (rw.token == TOK_UNION) {
+            isCurlyBrace = true;
+          }
+          return rw.token;
+        }
+      }
+      isError = true;
+      environment.error(-1, "Reserved word \'%s\' is incorrect.", runtimeData.currentStringValue);
+      return TOK_ERROR;
+    }
+  
+    if (runtimeData.currentCharacter == ';') {
+      getCharacter();
+      return ';';
+    }
+  
+    if (runtimeData.currentCharacter == ',') {
+      getCharacter();
+      return ',';
+    }
+  
+    if (runtimeData.currentCharacter == ':') {
+      currentNonTerminalName = s2;
+      getCharacter();
+      return ':';
+    }
+  
+    if (runtimeData.currentCharacter == '|') {
+      getCharacter();
+      return '|';
+    }
+  
+    if (runtimeData.currentCharacter == '=') {
+      getCharacter();
+      isEqual = true;
+      return '=';
+    }
+  
+    if (runtimeData.currentCharacter == '{') {
+      isEqual = true;
+      return '=';
+    }
+  
+    if (runtimeData.currentCharacter == '<') {
+      getCharacter();
+      runtimeData.currentStringValue = "";
+      while (runtimeData.currentCharacter != '\0' && runtimeData.currentCharacter != '>' && runtimeData.currentCharacter != '\n') {
+        runtimeData.currentStringValue += runtimeData.currentCharacter;
+        getCharacter();
+      }
+      if (runtimeData.currentCharacter != '>') {
+        isError = true;
+        environment.error(-1, "Statement < .. > not ended.");
+        return TOK_ERROR;
+      }
+      getCharacter();
+      return TOK_TYPENAME;
+    }
+  
+    if (runtimeData.currentCharacter == '/') {
+      isRegex = true;
+      isEqual = true;
+      getCharacter();
+      return '/';
+    }
+  
+    if (Character.isDigit(runtimeData.currentCharacter)) {
+      runtimeData.currentStringValue = "";
+      while (Character.isDigit(runtimeData.currentCharacter)) {
+        runtimeData.currentStringValue += runtimeData.currentCharacter;
+        getCharacter();
+      }
+      tokenNumber = Integer.parseInt(runtimeData.currentStringValue);
+      return TOK_NUM;
+    }
+  
+    mustClose = false;
+    if (runtimeData.currentCharacter == '\'' || runtimeData.currentCharacter == '"') {
+      c2 = runtimeData.currentCharacter;
+      mustClose = true;
+      getCharacter();
+    } else {
+      c2 = ':';
+    }
+  
+    runtimeData.currentStringValue = "";
+    do { /* TOKEN */
+      runtimeData.currentStringValue += runtimeData.currentCharacter;
+      getCharacter();
+      if (runtimeData.currentCharacter == '\0') {
+        break;
+      }
+      if (!mustClose && "%\\;,:|={< \r\t\n".indexOf(runtimeData.currentCharacter) >= 0) {
+        break;
+      }
+    } while (runtimeData.currentCharacter != c2);
+  
+    if (mustClose && runtimeData.currentCharacter != c2) {
+      isError = true;
+      environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
+      return TOK_ERROR;
+    }
+    tokenNumber = -1;
+    if (runtimeData.currentStringValue.equals("\\a")) {
+      tokenNumber = 7;
+    } else if (runtimeData.currentStringValue.equals("\\b")) {
+      tokenNumber = '\b';
+    } else if (runtimeData.currentStringValue.equals("\\n")) {
+      tokenNumber = '\n';
+    } else if (runtimeData.currentStringValue.equals("\\t")) {
+      tokenNumber = '\t';
+    } else if (runtimeData.currentStringValue.equals("\\f")) {
+      tokenNumber = '\f';
+    } else if (runtimeData.currentStringValue.equals("\\r")) {
+      tokenNumber = '\r';
+    } else if (runtimeData.currentStringValue.length() >= 2 && runtimeData.currentStringValue.substring(0, 2).equals("\\x")) {
+      int p = 2;
+      tokenNumber = 0;
+      while (2 > 1) {
+        if (runtimeData.currentStringValue.charAt(p) >= '0' && runtimeData.currentStringValue.charAt(p) <= '9') {
+          tokenNumber = tokenNumber * 16 + runtimeData.currentStringValue.charAt(p++) - '0';
+        } else if (runtimeData.currentStringValue.charAt(p) >= 'A' && runtimeData.currentStringValue.charAt(p) <= 'F') {
+          tokenNumber = tokenNumber * 16 + runtimeData.currentStringValue.charAt(p++) - 'A' + 10;
+        } else if (runtimeData.currentStringValue.charAt(p) >= 'a' && runtimeData.currentStringValue.charAt(p) <= 'f') {
+          tokenNumber = tokenNumber * 16 + runtimeData.currentStringValue.charAt(p++) - 'a' + 10;
+        } else {
+          break;
+        }
+      }
+    } else if (runtimeData.currentStringValue.length() >= 2 && runtimeData.currentStringValue.substring(0, 2).equals("\\0")) {
+      int p = 2;
+      tokenNumber = 0;
+      while (runtimeData.currentStringValue.charAt(p) >= '0' && runtimeData.currentStringValue.charAt(p) <= '7') {
+        tokenNumber = tokenNumber * 8 + runtimeData.currentStringValue.charAt(p++) - '0';
+      }
+    }
+  
+    if (mustClose) {
+      getCharacter();
+      if (runtimeData.currentStringValue.length() == 1) {
+        tokenNumber = runtimeData.currentStringValue.charAt(0);
+      }
+    }
+  
+    return TOK_TOKEN;
+  }
+
+  /**
+   * Execute this phase
+   * @throws ParsingException on error.  Check cause and message.
+   */
+  public void execute() throws ParsingException {
+    if (environment.isVerbose()) {
+      System.out.println("Parse");
+    }
+    try {
+      getCharacter();
+      runtimeData.lineNumber = 0;
+      markers = 0;
+      Terminal terminal = new Terminal("$");
+      runtimeData.getTerminals().add(terminal);
+      terminal.setCount(0);
+      terminal.setToken(0);
+      if (!StxParse() || isError) {
+        throw new ParsingException("Parser returned errors.  Please see messages from parser");
+      }
+      reviewDeclarations();
+      computeRootSymbol();
+      generateTopRecoveryTable();
+      finalizeSymbols();
+      finalizeRules();
+      generateTokenDefinitions();
+      runtimeData.setNumberOfErrors(StxErrors);
+      runtimeData.setFinalActions(finalActions);
+    } catch (IOException e) {
+      throw new ParsingException("IOError ocurred when parsing: " + e.getMessage(), e);
+    }
+  }
+  
 }

@@ -97,6 +97,7 @@ public class CodeParser extends AbstractCodeParser {
       new ReservedWord("term", TOK_TERM), new ReservedWord("left", TOK_LEFT), new ReservedWord("nonassoc", TOK_BINARY),
       new ReservedWord("binary", TOK_BINARY), new ReservedWord("right", TOK_RIGHT), new ReservedWord("prec", TOK_PREC),
       new ReservedWord("start", TOK_START), new ReservedWord("type", TOK_TYPE), new ReservedWord("union", TOK_UNION),
+      new ReservedWord("stack", TOK_UNION), new ReservedWord("class", TOK_UNION), new ReservedWord("struct", TOK_UNION),
       new ReservedWord("name", TOK_NAME), new ReservedWord("error", TOK_ERRDEF), new ReservedWord("lexer", TOK_LEXER) };
 
   private static final ParserAction StxActionTable[] = { new ParserAction(257, 6), new ParserAction(259, 8),
@@ -710,26 +711,6 @@ public class CodeParser extends AbstractCodeParser {
         }
       }
     }
-  }
-
-  /**
-   * Found a rule action.  Copy it to the output stream as-is
-   * @param ruleNumber the rule index
-   * @param elementCount the elements in the rule
-   * @param nonTerminalName the left hand symbol of the rule
-   */
-  private boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) throws IOException {
-    generateCodeGeneratorHeader();
-    generateCaseStatement(ruleNumber, nonTerminalName + " -> " + runtimeData.currentRuleItems.toString());
-    
-    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName)) {
-      return false;
-    }
-    
-    generateCaseEnd();
-    runtimeData.ruleActionCount++;
-    
-    return true;
   }
 
   /**

@@ -901,5 +901,26 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return rule != null ? rule.getLineNumber() - 1 : -1;
   }
 
+  /**
+   * Found a rule action.  Copy it to the output stream as-is
+   * @param ruleNumber the rule index
+   * @param elementCount the elements in the rule
+   * @param nonTerminalName the left hand symbol of the rule
+   */
+  protected boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) throws IOException {
+    generateCodeGeneratorHeader();
+    String ruleLabel = runtimeData.currentRuleItems == null? "" : runtimeData.currentRuleItems.toString();
+    generateCaseStatement(ruleNumber, nonTerminalName + " -> " + ruleLabel);
+    
+    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName)) {
+      return false;
+    }
+    
+    generateCaseEnd();
+    runtimeData.ruleActionCount++;
+    
+    return true;
+  }
+
 
 }
