@@ -136,7 +136,7 @@ public class TableGenerator extends AbstractPhase {
       if (marker.getItem() != null && marker.getItem().getSymbol() instanceof NonTerminal) {
         for (Rule rule : runtimeData.getRules()) {
           if (rule.getLeftHandId() == marker.getItem().getSymbolId()) {
-            Dot auxiliary = findDot(state.getKernelDots(), rule, rule.getItem(0));
+            Dot auxiliary = findDot(state.getAllDots(), rule, rule.getItem(0));
             if (auxiliary != null) {
               environment.algorithm.mergeLookaheads(marker, auxiliary);
             } else {
@@ -617,12 +617,15 @@ public class TableGenerator extends AbstractPhase {
           environment.report.println("ACCEPT BY " + -dot.getRule().getRulenum());
           parserLine[0] = ACCEPT;
         } else {
-          environment.report.printf("REDUCE BY RULE %d\n", dot.getRule().getRulenum());
           for (Symbol tkn : runtimeData.getTerminals()) {
             boolean containsToken = environment.algorithm.dotContains(dot, tkn.getId());
             if (containsToken) {
+              environment.report.printf("REDUCE BY RULE %d with %s\n", dot.getRule().getRulenum(), tkn.toString());
               if (parserLine[tkn.getId()] > 0) {
+                // Conflict
                 if (!resolveShiftReduceConflict(parserLine, tkn, dot.getRule())) {
+                  environment.report.printf("Warning: Shift/Reduce conflict. With %s Shift to %d, Reduce by rule %d.  (Reduce by rule %d assumed)\n", tkn.getName(),
+                      parserLine[tkn.getId()], dot.getRule().getRulenum(), dot.getRule().getRulenum());
                   environment.error(dot.getRule().getLineNumber(),
                       "Warning: Shift/Reduce conflict on state %d[%s Shift:%d Reduce:%d].", stateNumber, tkn.getName(),
                       parserLine[tkn.getId()], dot.getRule().getRulenum());
@@ -776,7 +779,11 @@ public class TableGenerator extends AbstractPhase {
         if (s == null) {
           s = runtimeData.findNonTerminalById(i);
         }
-        environment.report.printf("SHIFT ON %s TO STATE %d\n", s.getName(), parserLine[i]);
+        if (s instanceof NonTerminal) {
+          environment.report.printf("GO TO STATE %d with symbol %s\n", parserLine[i], s.getName());
+        } else {
+          environment.report.printf("SHIFT ON %s TO STATE %d\n", s.getName(), parserLine[i]);
+        }
       }
     }
     computeReduce(parserLine, stateNumber);

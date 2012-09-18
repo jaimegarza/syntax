@@ -59,7 +59,10 @@ import me.jaimegarza.syntax.env.Environment;
  * @author jaimegarza@gmail.com
  *
  */
+@SuppressWarnings("unused")
 public class SyntaxCodeParser extends AbstractCodeParser {
+
+  private String currentTypeName = null;
 
   public SyntaxCodeParser(Environment env) {
     super(env);
@@ -67,14 +70,14 @@ public class SyntaxCodeParser extends AbstractCodeParser {
   
 %}
 
-%union {
+%stack {
     public int stateNumber;
     public int value;
     public boolean mustClose;
     public String id;
     public String regex;
 
-    LexicalValue(int state, int value, boolean mustClose, String id, String regex) {
+    StackElement(int state, int value, boolean mustClose, String id, String regex) {
       super();
       this.stateNumber = state;
       this.value = value;
@@ -91,46 +94,49 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 
 %token            TOK_MARK      256: "'%%'"
 %token            TOK_START     257: "'%start'"
-%token  <s>       TOK_TOKEN     258: "Token"
+%token  <id>      TOK_TOKEN     258: "Token"
 %token            TOK_TYPE      259: "'%type'"
 %token            TOK_UNION     260: "'%union'"
-%token  <s.id>    TOK_TYPENAME  261: "Type definition"
+%token  <id>      TOK_TYPENAME  261: "Type definition"
 %token            TOK_TERM      262: "'%token'"
 %token            TOK_LEFT      263: "'%left'"
 %token            TOK_RIGHT     264: "'%right'"
 %token            TOK_BINARY    265: "'%binary'"
 %token            TOK_ERRDEF    266: "'%error'"
-%token  <s.value> TOK_NUM       267: "Number"
+%token  <value>   TOK_NUM       267: "Number"
 %token            TOK_PREC      268: "'%prec'"
 %token            TOK_NAME      269: "'%name'"
 %token            TOK_ERROR     270: "Error"
 %token            TOK_LEXER     271: "%lexer"
 
-%token <node>     TOK_RX_PIPE   272: "'|'"
+%token <regex>    TOK_RX_PIPE   272: "'|'"
 %token            TOK_RX_LPAR   273: "'('"
 %token            TOK_RX_RPAR   274: "')'"
-%token <node>     TOK_RX_STAR   275: "'*'" 
-%token <node>     TOK_RX_PLUS   276: "'+'" 
-%token <node>     TOK_RX_HUH    277: "'?'" 
-%token <node>     TOK_RX_ANY    278: "'.'"
-%token <node>     TOK_RX_CHARS  279: "Character or set of characters"
+%token <regex>    TOK_RX_STAR   275: "'*'" 
+%token <regex>    TOK_RX_PLUS   276: "'+'" 
+%token <regex>    TOK_RX_HUH    277: "'?'" 
+%token <regex>    TOK_RX_ANY    278: "'.'"
+%token <regex>    TOK_RX_CHARS  279: "Character or set of characters"
+%token            TOK_LEXCODE   280: "lexical code"
+%token            TOK_CHARS     290: "regular expression characters"
 
-%token            ';'              : "Semicolon"
-%token            ':'              : "Colon"
-%token            ','              : "Comma"
-%token            '|'              : "Rule separator ('|')"
-%token            '('              : "Opening parenthesis"
-%token            ')'              : "Closing parenthesis"
-%token            '/'              : "Regular expression marker ('/')"
+%token            ';'              : "semicolon"
+%right            ':'              : "colon"
+%right            '='              : "equals sign"
+%token            ','              : "comma"
+%token            '|'              : "rule separator ('|')"
+%token            '('              : "opening parenthesis"
+%token            ')'              : "closing parenthesis"
+%token            '/'              : "regular expression marker ('/')"
 
-%type   <s.value> Number;
-%type   <s>       Precedence;
-%type   <s>       ErrInfo;
-%type   <node>    LexicAction;
+%type   <value>   Number;
+%type   <value>   Precedence;
+%type   <id>      ErrInfo;
+%type   <regex>   LexicAction;
 
-%type <node>      BasicElement;
-%type <node>      ConcatElement;
-%type <node>      RegExp;
+%type   <regex>   BasicElement;
+%type   <regex>   ConcatElement;
+%type   <regex>   RegExp;
 
 %name Declarations                  : "declarations";
 %name Declaration                   : "a declaration";
@@ -139,7 +145,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %name Symbol                        : "token, precedence declaration or '='";
 %name GrammarRule                   : "parser rule definition";
 %name LexicAction                   : "lexical token definition";
-
+%name Name                          : "a token:name pair";
 %name RegExp                        : "regular expression";
 %name ConcatElement                 : "operator expression";
 %name BasicElement                  : "basic element";
@@ -149,8 +155,11 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %error ';'
 
 %%
-Descriptor   :  Declarations =generateLexerFooter(); TOK_MARK Productions Actions
-             |  =generateLexerFooter(); TOK_MARK Productions Actions
+Descriptor   :  Declarations DeclMarker Productions Actions
+             |  DeclMarker  Productions Actions
+             ;
+             
+DeclMarker   : TOK_MARK                     = generateLexerFooter();
              ;
 
 Actions      :                              = {
@@ -168,13 +177,14 @@ Declarations :  Declarations Declaration
              ;
 
 Declaration  :  ';'
-             |  TOK_START TOK_TOKEN         = if (!declareStart($2)) return 0;
+             |  TOK_START TOK_TOKEN         = if (!declareStart($2)) return false;
              |  TOK_LEXCODE TOK_TOKEN 
-             |  TOK_TYPE TOK_TYPENAME Tokens
+             |  TOK_TYPE TOK_TYPENAME       = currentTypeName = $2;
+                         Tokens             = currentTypeName = null;
              |  TOK_NAME TokenNames
-             |  TOK_UNION                   = if (!generateStructure()) return 0;
+             |  TOK_UNION                   = if (!generateStructure()) return false;
              |  PrecDef Definition          = currentType = null;
-             |  '{'                         = if (!generateDeclaration()) return 0;
+             |  '{'                         = if (!generateDeclaration()) return false;
              |  TOK_LEXER Equals TOK_TOKEN
              ;
 
@@ -203,79 +213,44 @@ PrecDef      :  TOK_TERM                    = {
                                               }
              ;
 
-Tokens       :  Tokens TOK_TOKEN            = return declareOneNonTerminal($<s.id>0, $2.id);
-             |  Tokens ',' TOK_TOKEN        = return declareOneNonTerminal($<s.id>0, $3.id);
-             |  TOK_TOKEN                   = return declareOneNonTerminal($<s.id>0, $1.id);
+Tokens       :  Tokens ',' TOK_TOKEN        = if (!declareOneNonTerminal(currentTypeName, $3)) return false;
+             |  TOK_TOKEN                   = if (!declareOneNonTerminal(currentTypeName, $1)) return false;
              ;
 
-TokenNames   :  TokenNames TOK_TOKEN ':' TOK_TOKEN       = return nameOneNonTerminal($2.id, $4.id);
-             |  TokenNames ',' TOK_TOKEN ':' TOK_TOKEN   = return nameOneNonTerminal($3.id, $5.id);
-             |  TOK_TOKEN ':' TOK_TOKEN                  = return nameOneNonTerminal($1.id, $3.id);
+TokenNames   :  TokenNames ',' Name
+             |  Name
+             ;
+             
+Name         : TOK_TOKEN ':' TOK_TOKEN                   = if (!nameOneNonTerminal($1, $3)) return false;
              ;
 
 Definition   :  Type Precedences
              ;
 
 Precedences  :  Precedences ',' Precedence
-             |  Precedences Precedence
              |  Precedence
              ;
 
-Precedence   :  TOK_TOKEN Number ErrInfo LexicAction = {
-                                                         if ($2 != -1) {
-                                                           $$.value = $2.value;
-                                                         }
-                                                         Terminal terminal = runtimeData.findTerminalByName($1.id);
-                                                         if (terminal == null) {
-                                                           terminal = isErrorToken ? new ErrorToken($1.id) : new Terminal($1.id);
-                                                           runtimeData.getTerminals().add(terminal);
-                                                         }
-                                                         terminal.setCount(terminal.getCount() - 1);
-                                                         if (ruleAssociativity != Associativity.NONE) {
-                                                           if (terminal.getAssociativity() != Associativity.NONE) {
-                                                             environment.error(-1, "Reassigning precedence/associativity for token \'%s\'.", terminal.getName());
-                                                             return 0;
-                                                           }
-                                                           terminal.setPrecedence(rulePrecedence);
-                                                           terminal.setAssociativity(ruleAssociativity);
-                                                         }
-                                                         if (currentType != null) {
-                                                           terminal.setType(currentType);
-                                                           currentType.addUsage(terminal);
-                                                         }
-                                                         if ($$.value >= 0) {
-                                                           if (terminal.getToken() != -1) {
-                                                             environment.error(-1, "Warning: Token \'%s\' already has a value.", terminal.getName());
-                                                           }
-                                                           for (Terminal cual : runtimeData.getTerminals()) {
-                                                             if (cual != terminal && cual.getToken() == $$.value) {
-                                                               environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
-                                                                   $$.value, cual.getName());
-                                                               return 0;
-                                                             }
-                                                           }
-                                                           terminal.setToken($$.value);
-                                                         }
-                                                         if ($3.id != "") {
-                                                           terminal.setFullName($3.id);
-                                                         }
-                                                         if ($4.regex != null) {
-                                                           // SetEndToken($4.regex, terminal.getName());
-                                                         }
-                                                       }
-                        ;
+Precedence   :  TOK_TOKEN Number ErrInfo
+                                LexicAction = {
+                                                if ($2 != -1) {
+                                                  $$ = $2;
+                                                }
+                                                if (!declareOneTerminal($1, isErrorToken, ruleAssociativity, rulePrecedence, currentType, $$, $3)) return false;
+                                              }
+             ;
 
 Number       :  TOK_NUM
              |                              = $$ = -1;
              ;
 
-ErrInfo      : ':' TOK_TOKEN                =  $$.id = $2.id;
-             |                              =  $$.id = "";
+ErrInfo      : ':' TOK_TOKEN                = $$ = $2; 
+             | %prec ':'                    = $$ = "";
              ;
 
 LexicAction  : Equals TOK_TOKEN             = $$ = null;
              | Slash RegExp Slash           = //$$ = AddTree($2);
-             |                              = $$ = null;
+             | %prec '='                    = $$ = null;
              ;
 
 Slash        : '/' TOK_TOKEN                
@@ -312,8 +287,8 @@ Type         :  TOK_TYPENAME                = {
              ;
 
 
-Productions  :  Productions TOK_TOKEN ':' Rules ';'  = if (!setLeftHandOfLastRule($2.id)) return 0;
-             |  TOK_TOKEN ':' Rules ';'              = if (!setLeftHandOfLastRule($1.id)) return 0;
+Productions  :  Productions TOK_TOKEN ':' Rules ';'  = if (!setLeftHandOfLastRule($2)) return false;
+             |  TOK_TOKEN ':' Rules ';'              = if (!setLeftHandOfLastRule($1)) return false;
              ;
 
 Rules        :  Rules '|' GrammarRule       = {
@@ -338,7 +313,7 @@ Rule         :  Rule Symbol
              ;
 
 Symbol       :  TOK_TOKEN                    = {
-                                                 if ($1.id.length() == 0) {
+                                                 if ($1.length() == 0) {
                                                    break;
                                                  }
                                                  if (isFirstToken) {
@@ -348,41 +323,42 @@ Symbol       :  TOK_TOKEN                    = {
                                                  }
                                                  if (bActionDone) {
                                                    Rule stx = newEmptyRule();
-                                                   String rootName = "Sys$Prod" + (runtimeData.getRules().size() - 1);
-                                                   NonTerminal rootSymbol = new NonTerminal(rootName);
-                                                   runtimeData.getNonTerminals().add(rootSymbol);
-                                                   stx.setLeftHand(rootSymbol);
-                                                   rootSymbol.setCount(rootSymbol.getCount() + 1);
-                                                   rootSymbol.setPrecedence(1); /* usado como no terminal */
-                                                   RuleItem item = newItem(rootSymbol);
-                                                   stx.getItems().add(item);
+                                                   String rootName = "$code-fragment-" + (runtimeData.codeRule++);
+                                                   NonTerminal codeFragment = new NonTerminal(rootName);
+                                                   codeFragment.setCodeFragment(true);
+                                                   runtimeData.getNonTerminals().add(codeFragment);
+                                                   stx.setLeftHand(codeFragment);
+                                                   codeFragment.setCount(codeFragment.getCount() + 1);
+                                                   codeFragment.setPrecedence(1); /* used as non terminal */
+                                                   newItem(codeFragment);
+                                                   //stx.getItems().add(item);
                                                    bActionDone = false;
                                                  }
                                                  Symbol symbol;
-                                                 NonTerminal nonTerminal = runtimeData.findNonTerminalByName($1.id);
+                                                 NonTerminal nonTerminal = runtimeData.findNonTerminalByName($1);
                                                  if (nonTerminal == null) {
-                                                   Terminal terminal = runtimeData.findTerminalByName($1.id);
+                                                   Terminal terminal = runtimeData.findTerminalByName($1);
                                                    if (terminal != null) {
                                                      rulePrecedence = terminal.getPrecedence();
                                                      ruleAssociativity = terminal.getAssociativity();
                                                      symbol = terminal;
                                                    } else {
-                                                     if ($1.mustClose && $1.value >= 0) {
-                                                       terminal = new Terminal($1.id);
+                                                     if ($<mustClose>1 && $<value>1 >= 0) {
+                                                       terminal = new Terminal($1);
                                                        runtimeData.getTerminals().add(terminal);
-                                                       if ($1.value >= 0) {
+                                                       if ($<value>1 >= 0) {
                                                          for (Terminal cual : runtimeData.getTerminals()) {
-                                                           if (cual != terminal && cual.getToken() == $1.value) {
+                                                           if (cual != terminal && cual.getToken() == $<value>1) {
                                                              environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
-                                                                 $1.value, cual.getName());
-                                                             return 0;
+                                                                 $<value>1, cual.getName());
+                                                             return false;
                                                            }
                                                          }
-                                                         terminal.setToken($1.value);
+                                                         terminal.setToken($<value>1);
                                                        }
                                                        symbol = terminal;
                                                      } else {
-                                                       nonTerminal = new NonTerminal($1.id);
+                                                       nonTerminal = new NonTerminal($1);
                                                        runtimeData.getNonTerminals().add(nonTerminal);
                                                        nonTerminal.setCount(nonTerminal.getCount() + 1);
                                                        symbol = nonTerminal;
@@ -394,26 +370,26 @@ Symbol       :  TOK_TOKEN                    = {
                                                  newItem(symbol);
                                                }
              |  TOK_PREC TOK_TOKEN           = {
-                                                 NonTerminal nonTerminal = runtimeData.findNonTerminalByName($2.id);
+                                                 NonTerminal nonTerminal = runtimeData.findNonTerminalByName($2);
                                                  if (nonTerminal == null) {
-                                                   Terminal terminal = runtimeData.findTerminalByName($2.id);
+                                                   Terminal terminal = runtimeData.findTerminalByName($2);
                                                    if (terminal == null) {
-                                                     environment.error(-1, "Warning: token \'%s\' not declared.", $2.id);
-                                                     return 0;
+                                                     environment.error(-1, "Warning: token \'%s\' not declared.", $2);
+                                                     return false;
                                                    } else {
                                                      rulePrecedence = terminal.getPrecedence();
                                                      ruleAssociativity = terminal.getAssociativity();
                                                    }
                                                  } else {
-                                                   environment.error(-1, "Warning: token \'%s\' not declared.", $2.id);
-                                                   return 0;
+                                                   environment.error(-1, "Warning: token \'%s\' not declared.", $2);
+                                                   return false;
                                                  }
                                                }
                                              
              |  '='                          = {
-                                                 i = runtimeData.currentRuleItems != null ? runtimeData.currentRuleItems.size() : 0;
+                                                 int i = runtimeData.currentRuleItems != null ? runtimeData.currentRuleItems.size() : 0;
                                                  if (!ruleAction(runtimeData.getRules().size(), i, currentNonTerminalName)) {
-                                                   return 0;
+                                                   return false;
                                                  }
                                                  bActionDone = true;
                                                }
@@ -426,9 +402,12 @@ Symbol       :  TOK_TOKEN                    = {
    * 
    * @return the next token, changing mode as needed
    */
-  protected int StxScan() throws IOException {
+  protected int parserElement(boolean init) {
     int rc;
   
+    if (init) {
+      getNextChar(init);
+    }
     if (isRegex) {
       rc = getRegexSymbol();
       if (environment.isVerbose()) {
@@ -436,11 +415,10 @@ Symbol       :  TOK_TOKEN                    = {
       }
     } else {
       rc = getNormalSymbol();
-      StxValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null);
+      lexicalValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null);
       if (environment.isDebug()) {
         System.out.printf("* StdScanner: %s(%d) {%s}\n",
-            (rc >= 256 ? tokenNames[rc - 256] : "\"" + Character.toString((char) rc) + "\""), rc,
-            StxValue != null ? StxValue.toString() : "");
+            getTokenName(rc), rc, lexicalValue != null ? lexicalValue.toString() : "");
       }
     }
     return rc;
@@ -454,13 +432,12 @@ Symbol       :  TOK_TOKEN                    = {
    * @param pStxStack the position in the stack when the error happened
    * @return
    */
-  protected int StxError(int StxState, int StxSym, int pStxStack) {
-    int msg = StxParsingTable[StxState].msg;
-    if (msg >= 0) {
-      environment.error(-1, "Syntax error %d :\'%s\'.", StxState, StxErrorTable[msg]);
+  protected int parserError(int state, int sym, int stackTop, String errorMessage) {
+    if (errorMessage != null) {
+      environment.error(-1, "Syntax error %d :\'%s\'.", state, errorMessage);
     } else {
       System.err.printf("%s(%05d) : Unknown error on state %d\n", environment.getSourceFile().toString(),
-          runtimeData.lineNumber + 1, StxState);
+          runtimeData.lineNumber + 1, state);
     }
     isError = true;
     return 0; /*
@@ -468,9 +445,17 @@ Symbol       :  TOK_TOKEN                    = {
                * stuff to the scanner
                */
   }
+  
+  /**
+   * Get the next character
+   * @param init indicates if this is the first call
+   */
+  public char getNextChar(boolean init) {
+    return getCharacter();
+  }
 
   @Override
-  public int getRegexSymbol() throws IOException {
+  public int getRegexSymbol() {
     char c2;
   
     if (isEqual) {
@@ -533,7 +518,7 @@ Symbol       :  TOK_TOKEN                    = {
   }
 
   @Override
-  public int getNormalSymbol() throws IOException {
+  public int getNormalSymbol() {
     char c2;
     String s2;
     boolean end;
@@ -624,7 +609,7 @@ Symbol       :  TOK_TOKEN                    = {
         runtimeData.currentStringValue += runtimeData.currentCharacter;
         getCharacter();
       }
-      for (ReservedWord rw : RWord) {
+      for (ReservedWord rw : reservedWords) {
         if (runtimeData.currentStringValue.equals(rw.word)) {
           if (rw.token == TOK_UNION) {
             isCurlyBrace = true;
@@ -781,28 +766,54 @@ Symbol       :  TOK_TOKEN                    = {
     if (environment.isVerbose()) {
       System.out.println("Parse");
     }
-    try {
-      getCharacter();
-      runtimeData.lineNumber = 0;
-      markers = 0;
-      Terminal terminal = new Terminal("$");
-      runtimeData.getTerminals().add(terminal);
-      terminal.setCount(0);
-      terminal.setToken(0);
-      if (!StxParse() || isError) {
-        throw new ParsingException("Parser returned errors.  Please see messages from parser");
-      }
-      reviewDeclarations();
-      computeRootSymbol();
-      generateTopRecoveryTable();
-      finalizeSymbols();
-      finalizeRules();
-      generateTokenDefinitions();
-      runtimeData.setNumberOfErrors(StxErrors);
-      runtimeData.setFinalActions(finalActions);
-    } catch (IOException e) {
-      throw new ParsingException("IOError ocurred when parsing: " + e.getMessage(), e);
+    setVerbose(environment.isDebug());
+    runtimeData.lineNumber = 0;
+    markers = 0;
+    Terminal terminal = new Terminal("$");
+    runtimeData.getTerminals().add(terminal);
+    terminal.setCount(0);
+    terminal.setToken(0);
+    if (parse() == 0 || isError) {
+      throw new ParsingException("Parser returned errors.  Please see messages from parser");
+    }
+    reviewDeclarations();
+    computeRootSymbol();
+    generateTopRecoveryTable();
+    finalizeSymbols();
+    finalizeRules();
+    generateTokenDefinitions();
+    runtimeData.setNumberOfErrors(errorCount);
+    runtimeData.setFinalActions(finalActions);
+  }
+  
+  static class ReservedWord {
+    String word;
+    int token;
+
+    ReservedWord(String word, int token) {
+      super();
+      this.word = word;
+      this.token = token;
     }
   }
+  
+  static final ReservedWord reservedWords[] = { 
+    new ReservedWord("token", TOK_TERM),
+    new ReservedWord("term", TOK_TERM), 
+    new ReservedWord("left", TOK_LEFT), 
+    new ReservedWord("nonassoc", TOK_BINARY),
+    new ReservedWord("binary", TOK_BINARY),
+    new ReservedWord("right", TOK_RIGHT), 
+    new ReservedWord("prec", TOK_PREC),
+    new ReservedWord("start", TOK_START), 
+    new ReservedWord("type", TOK_TYPE), 
+    new ReservedWord("union", TOK_UNION),
+    new ReservedWord("stack", TOK_UNION), 
+    new ReservedWord("class", TOK_UNION),
+    new ReservedWord("struct", TOK_UNION),
+    new ReservedWord("name", TOK_NAME), 
+    new ReservedWord("error", TOK_ERRDEF), 
+    new ReservedWord("lexer", TOK_LEXER)
+  };
   
 }

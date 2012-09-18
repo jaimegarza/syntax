@@ -59,6 +59,10 @@ public class RuntimeData {
    */
   private List<Rule> rules = new LinkedList<Rule>();
   /**
+   * ID of the automatically generated rules
+   */
+  public int codeRule = 1;
+  /**
    * List of non terminals
    */
   private List<NonTerminal> nonTerminals = new LinkedList<NonTerminal>();
@@ -114,7 +118,7 @@ public class RuntimeData {
   /**
    * Current source line number
    */
-  public int lineNumber = 0;
+  public int lineNumber = 1;
   /**
    * The token's value
    */

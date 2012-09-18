@@ -34,6 +34,7 @@ import java.util.Stack;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
+import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.definition.Associativity;
 import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.NonTerminal;
@@ -50,6 +51,10 @@ import me.jaimegarza.syntax.util.PathUtils;
  * parser.<p>
  * 
  * This is done so that the CodeParser can be generated from a syntaxt file
+ * 
+ * TODO: Today I support $1, $2, $$, etc.  Support $TOKEN, $Declaration etc.
+ * TODO: Allow for type to be declared by itself, to avoid warnings when used.
+ * 
  * @author jgarza
  *
  */
@@ -86,6 +91,63 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
 
   }
 
+  /**
+   * Declare a token
+   * @param id is the short name of the token
+   * @param isErrorToken specifies if this token was declared with %error
+   * @param associativity defines if a token is defined with %left, %right, etc.
+   * @param precedence is the numeric precedence of the token
+   * @param tokenNumber is the number of the token, or its value
+   * @param fullName is the fullname, if given, of the token
+   * @return
+   */
+  protected boolean declareOneTerminal(String id, boolean isErrorToken, Associativity associativity, int precedence, Type type, int tokenNumber, String fullName) {
+    Terminal terminal = runtimeData.findTerminalByName(id);
+    if (terminal == null) {
+      terminal = isErrorToken ? new ErrorToken(id) : new Terminal(id);
+      runtimeData.getTerminals().add(terminal);
+    }
+    terminal.setCount(terminal.getCount() - 1);
+    
+    if (associativity != Associativity.NONE) {
+      if (terminal.getAssociativity() != Associativity.NONE) {
+        environment.error(-1, "Reassigning precedence/associativity for token \'%s\'.", terminal.getName());
+        return false;
+      }
+      terminal.setPrecedence(precedence);
+      terminal.setAssociativity(associativity);
+    }
+    
+    if (type != null) {
+      terminal.setType(type);
+      type.addUsage(terminal);
+    }
+    
+    if (tokenNumber >= 0) {
+      if (terminal.getToken() != -1 && terminal.getToken() != tokenNumber) {
+        environment.error(-1, "Warning: Token \'%s\' already has a value.", terminal.getName());
+      }
+      for (Terminal t : runtimeData.getTerminals()) {
+        if (t != terminal && t.getToken() == tokenNumber) {
+          environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
+            tokenNumber, t.getName());
+          return false;
+        }
+      }
+      terminal.setToken(tokenNumber);
+    }
+    
+    if (fullName != "" && fullName != null) {
+      terminal.setFullName(fullName);
+    }
+    
+    //if ($4 != null) {
+    // SetEndToken($4, terminal.getName());
+    //}
+    
+    return true;
+  }
+  
   /**
    * Declare one non terminal in the symbol table
    * @param typeName the desired type
@@ -168,7 +230,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * for instance '\017'
    * @return the octal entered character
    */
-  protected char decodeOctal() throws IOException {
+  protected char decodeOctal() {
     int iCount = 3;
     char c2 = 0;
   
@@ -195,7 +257,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * \a - \z
    * @return the control char
    */
-  protected char decodeControlChar() throws IOException {
+  protected char decodeControlChar() {
     char c2;
     getCharacter();
   
@@ -221,7 +283,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * for instance \x1f
    * @return the character
    */
-  protected char decodeHex() throws IOException {
+  protected char decodeHex() {
     int iCount = 2;
     char c2 = 0;
   
@@ -254,7 +316,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @return the encoded character
    * @throws IOException
    */
-  protected char decodeEscape() throws IOException {
+  protected char decodeEscape() {
     char c2;
     switch (runtimeData.currentCharacter) {
       case '0':
@@ -303,16 +365,24 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     }
   }
 
-  public char getCharacter() throws IOException {
+  public char getCharacter() {
     if (inputChars.size() > 0) {
       runtimeData.currentCharacter = inputChars.pop();
+      if (runtimeData.currentCharacter == '\n') {
+        runtimeData.lineNumber++;
+      }
       return runtimeData.currentCharacter;
     }
   
     // Get one char from stream
-    runtimeData.currentCharacter = (char) environment.source.read();
+    try {
+      runtimeData.currentCharacter = (char) environment.source.read();
+    } catch (IOException e) {
+      runtimeData.currentCharacter = 0;
+    }
+    
     // EOF?
-    if (runtimeData.currentCharacter == -1) {
+    if (runtimeData.currentCharacter == -1 || runtimeData.currentCharacter == 0) {
       return 0;
     }
   
@@ -331,18 +401,22 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
 
   public void ungetCharacter(char c) {
     inputChars.push(c);
+    if (c == '\n') {
+      runtimeData.lineNumber--;
+    }
   }
 
   /****************************EMBEDDED CODE PROCESSOR **************************/
-  public Type getTypeFromStream(Lexer lexer) throws IOException {
+  public Type getTypeFromStream(Lexer lexer) {
     Type type;
     String s2;
     s2 = runtimeData.currentStringValue;
     lexer.getNormalSymbol();
     type = runtimeData.findType(runtimeData.currentStringValue);
     if (type == null) {
-      environment.error(-1, "Cannot find type '%s'.", runtimeData.currentStringValue);
-      return null;
+      environment.error(-1, "Warning: cannot find type '%s'.  It will be declared", runtimeData.currentStringValue);
+      type = new Type(runtimeData.currentStringValue);
+      runtimeData.getTypes().add(type);
     }
     runtimeData.currentStringValue = s2;
     return type;
@@ -356,7 +430,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return item;
   }
 
-  public boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign) throws IOException {
+  public boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign) {
     int num;
     int base;
     num = 0;
@@ -411,7 +485,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return true;
   }
 
-  public boolean generateDollarDollar(Lexer lexer, int elementCount, String nonTerminalId, Type type) throws IOException {
+  public boolean generateDollarDollar(Lexer lexer, int elementCount, String nonTerminalId, Type type) {
     if (elementCount == 1) {
       environment.output.printFragment("stxstack", "");
     } else if (elementCount != 0) {
@@ -435,7 +509,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return true;
   }
 
-  public boolean generateConstant(Lexer lexer, char characterType) throws IOException {
+  public boolean generateConstant(Lexer lexer, char characterType) {
     environment.output.print(runtimeData.currentCharacter);
     while ((lexer.getCharacter()) != characterType) {
       if (runtimeData.currentCharacter == '\0') {
@@ -455,7 +529,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return true;
   }
 
-  public boolean skipAndOutputCompositeComment(Lexer lexer, char secondaryCharacter, char characterToFind) throws IOException {
+  public boolean skipAndOutputCompositeComment(Lexer lexer, char secondaryCharacter, char characterToFind) {
     boolean bBreak;
     
     environment.output.print(runtimeData.currentCharacter);
@@ -505,7 +579,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * copy action until the next ';' or '}' that actually closes
    */
-  protected boolean generateLexerCode() throws IOException {
+  protected boolean generateLexerCode() {
     if (tokenActionCount == 0) {
       environment.language.generateLexerHeader();
     }
@@ -540,7 +614,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * During a declaration, emit the accompanying code
    */
-  protected boolean generateDeclaration() throws IOException {
+  protected boolean generateDeclaration() {
     while (Character.isWhitespace(runtimeData.currentCharacter)) {
       getCharacter();
     }
@@ -603,7 +677,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * For yacc compatibility this is called the union, but it is
    * really a structure
    */
-  protected boolean generateStructure() throws IOException {
+  protected boolean generateStructure() {
     environment.language.emitLine(runtimeData.lineNumber);
     runtimeData.setStackTypeDefined(true);
     return environment.language.generateStructure(this);
@@ -907,10 +981,15 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @param elementCount the elements in the rule
    * @param nonTerminalName the left hand symbol of the rule
    */
-  protected boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) throws IOException {
+  protected boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) {
     generateCodeGeneratorHeader();
-    String ruleLabel = runtimeData.currentRuleItems == null? "" : runtimeData.currentRuleItems.toString();
-    generateCaseStatement(ruleNumber, nonTerminalName + " -> " + ruleLabel);
+    String ruleLabel = "";
+    if (runtimeData.currentRuleItems != null) {
+      for (RuleItem item : runtimeData.currentRuleItems) {
+        ruleLabel = ruleLabel + " " + item.getSymbol().getName();
+      }
+    }
+    generateCaseStatement(ruleNumber, "" + (ruleNumber+1) + ". " + nonTerminalName + " -> " + ruleLabel);
     
     if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName)) {
       return false;
@@ -921,6 +1000,29 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     
     return true;
   }
+
+  protected boolean declareStart(String id) {
+    if (runtimeData.getStart() != null) {
+      environment.error(-1, "Distinguished symbol \'%s\' declared more than once.", runtimeData.getStart().getName());
+      return false;
+    }
+    Terminal terminal = runtimeData.findTerminalByName(id);
+    if (terminal == null) {
+      NonTerminal nonTerminal = runtimeData.findNonTerminalByName(id);
+      if (nonTerminal == null) {
+        nonTerminal = new NonTerminal(id);
+        runtimeData.getNonTerminals().add(nonTerminal);
+      }
+      nonTerminal.setCount(nonTerminal.getCount() - 1);
+      runtimeData.setStart(nonTerminal);
+    } else {
+      environment.error(-1, "Distinguished symbol \'%s\' previously declared as token.", id);
+      return false;
+    }
+    return true;
+  }
+
+  public abstract void execute() throws ParsingException;
 
 
 }

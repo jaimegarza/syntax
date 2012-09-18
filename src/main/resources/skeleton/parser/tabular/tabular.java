@@ -19,7 +19,7 @@
 
   private int    stateStack[] = new int[STACK_DEPTH];
   int            state;
-  LexicalValue   lexicalValue;
+  StackElement   lexicalValue;
   int            lexicalToken;
   int            errorCount;
   int            errorFlag;
@@ -73,7 +73,7 @@
     System.out.println("<--Top Of Stack (" + stackTop + ")");
     System.out.print("Values: [");
     for(i=0;i<=stackTop;i++) {
-      System.out.print("|" + toString(stack[i]) + "| ");
+      System.out.print("|" + (stack[i] != null ? stack[i].toString() : "(nothing)") + "| ");
     }
     System.out.println("<--Top Of Stack (" + stackTop + ")\n");
   }
@@ -107,7 +107,7 @@
     if (isVerbose()) {
       System.out.println("Reduce on rule " + rule + " with symbol " + sym);
     }
-    if(generateCode(rule) == 0) {
+    if(generateCode(rule) == false) {
       return 0;
     }
     stackTop -= grammarTable[rule].reductions;
@@ -196,7 +196,6 @@
     stackTop = 0;
     stateStack[0] = 0;
     stack[0] = null;
-    currentChar = getNextChar(true);
     lexicalToken = parserElement(true);
     state = 0;
     errorFlag = 0;
@@ -207,7 +206,7 @@
       parserPrintStack();
     }
 
-    while(1 == 1) { // forever with break and return below
+    while(2 != 1) { // forever with break and return below
       action = parserAction(state, lexicalToken);
       if(action == ACCEPT) {
         if (isVerbose()) {
@@ -245,7 +244,7 @@
   /**
    * @returns the current lexical value
    */
-  public LexicalValue getResult() {
+  public StackElement getResult() {
     return stack[stackTop];
   }
 
@@ -283,7 +282,6 @@
    * Perform a round of tokenization and dump the results
    */
   public void dumpTokens() {
-    currentChar = getNextChar(true);
     lexicalToken = parserElement(true);
     while (lexicalToken != 0) {
       System.out.println("Token: " + getTokenName(lexicalToken) + "(" + lexicalToken + "):" + lexicalValue.toString());
@@ -364,7 +362,6 @@
 
       if (count > 0) {
         s += currentChar;
-        currentChar = getNextChar(false);
       }
     } while (count > 0);
 

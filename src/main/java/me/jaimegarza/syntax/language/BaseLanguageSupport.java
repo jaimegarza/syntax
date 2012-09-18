@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.language;
 
-import java.io.IOException;
 import java.io.PrintStream;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
@@ -129,7 +128,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
    * @see me.jaimegarza.syntax.language.LanguageSupport#generateRuleCode(me.jaimegarza.syntax.definition.Lexer, int, java.lang.String)
    */
   @Override
-  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) throws IOException {
+  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) {
     int nBracks = 0;
     boolean end = false;
     
@@ -194,7 +193,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     return true;
   }
   
-  protected int manageDollar(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) throws IOException {
+  protected int manageDollar(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) {
     Type type = null;
     int sign = 1;
     
@@ -230,7 +229,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     return -1; // command a break
   }
 
-  protected boolean lexerDollar(Lexer lexer) throws IOException {
+  protected boolean lexerDollar(Lexer lexer) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
@@ -249,7 +248,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     return false;
   }
 
-  protected boolean lexerComment(Lexer lexer, char characterToFind) throws IOException {
+  protected boolean lexerComment(Lexer lexer, char characterToFind) {
     environment.output.print(runtime.currentCharacter);
     lexer.getCharacter();
     if (runtime.currentCharacter != '*') {
@@ -276,7 +275,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     return true;
   }
 
-  protected boolean lexerString(Lexer lexer, char characterToFind) throws IOException {
+  protected boolean lexerString(Lexer lexer, char characterToFind) {
     environment.output.print(runtime.currentCharacter);
     while ((lexer.getCharacter()) != characterToFind) {
       if (runtime.currentCharacter == '\0') {
@@ -297,7 +296,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   }
   
   @Override
-  public boolean generateLexerCode(Lexer lexer) throws IOException {
+  public boolean generateLexerCode(Lexer lexer) {
     int nBracks = 0;
     boolean end = false;
     boolean bStart = true;

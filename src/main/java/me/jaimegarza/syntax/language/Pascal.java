@@ -28,8 +28,6 @@
 */
 package me.jaimegarza.syntax.language;
 
-import java.io.IOException;
-
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.code.Fragments;
@@ -92,7 +90,7 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) throws IOException {
+  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) {
     boolean end = false;
 
     while (!end) {
@@ -257,7 +255,7 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  public boolean generateStructure(Lexer lexer) throws IOException {
+  public boolean generateStructure(Lexer lexer) {
     int level;
     boolean hasCharacters;
 
@@ -366,7 +364,7 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  protected boolean lexerDollar(Lexer lexer) throws IOException {
+  protected boolean lexerDollar(Lexer lexer) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
@@ -388,7 +386,7 @@ public class Pascal extends BaseLanguageSupport {
     return false; 
   }
 
-  private void lexerReturnValue(Lexer lexer) throws IOException {
+  private void lexerReturnValue(Lexer lexer) {
     String follows = "";
     lexer.getCharacter();
     while (runtime.currentCharacter == ' ') {
@@ -426,7 +424,7 @@ public class Pascal extends BaseLanguageSupport {
     }
   }
 
-  private String readLexerString(Lexer lexer, String s, char separator) throws IOException {
+  private String readLexerString(Lexer lexer, String s, char separator) {
     s = lexerAccumulateCurrentCharacter(lexer, s);
     while (runtime.currentCharacter != separator && runtime.currentCharacter != 0) {
       s = lexerAccumulateCurrentCharacter(lexer, s);
@@ -437,14 +435,14 @@ public class Pascal extends BaseLanguageSupport {
     return s;
   }
 
-  private String lexerAccumulateCurrentCharacter(Lexer lexer, String s) throws IOException {
+  private String lexerAccumulateCurrentCharacter(Lexer lexer, String s) {
     s = s + runtime.currentCharacter;
     lexer.getCharacter();
     return s;
   }
   
   @Override
-  public boolean generateLexerCode(Lexer lexer) throws IOException {
+  public boolean generateLexerCode(Lexer lexer) {
     boolean end = false;
     boolean bStart = true;
 

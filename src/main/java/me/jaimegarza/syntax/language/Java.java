@@ -28,8 +28,6 @@
 */
 package me.jaimegarza.syntax.language;
 
-import java.io.IOException;
-
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.ErrorToken;
@@ -93,7 +91,7 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("int parserElement(boolean initialize) {\n");
     indent(environment.output, environment.getIndent());
-    environment.output.printf("lexicalValue = new LexicalValue();\n\n");
+    environment.output.printf("StackElement = new StackElement();\n\n");
   }
 
   @Override
@@ -113,11 +111,11 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, 1);
     environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
     indent(environment.output, 1);
-    environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
+    environment.output.printf("StackElement stack[] = new StackElement[STACK_DEPTH];\n");
     indent(environment.output, 1);
     environment.output.printf("int stackTop;\n\n");
     indent(environment.output, 1);
-    environment.output.printf("int generateCode(int rule) {\n");
+    environment.output.printf("boolean generateCode(int rule) {\n");
     indent(environment.output, environment.getIndent());
     environment.output.printf("switch(rule){\n");
     environment.output.println();
@@ -128,7 +126,7 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent());
     environment.output.printf("}\n");
     indent(environment.output, environment.getIndent());
-    environment.output.printf("return 1; // OK\n");
+    environment.output.printf("return true; // OK\n");
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("}\n");
   }
@@ -141,13 +139,13 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent());
     environment.output.printf("private static final int STACK_DEPTH = 5000;\n");
     indent(environment.output, environment.getIndent());
-    environment.output.printf("LexicalValue stack[] = new LexicalValue[STACK_DEPTH];\n");
+    environment.output.printf("StackElement stack[] = new StackElement[STACK_DEPTH];\n");
     indent(environment.output, environment.getIndent());
     environment.output.printf("int stackTop;\n\n");
     indent(environment.output, environment.getIndent());
-    environment.output.printf("int generateCode(int rule) {\n");
+    environment.output.printf("boolean generateCode(int rule) {\n");
     indent(environment.output, environment.getIndent() + 1);
-    environment.output.printf("return 1;\n");
+    environment.output.printf("return true;\n");
     indent(environment.output, environment.getIndent());
     environment.output.printf("}\n\n");
   }
@@ -169,11 +167,11 @@ public class Java extends BaseLanguageSupport {
   }
 
   @Override
-  public boolean generateStructure(Lexer lexer) throws IOException {
+  public boolean generateStructure(Lexer lexer) {
     int level;
 
     indent(environment.include, 1);
-    environment.include.printf("public static class LexicalValue");
+    environment.include.printf("public static class StackElement");
     level = 0;
     while (2 > 1) {
       if (runtime.currentCharacter == '\0') {
@@ -327,7 +325,7 @@ public class Java extends BaseLanguageSupport {
       return;
     }
     indent(environment.output, environment.getIndent()-1);
-    environment.output.printf("// Parsing Errors\n");
+    environment.output.printf("\n// Parsing Errors\n");
     indent(environment.output, environment.getIndent()-1);
     environment.output.printf("private int parsingError[] = {\n");
     int i = 0;
@@ -336,7 +334,7 @@ public class Java extends BaseLanguageSupport {
       if (i == runtime.getStates().length - 1) {
         environment.output.printf(" /* %3d */ %s  // %s\n", i, I.getMessage(), getErrorMessage(I));
         indent(environment.output, environment.getIndent()-1);
-        environment.output.printf("};\n\n");
+        environment.output.printf("};\n");
       } else {
         environment.output.printf(" /* %3d */ %s, // %s\n", i, I.getMessage(), getErrorMessage(I));
       }
@@ -584,14 +582,14 @@ public class Java extends BaseLanguageSupport {
         indent(environment.output, environment.getIndent() - 1);
         environment.output.printf("};\n\n");
       } else {
-        environment.output.printf("%d,// %s", environment.isPacked()?id.getToken():id.getId(), id.getName());
+        environment.output.printf("%d,// %s\n", environment.isPacked()?id.getToken():id.getId(), id.getName());
       }
       i++;
     }
     if (!runtime.isStackTypeDefined()) {
       environment.output.printf("\n");
       indent(environment.output, environment.getIndent() - 1);
-      environment.output.printf("public static class LexicalValue {\n");
+      environment.output.printf("public static class StackElement {\n");
       indent(environment.output, environment.getIndent() - 1);
       environment.output.printf("}\n\n");
     }

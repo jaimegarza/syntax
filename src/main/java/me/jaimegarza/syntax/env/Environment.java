@@ -105,7 +105,6 @@ public class Environment {
   public LanguageSupport language = null;
   
   private ResourceBundle fragments;
-  private int parsedLine;
   private Locale locale;
 
   private Driver driver;
@@ -577,7 +576,7 @@ public class Environment {
    * @param args are the additional entries in the message
    */
   public void error(int line, String msg, Object... args) {
-    System.err.printf("%s(%05d) : ", sourceFile, line == -1 ? parsedLine + 1 : line);
+    System.err.printf("%s(%d) : ", sourceFile, line == -1 ? runtimeData.lineNumber : line);
     System.err.printf(msg + "\n", args);
 
   }
@@ -743,13 +742,6 @@ public class Environment {
    */
   public File getReportFile() {
     return reportFile;
-  }
-
-  /**
-   * @return the parsedLine
-   */
-  public int getParsedLine() {
-    return parsedLine;
   }
 
   /**

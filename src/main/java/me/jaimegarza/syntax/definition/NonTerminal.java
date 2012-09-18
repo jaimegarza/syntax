@@ -101,6 +101,12 @@ public class NonTerminal extends Symbol {
    * state.
    */
   List<GoTo> gotos = new LinkedList<GoTo>();
+  /**
+   * Some non terminals are automatically created when code is encountered in the
+   * middle of a rule, and new rules are created for them.  I call these code
+   * fragments
+   */
+  boolean codeFragment = false;
 
   /** 
    * Construct one non terminal
@@ -208,6 +214,21 @@ public class NonTerminal extends Symbol {
    */
   public void setFollow(Set<Integer> follow) {
     this.follow = follow;
+  }
+
+  /**
+   * @return the codeFragment
+   */
+  public boolean isCodeFragment() {
+    return codeFragment;
+  }
+
+  /**
+   * @param codeFragment is the flag indicating that this non terminal
+   *        is a code fragment.
+   */
+  public void setCodeFragment(boolean codeFragment) {
+    this.codeFragment = codeFragment;
   }
 
 

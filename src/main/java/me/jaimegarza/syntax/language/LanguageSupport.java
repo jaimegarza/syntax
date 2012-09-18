@@ -127,7 +127,7 @@ public interface LanguageSupport {
    * @param elementCount the number of elements in the rule
    * @param nonTerminalId the non terminal id for the rule
    */
-  boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) throws IOException;
+  boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId);
 
   /**
    * Emit the header of the lexer as needed.
@@ -165,7 +165,7 @@ public interface LanguageSupport {
    * For yacc compatibility this is called the union, but it is
    * really a structure
    */
-  boolean generateStructure(Lexer lexer) throws IOException;
+  boolean generateStructure(Lexer lexer);
 
   /**
    * Generates one entry for an error token
@@ -198,7 +198,7 @@ public interface LanguageSupport {
    * @param lexer is the lexer to obtain more characters
    * @throws IOException 
    */
-  boolean generateLexerCode(Lexer lexer) throws IOException;
+  boolean generateLexerCode(Lexer lexer);
 
   /**
    * print the declarations for the rest of the code

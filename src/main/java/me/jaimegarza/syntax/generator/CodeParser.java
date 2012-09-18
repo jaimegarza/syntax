@@ -33,10 +33,8 @@ import java.util.Arrays;
 
 import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.definition.Associativity;
-import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
-import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.Type;
@@ -292,7 +290,7 @@ public class CodeParser extends AbstractCodeParser {
   /**
    * Generation of code
    */
-  private boolean StxCode(int rule) throws IOException {
+  private boolean StxCode(int rule) {
     int i;
     switch (rule) {
 
@@ -316,22 +314,7 @@ public class CodeParser extends AbstractCodeParser {
         break;
       case 10:
         {
-          if (runtimeData.getStart() != null) {
-            environment.error(-1, "Distinguished symbol \'%s\' declared more than once.", runtimeData.getStart()
-                .getName());
-            return false;
-          }
-          Terminal terminal = runtimeData.findTerminalByName(StxStack[pStxStack].id);
-          if (terminal == null) {
-            NonTerminal nonTerminal = runtimeData.findNonTerminalByName(StxStack[pStxStack].id);
-            if (nonTerminal == null) {
-              nonTerminal = new NonTerminal(StxStack[pStxStack].id);
-              runtimeData.getNonTerminals().add(nonTerminal);
-            }
-            nonTerminal.setCount(nonTerminal.getCount() - 1);
-            runtimeData.setStart(nonTerminal);
-          } else {
-            environment.error(-1, "Distinguished symbol \'%s\' previously declared as token.", StxStack[pStxStack].id);
+          if (!declareStart(StxStack[pStxStack].id)) {
             return false;
           }
         }
@@ -399,44 +382,7 @@ public class CodeParser extends AbstractCodeParser {
           if (StxStack[pStxStack - 2].value != -1) {
             StxStack[pStxStack - 3].value = StxStack[pStxStack - 2].value;
           }
-          Terminal terminal = runtimeData.findTerminalByName(StxStack[pStxStack - 3].id);
-          if (terminal == null) {
-            terminal = isErrorToken ? new ErrorToken(StxStack[pStxStack - 3].id) : new Terminal(
-                StxStack[pStxStack - 3].id);
-            runtimeData.getTerminals().add(terminal);
-          }
-          terminal.setCount(terminal.getCount() - 1);
-          if (ruleAssociativity != Associativity.NONE) {
-            if (terminal.getAssociativity() != Associativity.NONE) {
-              environment.error(-1, "Reassigning precedence/associativity for token \'%s\'.", terminal.getName());
-              return false;
-            }
-            terminal.setPrecedence(rulePrecedence);
-            terminal.setAssociativity(ruleAssociativity);
-          }
-          if (currentType != null) {
-            terminal.setType(currentType);
-            currentType.addUsage(terminal);
-          }
-          if (StxStack[pStxStack - 3].value >= 0) {
-            if (terminal.getToken() != -1) {
-              environment.error(-1, "Warning: Token \'%s\' already has a value.", terminal.getName());
-            }
-            for (Terminal cual : runtimeData.getTerminals()) {
-              if (cual != terminal && cual.getToken() == StxStack[pStxStack - 3].value) {
-                environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
-                    StxStack[pStxStack - 3].value, cual.getName());
-                return false;
-              }
-            }
-            terminal.setToken(StxStack[pStxStack - 3].value);
-          }
-          if (StxStack[pStxStack - 1].id != "") {
-            terminal.setFullName(StxStack[pStxStack - 1].id);
-          }
-          if (StxStack[pStxStack].regex != null) {
-            // SetEndToken(StxStack[pStxStack].regex, terminal.getName());
-          }
+          if (!declareOneTerminal(StxStack[pStxStack - 3].id, isErrorToken, ruleAssociativity, rulePrecedence, currentType, StxStack[pStxStack - 3].value, StxStack[pStxStack - 1].id)) return false;
         }
         break;
       case 35:
@@ -535,14 +481,15 @@ public class CodeParser extends AbstractCodeParser {
           }
           if (bActionDone) {
             Rule stx = newEmptyRule();
-            String rootName = "Sys$Prod" + (runtimeData.getRules().size() - 1);
-            NonTerminal rootSymbol = new NonTerminal(rootName);
-            runtimeData.getNonTerminals().add(rootSymbol);
-            stx.setLeftHand(rootSymbol);
-            rootSymbol.setCount(rootSymbol.getCount() + 1);
-            rootSymbol.setPrecedence(1); /* usado como no terminal */
-            RuleItem item = newItem(rootSymbol);
-            stx.getItems().add(item);
+            String rootName = "$code-fragment-" + (runtimeData.codeRule++);
+            NonTerminal codeFragment = new NonTerminal(rootName);
+            codeFragment.setCodeFragment(true);
+            runtimeData.getNonTerminals().add(codeFragment);
+            stx.setLeftHand(codeFragment);
+            codeFragment.setCount(codeFragment.getCount() + 1);
+            codeFragment.setPrecedence(1); /* used as non terminal */
+            newItem(codeFragment);
+            //stx.getItems().add(item);
             bActionDone = false;
           }
           Symbol symbol;
@@ -579,7 +526,6 @@ public class CodeParser extends AbstractCodeParser {
             symbol = nonTerminal;
           }
           newItem(symbol);
-
         }
         break;
       case 64:
@@ -762,7 +708,7 @@ public class CodeParser extends AbstractCodeParser {
   }
 
   @Override
-  public int getRegexSymbol() throws IOException {
+  public int getRegexSymbol() {
     char c2;
   
     if (isEqual) {
@@ -825,7 +771,7 @@ public class CodeParser extends AbstractCodeParser {
   }
 
   @Override
-  public int getNormalSymbol() throws IOException {
+  public int getNormalSymbol() {
     char c2;
     String s2;
     boolean end;

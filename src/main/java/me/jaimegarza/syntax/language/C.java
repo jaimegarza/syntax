@@ -29,8 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.language;
 
-import java.io.IOException;
-
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.Driver;
@@ -211,7 +209,7 @@ public class C extends BaseLanguageSupport {
   }
 
   @Override
-  public boolean generateStructure(Lexer lexer) throws IOException {
+  public boolean generateStructure(Lexer lexer) {
     int level;
 
     environment.include.printf("typedef union");

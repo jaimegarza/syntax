@@ -80,7 +80,7 @@ public abstract class AbstractTestBase {
       bufferedReader.close();
       failWithUncheckedExpressions(regularExpressions);
     } catch (FileNotFoundException e) {
-      Assert.fail("File " + fileName + "cannot be opened since it cannot be found", e);
+      Assert.fail("File " + fileName + " cannot be opened since it cannot be found", e);
 
     } catch (IOException e) {
       Assert.fail("File " + fileName + "cannot be read", e);

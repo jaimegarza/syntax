@@ -19,7 +19,7 @@
 
   private int    stateStack[] = new int[STACK_DEPTH];
   int            state;
-  LexicalValue   lexicalValue;
+  StackElement   lexicalValue;
   int            lexicalToken;
   int            errorCount;
   int            errorFlag;
@@ -73,7 +73,7 @@
     System.out.println("<--Top Of Stack (" + stackTop + ")");
     System.out.print("Values: [");
     for(i=0;i<=stackTop;i++) {
-      System.out.print("|" + toString(stack[i]) + "| ");
+      System.out.print("|" + (stack[i] != null ? stack[i].toString() : "(nothing)") + "| ");
     }
     System.out.println("<--Top Of Stack (" + stackTop + ")\n");
   }
@@ -107,7 +107,7 @@
     if (isVerbose()) {
       System.out.println("Reduce on rule " + rule + " with symbol " + sym);
     }
-    if(generateCode(rule) == 0) {
+    if(generateCode(rule) == false) {
       return 0;
     }
     stackTop -= grammarTable[rule].reductions;
@@ -205,7 +205,7 @@
   /**
    * send and parse one token.  main routine of the scanner driven recognizer
    */
-  public int parse(int symbol, LexicalValue value) {
+  public int parse(int symbol, StackElement value) {
     int action;
     lexicalToken = getTokenIndex(symbol);
     lexicalValue = value;
@@ -215,7 +215,7 @@
       parserPrintStack();
     }
 
-    while(1 == 1) { // forever with break and return below
+    while(2 != 1) { // forever with break and return below
       action = parserAction(state, symbol);
       if (isVerbose()) {
         System.out.println("Action: " + action);
@@ -266,7 +266,7 @@
   /**
    * @returns the current lextical value
    */
-  public LexicalValue getResult() {
+  public StackElement getResult() {
     return stack[stackTop];
   }
 
@@ -304,7 +304,6 @@
    * Perform a round of tokenization and dump the results
    */
   public void dumpTokens() {
-    currentChar = getNextChar(true);
     lexicalToken = parserElement(true);
     while (lexicalToken != 0) {
       System.out.println("Token: " + getTokenName(lexicalToken) + "(" + lexicalToken + "):" + lexicalValue.toString());
@@ -385,7 +384,7 @@
 
       if (count > 0) {
         s += currentChar;
-        currentChar = getNextChar(false);
+        getNextChar(false);
       }
     } while (count > 0);
 

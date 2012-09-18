@@ -26,43 +26,49 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax;
+package me.jaimegarza.syntax.test.java;
 
 import java.io.IOException;
 
-/**
- * Routines implemented by the lexer.  The lexer is the unit that breaks
- * the input stream as a series of tokens.
- * 
- * @author jgarza
- *
- */
-public interface Lexer {
-  /**
-   * Get one character.  Place it in RuntimeData.currentCharacter
-   * @return the character
-   * @throws IOException on input error
-   */
-  char getCharacter();
+import me.jaimegarza.syntax.AnalysisException;
+import me.jaimegarza.syntax.OutputException;
+import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.language.Language;
+import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
-  /**
-   * Reverse one character.  Place it in RuntimeData.currentCharacter
-   * @return the character
-   * @throws IOException on input error
-   */
-  void ungetCharacter(char c);
-  
-  /**
-   * Standard tokens.  This routine deals with the parser type of symbols
-   * @return next token
-   * @throws IOException on input error
-   */
-  int getNormalSymbol();
-  
-  /**
-   * Regex tokens.  They are surrounded by '/'
-   * @return the next regex symbol
-   * @throws IOException on input error
-   */
-  int getRegexSymbol();
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+
+public class TestSyntaxGrammar extends AbstractGenerationBase {
+
+  static final String expandedArgs[] = {
+      // "-v",
+      "--algorithm",
+      "l",
+      "--language",
+      "java",
+      "--packing",
+      "tabular",
+      //"--debug",
+      "classpath:syntax.sy",
+      "target/gensrc/me/jaimegarza/syntax/generator/SyntaxCodeParser.java"
+  };
+
+  @BeforeTest
+  public void setUp() throws IOException {
+    super.setUp(Language.java, "SyntaxCodeParser");
+  }
+
+  @Override
+  @AfterTest
+  public void tearDown() {
+    super.tearDown();
+  }
+
+  @Test
+  public void test01Generate() throws ParsingException, AnalysisException, OutputException {
+    generateLanguageFile(expandedArgs);
+  }
+
 }

@@ -106,11 +106,11 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
   }  
   
   @Override
-  public void mergeLookaheads(Dot marker, Dot auxiliary) {
-    LookAhead l = computeLookAhead(marker.getRule(), marker.getItem());
-    auxiliary.getLookahead().addAll(l.getSymbolIds());
+  public void mergeLookaheads(Dot from, Dot to) {
+    LookAhead l = computeLookAhead(from.getRule(), from.getItem());
+    to.getLookahead().addAll(l.getSymbolIds());
     if (l.isCarry()) {
-      auxiliary.getLookahead().addAll(marker.getLookahead());
+      to.getLookahead().addAll(from.getLookahead());
     }
   }
   
