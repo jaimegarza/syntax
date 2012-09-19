@@ -144,7 +144,7 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
     URLClassLoader classLoader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
     String className = FilenameUtils.getBaseName(tmpLanguageFile);
     Class<?> clazz = classLoader.loadClass(className);
-    String lexicalClassName = className + "$LexicalValue";
+    String lexicalClassName = className + "$StackElement";
     Class<?> lexicalClazz = classLoader.loadClass(lexicalClassName);
     Object parser = clazz.newInstance();
     Method setVerbose = parser.getClass().getMethod("setVerbose", boolean.class);

@@ -14,6 +14,7 @@ tests:
         - me.jaimegarza.syntax.test.java.TestJavaExpandedScanner
         - me.jaimegarza.syntax.test.java.TestJavaPackedParser
         - me.jaimegarza.syntax.test.java.TestJavaPackedScanner
+        - me.jaimegarza.syntax.test.java.TestSyntaxGrammar
         - me.jaimegarza.syntax.test.pascal.TestPascalExpandedParser
         - me.jaimegarza.syntax.test.pascal.TestPascalExpandedScanner
         - me.jaimegarza.syntax.test.pascal.TestPascalPackedParser

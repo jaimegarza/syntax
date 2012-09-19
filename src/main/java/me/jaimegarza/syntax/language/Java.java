@@ -91,7 +91,13 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("int parserElement(boolean initialize) {\n");
     indent(environment.output, environment.getIndent());
-    environment.output.printf("StackElement = new StackElement();\n\n");
+    environment.output.printf("if (initialize) {\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("  currentChar = getNextChar(true);\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("}\n\n");
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("lexicalValue = new StackElement();\n\n");
   }
 
   @Override

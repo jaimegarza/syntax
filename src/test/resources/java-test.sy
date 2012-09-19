@@ -2,10 +2,10 @@
 public class TestParser {
 %}
 
-%union {
+%class {
   int number;
     
-  public LexicalValue () {
+  public StackElement () {
     this.number = 0;
   }
     
@@ -131,7 +131,7 @@ Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 
     return ERROR_RE_ATTEMPT;
   }
   
-  private String toString(LexicalValue value) {
+  private String toString(StackElement value) {
     if(value == null) {
       return "";
     } else {
@@ -140,7 +140,12 @@ Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 
   }
   
   public int getTotal() {
-    return getResult().number;
+    StackElement result = getResult();
+    if (result != null) {
+      return result.number;
+    } else {
+      return 0;
+    }
   }
   
 }
