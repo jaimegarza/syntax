@@ -115,7 +115,27 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
+<!--       <plugin>
+        <groupId>me.jaimegarza</groupId>
+        <artifactId>syntax-maven-plugin</artifactId>
+        <version>1.0.2</version>
+        <executions>
+          <execution>
+            <id>generate-parser</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <sourceFile>src/main/grammar/syntax.sy</sourceFile>
+          <outputFile>${project.build.directory}/gensrc/me/jaimegarza/syntax/generator/SyntaxCodeParser.java</outputFile>
+          <verbose>true</verbose>
+          <debug>true</debug>
+        </configuration>
+      </plugin>
+ -->      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>1.7</version>
@@ -136,7 +156,19 @@
               </artifacts>
             </configuration>
           </execution>
-        </executions>
+<!--           <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/gensrc</source>
+              </sources>
+            </configuration>
+          </execution>
+ -->        </executions>
       </plugin>
     </plugins>
     <pluginManagement>
