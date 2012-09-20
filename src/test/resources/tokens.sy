@@ -11,15 +11,18 @@
 %binary i 304;
 %2 j 305;
 
-%start E;
+%error k;
 
+%start Expr;
+
+%name Expr : "an expression";
 %%
 
-E : a
-  | b
-  | c
-  | d
-  ;
+Expr : a
+     | b
+     | c
+     | d
+     ;
 
 %%
 

@@ -1,0 +1,39 @@
+%{
+public class Lexer {
+%}
+
+%struct {
+  String id;
+}
+
+%lexer {
+  while ($c == ' ') $+;
+}
+
+%token identifier = {
+  if (Character.isLetter($c)) {
+    $v.id = "";
+    while (Character.isLetter($c) || Character.isDigit($c)) {
+      $v.id += $c;
+      $+;
+    }
+    return identifier;
+  }
+};
+
+%token '!';
+
+%lexer {
+  if ($c == '!') {
+    $+;
+    return '!';
+  }
+}
+
+%start Expression;
+
+%%
+
+Expression : identifier;
+%%
+}

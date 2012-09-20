@@ -991,9 +991,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   protected void finalizeSymbols() {
     environment.report
-        .printf("## Token                                    Name                                     Full Name                                Value Err  Refs  Prec Assc  Type\n");
+        .printf("ID    Name                                     Full Name                                Value Err  Refs  Prec Assc  Type\n");
     environment.report
-        .printf("______________________________________________________________________________________________________________________________________________________________\n");
+        .printf("____________________________________________________________________________________________________________________________\n");
   
     int recoveries = 0;
     int terminals = 0;
@@ -1010,7 +1010,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
         id.setToken(tok_num);
       }
       id.setId(terminals++);
-      environment.report.printf("%2d %-40s %-40s %-40s %5d %s %5d %5d %-5s ", terminals, id.getId(), id.getName(), id.getFullName(), 
+      environment.report.printf("%-5d %-40s %-40s %5d %s %5d %5d %-5s ", id.getId(), id.getName(), id.getFullName(), 
           id.getToken(), id instanceof ErrorToken ? "Yes" : "No ", id.getCount(), id.getPrecedence(), id.getAssociativity().displayName());
       if (id.getType() != null) {
         environment.report.printf("%s", id.getType().getName());
@@ -1034,19 +1034,19 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     
     environment.report.printf("\n");
     environment.report
-        .printf("## Non Terminals                            Name                                     Refs  Type\n");
+        .printf("ID    Name                                     Full Name                                Refs  Type\n");
     environment.report
-        .printf("__________________________________________________________________________________________________\n");
+        .printf("_________________________________________________________________________________________________________\n");
   
     int noterminals = 0;
     for (NonTerminal id : runtimeData.getNonTerminals()) {
-      environment.report.printf("%2d %-40s %-40s %-2d    ", noterminals + terminals, id.getId(), id.getName(),
+      id.setId(noterminals + terminals);
+      environment.report.printf("%-5d %-40s %-40s %4d  ", id.getId(), id.getName(), id.getFullName(),
           id.getCount());
       if (id.getType() != null) {
         environment.report.printf("%s", id.getType().getName());
       }
       environment.report.printf("\n");
-      id.setId(noterminals + terminals);
       noterminals++;
       id.setFirst(null);
       id.setFollow(null);

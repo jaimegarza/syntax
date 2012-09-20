@@ -32,16 +32,18 @@ public class TestFeatures extends AbstractGenerationBase {
         "${file.grammar}"
     });
     checkRegularExpressions(tmpGrammarFile, new String[] {
-        " a .*One A.*256.*N/A",
-        " b .*b.*257.*N/A",
-        " c .*c.*32768.*N/A",
-        " d .*d.*32769.*N/A",
-        " e .*e.*300.*LEF",
-        " f .*f.*301.*LEF",
-        " g .*g.*302.*RIG",
-        " h .*h.*303.*RIG",
-        " i .*i.*304.*BIN",
-        " j .*j.*305.*BIN",
+        " a .*One A.*256.*No.*N/A",
+        " b .*b.*257.*No.*N/A",
+        " c .*c.*32768.*No.*N/A",
+        " d .*d.*32769.*No.*N/A",
+        " e .*e.*300.*No.*LEF",
+        " f .*f.*301.*No.*LEF",
+        " g .*g.*302.*No.*RIG",
+        " h .*h.*303.*No.*RIG",
+        " i .*i.*304.*No.*BIN",
+        " j .*j.*305.*No.*BIN",
+        " k .*k.*32770.*Yes.*N/A",
+        " Expr.*an expression"
     });
     tearDown();
   }
@@ -77,6 +79,36 @@ public class TestFeatures extends AbstractGenerationBase {
         "case 2:.*stackTop-2.\\.type1.*stackTop-2.\\.type1.*stackTop-1.\\.type1.*stackTop.\\.type2",
         "case 3:.*stackTop-2.\\.type1.*stackTop-2.\\.type2.*stackTop-1.\\.type2.*stackTop.\\.type2",
         "case 4:.*stackTop.\\.type2.*stackTop.\\.type1",
+    });
+    tearDown();
+  }
+  
+  @Test
+  public void testCodeLexer() throws IOException, ParsingException, AnalysisException, OutputException {
+    setUp(Language.java, "CodeLexer");
+    generateLanguageFile(new String[] {
+        "--algorithm",
+        "l",
+        "--language",
+        "java",
+        "--driver",
+        "scanner",
+        "--packing",
+        "tabular",
+        //"-v",
+        //"-g",
+        "classpath:codelexer.sy",
+        "${file.language}",
+        "${file.include}",
+        "${file.grammar}"
+    });
+    checkRegularExpressions(tmpLanguageFile, new String[] {
+        "public class Lexer \\{",
+        "int parserElement\\(",
+        "while \\(currentChar == ' '\\) currentChar = getNextChar\\(false\\)",
+        "lexicalValue.id",
+        "return '!'",
+        "private static final int identifier=32768"
     });
     tearDown();
   }
