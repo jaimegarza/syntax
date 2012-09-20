@@ -422,6 +422,11 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return type;
   }
 
+  /**
+   * Return the item with the given index, or null
+   * @param index is the offset into the rules, zero based
+   * @return the rule item
+   */
   private RuleItem getCurrentRuleItem(int index) {
     RuleItem item= null;
     if (runtimeData.currentRuleItems != null && index < runtimeData.currentRuleItems.size()) {
@@ -429,7 +434,128 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     }
     return item;
   }
+  
+  /**
+   * $Letter was detected.  The idea is to transform such occurrences into $$ or $digit
+   * occurrences by looking at the symbol whose name is given by the identifier.<p>
+   * 
+   * When two rule items have the same symbol, a disambiguating index like $Symbol[1],
+   * $Symbol[2], etc. can be used.  The Left hand symbol is only used when non indexed;
+   * 
+   * @param lexer the element that will give me the lexical logic
+   * @param elementCount the number of elements in the rule
+   * @param nonTerminalId the non terminal id for the rule
+   * @param type the type of the element
+   * @return true if everything is OK
+   */
+  public boolean generateDollarLetter(Lexer lexer, int elementCount, Type type, String nonTerminalId) {
+    String id = "";
+    while (Character.isLetterOrDigit(runtimeData.currentCharacter)) {
+      id += runtimeData.currentCharacter;
+      lexer.getCharacter();
+    }
+    int index = -1;
+    if (runtimeData.currentCharacter == '[') {
+      lexer.getCharacter();
+      index = getDollarTextIndexFromStream();
+      if (index == -2) {
+        return false;
+      }
+    }
+    
+    Symbol element = getSymbolWithName(id);
+    if (element == null) {
+      environment.error(-1, "element " + id + " not found.");
+      return false;
+    }
 
+    // check to see if this is the symbol of the rule.  No indexing for $$
+    if (runtimeData.findNonTerminalByName(nonTerminalId).equals(element) && index == -1) {
+      lexer.ungetCharacter(runtimeData.currentCharacter);
+      return generateDollarDollar(lexer, elementCount, nonTerminalId, element.getType());
+    }
+    
+    // in the rules now.  Locate the rule with the symbol obtained before.
+    int itemIndex = 1;
+    int elementIndex = 0;
+    for (RuleItem item : runtimeData.currentRuleItems) {
+      if (item.getSymbol().equals(element)) {
+        elementIndex ++;
+        if (index == -1 || index == elementIndex) {
+          break;
+        }
+      }
+      itemIndex++;
+    }
+    if (itemIndex > runtimeData.currentRuleItems.size()) {
+      environment.error(-1, "Element " + id + " was not used in the rules.");
+      return false;
+    }
+    
+    // redirect to the $digit routine by placing elements on the stack.
+    String s = Integer.toString(itemIndex);
+    ungetCharacter(runtimeData.currentCharacter);
+    for (int i = s.length()-1; i >= 0; i--) {
+      lexer.ungetCharacter(s.charAt(i));
+    }
+    lexer.getCharacter();
+    return generateDollarNumber(lexer, elementCount, element.getType(), 1);
+  }
+
+  /**
+   * Obtain a symbol, either terminal or non terminal, with the given name.
+   * @param name the name of the symbol
+   * @return the symbol
+   */
+  protected Symbol getSymbolWithName(String name) {
+    Symbol element = runtimeData.findNonTerminalByName(name);
+    if (element == null) {
+      element = runtimeData.findTerminalByName(name);
+    }
+    return element;
+  }
+
+  /**
+   * Find the $Letter[&lt;digits&gt;] digits. If &lt;digits&gt; start with
+   * a zero, octal radix is assumed. 
+   * @return the index.
+   */
+  protected int getDollarTextIndexFromStream() {
+    int index;
+    while (runtimeData.currentCharacter == ' ') {
+      getCharacter();
+    }
+    index = 0;
+    int base;
+    if (runtimeData.currentCharacter == '0') {
+      base = 8;
+    } else {
+      base = 10;
+    }
+    while (Character.isDigit(runtimeData.currentCharacter)) {
+      index = index * base + runtimeData.currentCharacter - '0';
+      getCharacter();
+    }
+    while (runtimeData.currentCharacter == ' ') {
+      getCharacter();
+    }
+    if (runtimeData.currentCharacter != ']') {
+      environment.error(-1, "Unfinished index detected.");
+      return -2;
+    }
+    getCharacter();
+    return index;
+  }
+  
+  /**
+   * $1, $2, $-3, etc detected.  Proceed with the code generation
+   * 
+   * @param lexer the element that will give me the lexical logic
+   * @param elementCount the number of elements in the rule
+   * @param nonTerminalId the non terminal id for the rule
+   * @param type the type of the element
+   * @return true if everything is OK
+   */
   public boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign) {
     int num;
     int base;
@@ -477,6 +603,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
             }
           }
         }
+      } else if (type == Type.NullType) {
+        type = null;
       }
       if (type != null) {
         environment.output.printf(".%s", type.getName());
@@ -485,6 +613,15 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return true;
   }
 
+  /**
+   * $$ detected.  Proceed with the code generation
+   * 
+   * @param lexer the element that will give me the lexical logic
+   * @param elementCount the number of elements in the rule
+   * @param nonTerminalId the non terminal id for the rule
+   * @param type the type of the element
+   * @return true if everything is OK
+   * */
   public boolean generateDollarDollar(Lexer lexer, int elementCount, String nonTerminalId, Type type) {
     if (elementCount == 1) {
       environment.output.printFragment("stxstack", "");
@@ -500,6 +637,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
           idp.setCount(idp.getCount() - 1);
           type = idp.getType();
         }
+      } else if (type == Type.NullType) {
+        type = null;
       }
       if (type != null) {
         environment.output.printf(".%s", type.getName());
@@ -852,9 +991,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   protected void finalizeSymbols() {
     environment.report
-        .printf("## Token                                    Name                                     Value Err  Refs  Prec Assc  Type\n");
+        .printf("## Token                                    Name                                     Full Name                                Value Err  Refs  Prec Assc  Type\n");
     environment.report
-        .printf("________________________________________________________________________________________________________________________\n");
+        .printf("______________________________________________________________________________________________________________________________________________________________\n");
   
     int recoveries = 0;
     int terminals = 0;
@@ -871,9 +1010,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
         id.setToken(tok_num);
       }
       id.setId(terminals++);
-      environment.report.printf("%2d %-40s %-40s %5d %s %5d %5d %-5s ", terminals, id.getId(), id.getName(), id
-          .getToken(), id instanceof ErrorToken ? "Yes" : "No ", id.getCount(), id.getPrecedence(), id
-          .getAssociativity().displayName());
+      environment.report.printf("%2d %-40s %-40s %-40s %5d %s %5d %5d %-5s ", terminals, id.getId(), id.getName(), id.getFullName(), 
+          id.getToken(), id instanceof ErrorToken ? "Yes" : "No ", id.getCount(), id.getPrecedence(), id.getAssociativity().displayName());
       if (id.getType() != null) {
         environment.report.printf("%s", id.getType().getName());
       }

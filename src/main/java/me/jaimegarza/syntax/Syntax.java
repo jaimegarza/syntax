@@ -30,8 +30,8 @@ package me.jaimegarza.syntax;
 
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.generator.AbstractCodeParser;
-//import me.jaimegarza.syntax.generator.SyntaxCodeParser;
-import me.jaimegarza.syntax.generator.CodeParser;
+import me.jaimegarza.syntax.generator.SyntaxCodeParser;
+//import me.jaimegarza.syntax.generator.CodeParser;
 import me.jaimegarza.syntax.generator.CodeWriter;
 import me.jaimegarza.syntax.generator.StructuralAnalyzer;
 import me.jaimegarza.syntax.generator.TableGenerator;
@@ -127,7 +127,7 @@ public class Syntax {
    * @throws OutputException when the generation could not produce the output file
    */
   public void executeInternal() throws ParsingException, AnalysisException, OutputException {
-    AbstractCodeParser parser = new CodeParser(environment);
+    AbstractCodeParser parser = new SyntaxCodeParser(environment);
     StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
     TableGenerator generator = new TableGenerator(environment);
     CodeWriter writer = new CodeWriter(environment);

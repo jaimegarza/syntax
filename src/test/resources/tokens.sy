@@ -1,0 +1,25 @@
+%token
+   a 256: "One A",
+   b 257;
+
+%token c, d;
+
+%left e 300;
+%< f 301 ;
+%right g 302;
+%> h 303;
+%binary i 304;
+%2 j 305;
+
+%start E;
+
+%%
+
+E : a
+  | b
+  | c
+  | d
+  ;
+
+%%
+

@@ -69,6 +69,21 @@ public interface EmbeddedCodeProcessor {
   boolean generateDollarDollar(Lexer lexer, int elementCount, String nonTerminalId, Type type);
   
   /**
+   * $Letter was detected.  The idea is to transform such occurrences into $$ or $digit
+   * occurrences by looking at the symbol whose name is given by the identifier.<p>
+   * 
+   * When two rule items have the same symbol, a disambiguating index like $Symbol[1],
+   * $Symbol[2], etc. can be used.  The Left hand symbol is only used when non indexed;
+   * 
+   * @param lexer the element that will give me the lexical logic
+   * @param elementCount the number of elements in the rule
+   * @param nonTerminalId the non terminal id for the rule
+   * @param type the type of the element
+   * @return true if everything is OK
+   */
+  boolean generateDollarLetter(Lexer lexer, int elementCount, Type type, String nonTerminalId);
+  
+  /**
    * Skip a comment, and copying it to the output
    * 
    * @param lexer the element that will give me the lexical logic

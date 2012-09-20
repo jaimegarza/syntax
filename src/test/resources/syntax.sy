@@ -189,7 +189,7 @@ Declaration  :  ';'
              ;
 
 PrecDef      :  TOK_TERM                    = {
-                                                ruleAssociativity = Associativity.LEFT;
+                                                ruleAssociativity = Associativity.NONE;
                                                 isErrorToken = false;
                                               }
              |  TOK_LEFT                    = {
@@ -241,16 +241,16 @@ Precedence   :  TOK_TOKEN Number ErrInfo
              ;
 
 Number       :  TOK_NUM
-             |                              = $$ = -1;
+             |                              = $<>$ = new StackElement(0, -1, false, "", null);
              ;
 
 ErrInfo      : ':' TOK_TOKEN                = $$ = $2; 
-             | %prec ':'                    = $$ = "";
+             | %prec ':'                    = $<>$ = new StackElement(0, 0, false, "", null);
              ;
 
 LexicAction  : Equals TOK_TOKEN             = $$ = null;
              | Slash RegExp Slash           = //$$ = AddTree($2);
-             | %prec '='                    = $$ = null;
+             | %prec '='                    = $<>$ = new StackElement(0, -1, false, "", null);
              ;
 
 Slash        : '/' TOK_TOKEN                

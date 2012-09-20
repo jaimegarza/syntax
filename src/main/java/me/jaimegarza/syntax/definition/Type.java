@@ -39,13 +39,20 @@ import java.util.List;
  * 
  * @author jaimegarza@gmail.com
  *
- */public class Type {
+ */
+public class Type {
+   
+   public static final Type NullType = new Type("<null>");
+   
    /**
     * The type name.  
     * It is up to the user to make sure that it is syntactically valid in 
     * the target language.
     */
   String name;
+  /**
+   * The list of terminals and non terminals that reference it
+   */
   List<Symbol> usedBy = new LinkedList<Symbol>();
 
   public void addUsage(Symbol symbol) {

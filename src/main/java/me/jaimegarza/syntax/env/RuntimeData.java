@@ -258,6 +258,10 @@ public class RuntimeData {
    * @return the type, or null if not found
    */
   public Type findType(String name) {
+    if (name == null || name.length() == 0) {
+      return Type.NullType;
+    }
+    
     for (Type t : types) {
       if (t.getName().equals(name)) {
         return t;

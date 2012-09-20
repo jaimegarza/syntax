@@ -210,15 +210,16 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
       }
       return 1; // command a continue
     }
+    if (Character.isLetter(runtime.currentCharacter)) {
+      return processor.generateDollarLetter(lexer, elementCount, type, nonTerminalId) ? 1 : 0;
+    }
+
     if (runtime.currentCharacter == '-') {
       sign = -sign;
       lexer.getCharacter();
     }
     if (Character.isDigit(runtime.currentCharacter)) {
-      if (!processor.generateDollarNumber(lexer, elementCount, type, sign)) {
-        return 0; // command a return false
-      }
-      return 1; // command a continue
+      return processor.generateDollarNumber(lexer, elementCount, type, sign) ? 1 : 0;
     }
     
     // fall through

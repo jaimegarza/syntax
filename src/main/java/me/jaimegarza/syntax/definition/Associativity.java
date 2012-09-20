@@ -42,7 +42,7 @@ package me.jaimegarza.syntax.definition;
  *
  */
 public enum Associativity {
-  NONE(""), 
+  NONE("N/A"), 
   LEFT("LEF"), 
   RIGHT("RIG"), 
   BINARY("BIN");

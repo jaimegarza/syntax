@@ -392,17 +392,17 @@ public class CodeParser extends AbstractCodeParser {
         StxStack[pStxStack - 1].id = StxStack[pStxStack].id;
         break;
       case 37:
-        StxStack[pStxStack + 1].id = "";
+        StxStack[pStxStack + 1] = new StackElement(0, 0, false, "", null);
         break;
       case 38:
-        StxStack[pStxStack - 1].regex = null;
+        //StxStack[pStxStack - 1].regex = null;
         break;
       case 39:
         // StxStack[pStxStack - 2].regex = AddTree(StxStack[pStxStack -
         // 1].regex);
         break;
       case 40:
-        StxStack[pStxStack + 1].regex = null;
+        //StxStack[pStxStack + 1].regex = null;
         break;
       case 42:
         // StxStack[pStxStack - 1].regex = SequentialNode(StxStack[pStxStack -
@@ -1110,9 +1110,9 @@ public class CodeParser extends AbstractCodeParser {
     public String id;
     public String regex;
 
-    StackElement(int estado, int value, boolean mustClose, String id, String regex) {
+    StackElement(int state, int value, boolean mustClose, String id, String regex) {
       super();
-      this.stateNumber = estado;
+      this.stateNumber = state;
       this.value = value;
       this.mustClose = mustClose;
       this.id = id;

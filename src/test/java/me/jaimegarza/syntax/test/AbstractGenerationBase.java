@@ -65,9 +65,9 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
     System.out.println("filenames:");
     switch (language) {
       case java:
-        tmpLanguageFile = createTmpFile("TestParser.java", "output implementation file");
-        tmpGrammarFile = createTmpFile("TestParser.txt", "grammar file");
-        tmpIncludeFile = createTmpFile("TestParserIntf.java", "interface file");
+        tmpLanguageFile = createTmpFile(basename + ".java", "output implementation file");
+        tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
+        tmpIncludeFile = createTmpFile(basename + "Intf.java", "interface file");
         break;
       case C:
         tmpLanguageFile = createTmpFile(basename + ".c", "output implementation file");

@@ -1,0 +1,27 @@
+
+%class {
+  int type1;
+  int type2;
+}
+
+%token <type1> a;
+%token <type2> b;
+%token <type1> c;
+
+%start Expr;
+
+%type <type1> Expr;
+%type <type2> Term;
+
+%%
+
+Expr : a           = $$ = $1;
+     | Expr a Term = $$ = $Expr + $a + $Term;
+     | Term b Term = $Expr = $Term[1] + $b + $Term[2]; 
+     ;
+
+Term : c           = $Term = $c;
+     ;
+  
+%%
+
