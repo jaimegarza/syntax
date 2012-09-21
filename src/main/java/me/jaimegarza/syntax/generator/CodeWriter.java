@@ -191,7 +191,7 @@ public class CodeWriter extends AbstractPhase {
     }
 
     environment.output.println();
-    environment.language.emitLine(runtimeData.sourceLineNumber + 1);
+    environment.language.emitLine(runtimeData.lineNumber + 1);
 
     int c = environment.source.read();
     while (c != -1) {

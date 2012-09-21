@@ -74,12 +74,13 @@ public class Pascal extends BaseLanguageSupport {
   }
   
   @Override
-  public void generateCaseStart(int lineNumber, String label, String comment) {
+  public int  generateCaseStart(int lineNumber, String label, String comment) {
     indent(environment.output, environment.getIndent());
     environment.output.printf("//%s\n", comment);
     indent(environment.output, environment.getIndent());
     environment.output.printf("%s: Begin\n", label);
-    indent(environment.output, environment.getIndent() + 1);
+    String i = indent(environment.output, environment.getIndent() + 1);
+    return i.length();
   }
   
   @Override
@@ -90,7 +91,7 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) {
+  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId, int sourceColumn) {
     boolean end = false;
 
     while (!end) {

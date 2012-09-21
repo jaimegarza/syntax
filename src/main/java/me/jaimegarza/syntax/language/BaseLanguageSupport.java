@@ -128,7 +128,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
    * @see me.jaimegarza.syntax.language.LanguageSupport#generateRuleCode(me.jaimegarza.syntax.definition.Lexer, int, java.lang.String)
    */
   @Override
-  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId) {
+  public boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId, int sourceColumn) {
     int nBracks = 0;
     boolean end = false;
     
@@ -170,7 +170,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
         case '\n':
           environment.output.print(runtime.currentCharacter);
           lexer.getCharacter();
-          indent(environment.output, environment.getIndent() + 1);
+          indent(environment.output, environment.getIndent() + 2);
           continue;
 
         case 0:

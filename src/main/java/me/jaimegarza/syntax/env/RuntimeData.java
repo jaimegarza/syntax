@@ -104,10 +104,6 @@ public class RuntimeData {
    */
   private boolean finalActions;
   /**
-   * Current line number in the source file
-   */
-  public int sourceLineNumber = 0;
-  /**
    * Did the stack structure get defined?
    */
   private boolean stackTypeDefined;
@@ -119,6 +115,10 @@ public class RuntimeData {
    * Current source line number
    */
   public int lineNumber = 1;
+  /**
+   * Current column in the source
+   */
+  public int columnNumber;
   /**
    * The token's value
    */
@@ -450,20 +450,6 @@ public class RuntimeData {
    */
   public void setFinalActions(boolean finalActions) {
     this.finalActions = finalActions;
-  }
-
-  /**
-   * @return the sourceLineNumber
-   */
-  public int getSourceLineNumber() {
-    return sourceLineNumber;
-  }
-
-  /**
-   * @param sourceLineNumber the sourceLineNumber to set
-   */
-  public void setSourceLineNumber(int sourceLineNumber) {
-    this.sourceLineNumber = sourceLineNumber;
   }
 
   /**

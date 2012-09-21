@@ -175,6 +175,107 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     nonTerminal.setType(type);
     return true;
   }
+  
+  /**
+   * Declare one given type
+   * @param typeName the desired type
+   */
+  protected boolean declareOneType(String typeName) {
+    Type type = runtimeData.findType(typeName);
+    if (type != null) {
+      environment.error(-1, "Type \'%s\' already defined.", typeName);
+      return false;
+    }
+    type = new Type(typeName);
+    runtimeData.getTypes().add(type);
+    return true;
+  }
+  
+  /**
+   * Adds one rule item to the current list of items
+   * @param symbolName the name of the symbol being used
+   * @param value the integer value of the symbol
+   * @param mustClose whether this token must close
+   * @return
+   */
+  public boolean declareOneItem(String symbolName, int value, boolean mustClose) {
+    if (isFirstToken) {
+      rulePrecedence = 0;
+      ruleAssociativity = Associativity.NONE;
+      isFirstToken = false;
+    }
+    if (bActionDone) {
+      Rule stx = newEmptyRule();
+      String rootName = "$code-fragment-" + (runtimeData.codeRule++);
+      NonTerminal codeFragment = new NonTerminal(rootName);
+      codeFragment.setCodeFragment(true);
+      runtimeData.getNonTerminals().add(codeFragment);
+      stx.setLeftHand(codeFragment);
+      codeFragment.setCount(codeFragment.getCount() + 1);
+      codeFragment.setPrecedence(1); /* used as non terminal */
+      newItem(codeFragment);
+      //stx.getItems().add(item);
+      bActionDone = false;
+    }
+    Symbol symbol;
+    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(symbolName);
+    if (nonTerminal == null) {
+      Terminal terminal = runtimeData.findTerminalByName(symbolName);
+      if (terminal != null) {
+        rulePrecedence = terminal.getPrecedence();
+        ruleAssociativity = terminal.getAssociativity();
+        symbol = terminal;
+      } else {
+        if (mustClose && value >= 0) {
+          terminal = new Terminal(symbolName);
+          runtimeData.getTerminals().add(terminal);
+          if (value >= 0) {
+            for (Terminal cual : runtimeData.getTerminals()) {
+              if (cual != terminal && cual.getToken() == value) {
+                environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
+                    value, cual.getName());
+                return false;
+              }
+            }
+            terminal.setToken(value);
+          }
+          symbol = terminal;
+        } else {
+          nonTerminal = new NonTerminal(symbolName);
+          runtimeData.getNonTerminals().add(nonTerminal);
+          nonTerminal.setCount(nonTerminal.getCount() + 1);
+          symbol = nonTerminal;
+        }
+      }
+    } else {
+      symbol = nonTerminal;
+    }
+    newItem(symbol);
+    return true;
+  }
+  
+  /**
+   * A %prec was given, and as such I need to load its context globally
+   * @param tokenName is the name of the token given in the %prec
+   * @return true on success
+   */
+  public boolean computeAssociativityAndPrecedence(String tokenName) {
+    NonTerminal nonTerminal = runtimeData.findNonTerminalByName(tokenName);
+    if (nonTerminal == null) {
+      Terminal terminal = runtimeData.findTerminalByName(tokenName);
+      if (terminal == null) {
+        environment.error(-1, "Warning: token \'%s\' not declared.", tokenName);
+        return false;
+      } else {
+        rulePrecedence = terminal.getPrecedence();
+        ruleAssociativity = terminal.getAssociativity();
+      }
+    } else {
+      environment.error(-1, "Warning: token \'%s\' not declared as token, but as a non-terminal.", tokenName);
+      return false;
+    }
+    return true;
+  }
 
   /**
    * Change the display name of a non terminal
@@ -370,7 +471,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
       runtimeData.currentCharacter = inputChars.pop();
       if (runtimeData.currentCharacter == '\n') {
         runtimeData.lineNumber++;
+        runtimeData.columnNumber = 0;
       }
+      runtimeData.columnNumber++;
       return runtimeData.currentCharacter;
     }
   
@@ -389,6 +492,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     // EOL?
     if (runtimeData.currentCharacter == '\n') {
       runtimeData.lineNumber++;
+      runtimeData.columnNumber = 0;
     }
   
     // CTRL-Z?  <-- suspect code
@@ -396,6 +500,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
       return 0;
     }
   
+    runtimeData.columnNumber++;
     return runtimeData.currentCharacter;
   }
 
@@ -450,7 +555,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   public boolean generateDollarLetter(Lexer lexer, int elementCount, Type type, String nonTerminalId) {
     String id = "";
-    while (Character.isLetterOrDigit(runtimeData.currentCharacter)) {
+    while (Character.isJavaIdentifierPart(runtimeData.currentCharacter) ) {
       id += runtimeData.currentCharacter;
       lexer.getCharacter();
     }
@@ -499,7 +604,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
       lexer.ungetCharacter(s.charAt(i));
     }
     lexer.getCharacter();
-    return generateDollarNumber(lexer, elementCount, element.getType(), 1);
+    return generateDollarNumber(lexer, elementCount, type == null ? element.getType() : type, 1);
   }
 
   /**
@@ -701,9 +806,10 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * Output the case for a given rule
    * @param ruleNumber is the rule number to be emitted in the case statement
+   * @return for indentation purposes the column where the case ended
    */
-  protected void generateCaseStatement(int ruleNumber, String comment) {
-    environment.language.generateCaseStart(ruleNumber, Integer.toString(ruleNumber + 1), comment);
+  protected int generateCaseStatement(int ruleNumber, String comment) {
+    return environment.language.generateCaseStart(ruleNumber, Integer.toString(ruleNumber + 1), comment);
   }
 
   /**
@@ -1129,7 +1235,11 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     }
     generateCaseStatement(ruleNumber, "" + (ruleNumber+1) + ". " + nonTerminalName + " -> " + ruleLabel);
     
-    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName)) {
+    while (runtimeData.currentCharacter == ' ') {
+      getCharacter();
+    }
+    
+    if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName, runtimeData.columnNumber-2)) {
       return false;
     }
     

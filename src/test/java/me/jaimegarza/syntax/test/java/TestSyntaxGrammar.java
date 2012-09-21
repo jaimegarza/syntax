@@ -51,7 +51,7 @@ public class TestSyntaxGrammar extends AbstractGenerationBase {
       "--packing",
       "tabular",
       //"--debug",
-      "classpath:syntax.sy",
+      "src/main/grammar/syntax.sy",
       "target/gensrc/me/jaimegarza/syntax/generator/SyntaxCodeParser.java"
   };
 

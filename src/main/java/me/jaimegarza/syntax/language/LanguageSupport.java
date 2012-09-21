@@ -111,8 +111,9 @@ public interface LanguageSupport {
    * emit a case start
    * @param lineNumber the line number on the source
    * @param label the label of the case statement
+   * @return for indentation purposes the column where the case ended
    */
-  void generateCaseStart(int lineNumber, String label, String comment); 
+  int generateCaseStart(int lineNumber, String label, String comment); 
   /**
    * emit a case end statement
    */
@@ -127,7 +128,7 @@ public interface LanguageSupport {
    * @param elementCount the number of elements in the rule
    * @param nonTerminalId the non terminal id for the rule
    */
-  boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId);
+  boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId, int sourceColumn);
 
   /**
    * Emit the header of the lexer as needed.
