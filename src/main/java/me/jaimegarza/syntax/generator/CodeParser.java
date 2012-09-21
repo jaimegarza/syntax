@@ -54,7 +54,7 @@ import me.jaimegarza.syntax.env.Environment;
  *   <li>Writing Code
  * </ol>
  * @author jaimegarza@gmail.com
- *
+ * @deprecated
  */
 public class CodeParser extends AbstractCodeParser {
   static final int TOK_MARCA = 256;
