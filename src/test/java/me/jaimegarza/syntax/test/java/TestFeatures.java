@@ -75,10 +75,10 @@ public class TestFeatures extends AbstractGenerationBase {
         "Term.*type2",
     });
     checkRegularExpressions(tmpLanguageFile, new String[] {
-        "case 1:.*stackTop.\\.type1.*=.*stackTop.\\.type1",
-        "case 2:.*stackTop-2.\\.type1.*stackTop-2.\\.type1.*stackTop-1.\\.type1.*stackTop.\\.type2",
-        "case 3:.*stackTop-2.\\.type1.*stackTop-2.\\.type2.*stackTop-1.\\.type2.*stackTop.\\.type2",
-        "case 4:.*stackTop.\\.type2.*stackTop.\\.type1",
+        ".*stackTop.\\.type1.*=.*stackTop.\\.type1",
+        ".*stackTop-2.\\.type1.*stackTop-2.\\.type1.*stackTop-1.\\.type1.*stackTop.\\.type2",
+        ".*stackTop-2.\\.type1.*stackTop-2.\\.type2.*stackTop-1.\\.type2.*stackTop.\\.type2",
+        ".*stackTop.\\.type2.*stackTop.\\.type1",
     });
     tearDown();
   }
