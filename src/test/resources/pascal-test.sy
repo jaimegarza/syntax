@@ -20,11 +20,11 @@ VAR
 %left             TOK_AND      256:"AND" =  if $c = '&' THEN BEGIN $+; $r(TOK_AND); END;%
 %left             TOK_OR       257:"OR"  =  if $c = '|' THEN BEGIN $+; $r(TOK_OR); END;% 
 %right            TOK_NOT      258:"NOT" =  if $c = '!' THEN BEGIN $+; $r(TOK_NOT); END;%
-%left             TOK_LE       259:"'<='"
-                  TOK_LT       260:"'<'"
-                  TOK_GE       261:"'>='"
-                  TOK_GT       262:"'>'"
-                  TOK_NE       263:"'<>'"
+%left             TOK_LE       259:"'<='",
+                  TOK_LT       260:"'<'",
+                  TOK_GE       261:"'>='",
+                  TOK_GT       262:"'>'",
+                  TOK_NE       263:"'<>'",
                   TOK_EQ       264:"'='" = 
   IF   $c = '='
   THEN BEGIN 
@@ -69,7 +69,7 @@ VAR
 %right            TOK_UMINUS:"unary minus"  
 
 %token            '(' =  IF   $c = '(' THEN BEGIN $+; $r(ORD('(')); END;%
-                  ')' =  IF   $c = ')' THEN BEGIN $+; $r(ORD(')')); END;%
+                , ')' =  IF   $c = ')' THEN BEGIN $+; $r(ORD(')')); END;%
 
 %token   <number> TOK_NUMBER:"number" = 
   IF   ($c >= '0') AND ($c <= '9')

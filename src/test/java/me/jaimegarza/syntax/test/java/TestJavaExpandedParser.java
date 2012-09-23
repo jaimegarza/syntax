@@ -60,6 +60,8 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
       "java",
       "--packing",
       "tabular",
+      //"-v",
+      //"-g",
       "classpath:java-test.sy",
       "${file.language}"
   };

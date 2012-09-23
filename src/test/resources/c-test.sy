@@ -16,11 +16,11 @@
 %left             TOK_AND      256:"AND" =  if ($c == '&') {$+; return TOK_AND;};
 %left             TOK_OR       257:"OR" =  if ($c == '|') {$+; return TOK_OR;}; 
 %right            TOK_NOT      258:"NOT" =  if ($c == '!') {$+; return TOK_NOT;};
-%left             TOK_LE       259:"'<='"
-                  TOK_LT       260:"'<'"
-                  TOK_GE       261:"'>='"
-                  TOK_GT       262:"'>'"
-                  TOK_NE       263:"'<>'"
+%left             TOK_LE       259:"'<='",
+                  TOK_LT       260:"'<'",
+                  TOK_GE       261:"'>='",
+                  TOK_GT       262:"'>'",
+                  TOK_NE       263:"'<>'",
                   TOK_EQ       264:"'=='" = {
   if ($c == '=') {
     $+; 
@@ -53,10 +53,10 @@
 %left             '*' =  if ($c == '*') {$+; return '*';};
                 , '/' =  if ($c == '/') {$+; return '/';};
 
-%right            TOK_UMINUS:"unary minus"  
+%right            TOK_UMINUS:"unary minus";
 
 %token            '(' =  if ($c == '(') {$+; return '(';};
-                  ')' =  if ($c == ')') {$+; return ')';};
+                , ')' =  if ($c == ')') {$+; return ')';};
 
 %token   <number> TOK_NUMBER:"number" = {
   if ($c >= '0' && $c <= '9') {
