@@ -52,9 +52,6 @@ import me.jaimegarza.syntax.util.PathUtils;
  * 
  * This is done so that the CodeParser can be generated from a syntaxt file
  * 
- * TODO: Today I support $1, $2, $$, etc.  Support $TOKEN, $Declaration etc.
- * TODO: Allow for type to be declared by itself, to avoid warnings when used.
- * 
  * @author jgarza
  *
  */
