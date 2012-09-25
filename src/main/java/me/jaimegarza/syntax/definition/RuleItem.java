@@ -122,7 +122,16 @@ package me.jaimegarza.syntax.definition;
     }
 
     try {
-      return getSymbolId() == ((RuleItem) obj).getSymbolId();
+      RuleItem ri = (RuleItem) obj;
+      if (getSymbolId() != ri.getSymbolId()) {
+        return false;
+      }
+      if (!rule.equals(ri.rule)) {
+        return false;
+      }
+      int ix1 = rule.exactIndexOf(this);
+      int ix2 = ri.rule.exactIndexOf(ri);
+      return ix1 == ix2;
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {

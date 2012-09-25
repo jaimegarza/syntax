@@ -185,6 +185,20 @@ public class Rule {
   public List<RuleItem> getItems() {
     return items;
   }
+  
+  public int exactIndexOf(RuleItem item) {
+    int index = 0;
+    while (index < items.size()) {
+      if (items.get(index) == item) {
+        break;
+      }
+      index ++;
+    }
+    if (index >= items.size()) {
+      index = -1;
+    }
+    return index;
+  }
 
   /**
    * @see java.lang.Object#equals(java.lang.Object)
