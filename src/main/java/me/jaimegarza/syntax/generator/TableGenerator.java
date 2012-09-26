@@ -432,8 +432,6 @@ public class TableGenerator extends AbstractPhase {
   /**
    * Given a parsing line, compute its possible error messages
    * 
-   * TODO: P1-Group like in "operator missing" with %group
-   * 
    * @param parserLine is the parsing table's line
    * @param stateNumber is the current state
    */
