@@ -31,6 +31,8 @@ package me.jaimegarza.syntax.generator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.definition.Associativity;
@@ -45,8 +47,6 @@ import me.jaimegarza.syntax.env.Environment;
 
 /**
  * Parser for a grammar.<p>
- * TODO: P1-This parser will be replaced for a generated one (which
- * probably will be created from this one)
  *
  * Phases:
  * 
@@ -81,6 +81,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
     public boolean mustClose;
     public String id;
     public String regex;
+    public List<String> ids = new LinkedList<String>();
 
     StackElement(int state, int value, boolean mustClose, String id, String regex) {
       super();
@@ -97,34 +98,35 @@ public class SyntaxCodeParser extends AbstractCodeParser {
     }
 }
 
-%token            MARK      256: "'%%'"
-%token            START     257: "'%start'"
-%token  <id>      TOKEN     258: "Token"
-%token            TYPE      259: "'%type'"
-%token            UNION     260: "'%union'"
-%token  <id>      TYPENAME  261: "Type definition"
-%token            TERM      262: "'%token'"
-%token            LEFT      263: "'%left'"
-%token            RIGHT     264: "'%right'"
-%token            BINARY    265: "'%binary'"
-%token            ERRDEF    266: "'%error'"
-%token  <value>   NUM       267: "Number"
-%token            PREC      268: "'%prec'"
-%token            NAME      269: "'%name'"
-%token            ERROR     270: "Error"
-%token            LEXER     271: "%lexer"
-%token            DECLARE   272: "%declare"
+%token            MARK      : "'%%'"
+%token            START     : "'%start'"
+%token  <id>      TOKEN     : "Token"
+%token            TYPE      : "'%type'"
+%token            UNION     : "'%union'"
+%token  <id>      TYPENAME  : "Type definition"
+%token            TERM      : "'%token'"
+%token            LEFT      : "'%left'"
+%token            RIGHT     : "'%right'"
+%token            BINARY    : "'%binary'"
+%token            ERRDEF    : "'%error'"
+%token  <value>   NUM       : "Number"
+%token            PREC      : "'%prec'"
+%token            NAME      : "'%name'"
+%token            ERROR     : "Error"
+%token            LEXER     : "%lexer"
+%token            DECLARE   : "%declare"
+%token            GROUP     : "%group"
 
-%token <regex>    RX_PIPE   273: "'|'"
-%token            RX_LPAR   274: "'('"
-%token            RX_RPAR   275: "')'"
-%token <regex>    RX_STAR   276: "'*'" 
-%token <regex>    RX_PLUS   277: "'+'" 
-%token <regex>    RX_HUH    278: "'?'" 
-%token <regex>    RX_ANY    279: "'.'"
-%token <regex>    RX_CHARS  280: "Character or set of characters"
-%token            LEXCODE   290: "lexical code"
-%token            CHARS     291: "regular expression characters"
+%token <regex>    RX_PIPE   : "'|'"
+%token            RX_LPAR   : "'('"
+%token            RX_RPAR   : "')'"
+%token <regex>    RX_STAR   : "'*'" 
+%token <regex>    RX_PLUS   : "'+'" 
+%token <regex>    RX_HUH    : "'?'" 
+%token <regex>    RX_ANY    : "'.'"
+%token <regex>    RX_CHARS  : "Character or set of characters"
+%token            LEXCODE   : "lexical code"
+%token            CHARS     : "regular expression characters"
 
 %token            ';'              : "semicolon"
 %right            ':'              : "colon"
@@ -143,6 +145,9 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %type   <regex>   BasicElement;
 %type   <regex>   ConcatElement;
 %type   <regex>   RegExp;
+
+%type   <ids>     GroupTokens;
+%type   <id>      GroupToken;
 
 %name Declarations                  : "declarations";
 %name Declaration                   : "a declaration";
@@ -193,6 +198,8 @@ Declaration  :  ';'
              |  PrecDef Definition          = currentType = null;
              |  '{'                         = if (!generateDeclaration()) return false;
              |  LEXER Equals TOKEN
+             |  GROUP TOKEN ':' TOKEN 
+                                GroupTokens = if(!groupTokens($GroupTokens, $TOKEN[1], $TOKEN[2])) return false;
              ;
 
 PrecDef      :  TERM                        = {
@@ -220,15 +227,28 @@ PrecDef      :  TERM                        = {
                                               }
              ;
 
-Tokens       :  Tokens ',' TOKEN            = if (!declareOneNonTerminal(currentTypeName, $3)) return false;
-             |  TOKEN                       = if (!declareOneNonTerminal(currentTypeName, $1)) return false;
+Tokens       :  Tokens ',' TOKEN            = if (!declareOneNonTerminal(currentTypeName, $TOKEN)) return false;
+             |  TOKEN                       = if (!declareOneNonTerminal(currentTypeName, $TOKEN)) return false;
              ;
 
 TokenNames   :  TokenNames ',' Name
              |  Name
              ;
              
-Name         : TOKEN ':' TOKEN              = if (!nameOneNonTerminal($1, $3)) return false;
+Name         : TOKEN ':' TOKEN              = if (!nameOneNonTerminal($TOKEN[1], $TOKEN[2])) return false;
+             ;
+             
+GroupTokens  : GroupTokens ',' GroupToken   = $GroupTokens.add($GroupToken);
+             | GroupToken                   = {
+                                                $GroupTokens = new LinkedList<String>();
+                                                $GroupTokens.add($GroupToken);
+                                              }
+             ;
+             
+GroupToken   : TOKEN                        = {
+                                                if (!declareOneTerminal($TOKEN, false, Associativity.NONE, rulePrecedence, null, -1, null)) return false;
+                                                $GroupToken = $TOKEN;
+                                              }
              ;
 
 Definition   :  Type Precedences
@@ -707,7 +727,7 @@ Symbol       :  TOKEN                       = {
       System.out.println("Parse");
     }
     setVerbose(environment.isDebug());
-    runtimeData.lineNumber = 0;
+    runtimeData.lineNumber = 1;
     markers = 0;
     Terminal terminal = new Terminal("$");
     runtimeData.getTerminals().add(terminal);
@@ -755,7 +775,8 @@ Symbol       :  TOKEN                       = {
     new ReservedWord("struct", UNION),
     new ReservedWord("name", NAME), 
     new ReservedWord("error", ERRDEF), 
-    new ReservedWord("lexer", LEXER)
+    new ReservedWord("lexer", LEXER),
+    new ReservedWord("group", GROUP)
   };
   
 }

@@ -84,6 +84,38 @@ public class TestFeatures extends AbstractGenerationBase {
   }
   
   @Test
+  public void testErrors() throws IOException, ParsingException, AnalysisException, OutputException {
+    setUp(Language.java, "Errors");
+    generateLanguageFile(new String[] {
+        "--algorithm",
+        "l",
+        "--language",
+        "java",
+        "--packing",
+        "tabular",
+        "-v",
+        "-g",
+        "classpath:errors.sy",
+        "${file.language}",
+        "${file.include}",
+        "${file.grammar}"
+    });
+    /*checkRegularExpressions(tmpGrammarFile, new String[] {
+        " a .*a.*32768.*N/A.*type1",
+        " b .*b.*32769.*N/A.*type2",
+        " c .*c.*32770.*N/A.*type1",
+        "Expr.*type1",
+        "Term.*type2",
+    });*/
+    checkRegularExpressions(tmpLanguageFile, new String[] {
+        "Expecting an expression",
+        "arithmetic operator, logic operator or relational operator expected",
+        "arithmetic operator, logic operator, relational operator or right parenthesis expected",
+    });
+    tearDown();
+  }
+  
+  @Test
   public void testCodeLexer() throws IOException, ParsingException, AnalysisException, OutputException {
     setUp(Language.java, "CodeLexer");
     generateLanguageFile(new String[] {

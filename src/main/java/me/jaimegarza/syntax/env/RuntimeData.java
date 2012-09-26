@@ -37,6 +37,7 @@ import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.definition.TokenGroup;
 import me.jaimegarza.syntax.definition.Type;
 
 /**
@@ -74,6 +75,10 @@ public class RuntimeData {
    * List of types
    */
   private List<Type> types = new LinkedList<Type>();
+  /**
+   * List of error groups
+   */
+  private List<TokenGroup> errorGroups = new LinkedList<TokenGroup>();
   /**
    * List of states
    */
@@ -477,6 +482,13 @@ public class RuntimeData {
    */
   public void setEnvironment(Environment environment) {
     this.environment = environment;
+  }
+
+  /**
+   * @return the errorGroups
+   */
+  public List<TokenGroup> getErrorGroups() {
+    return errorGroups;
   }
 
 }

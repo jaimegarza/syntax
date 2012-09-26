@@ -30,6 +30,7 @@ package me.jaimegarza.syntax.generator;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
@@ -42,6 +43,7 @@ import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.definition.TokenGroup;
 import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.util.PathUtils;
@@ -248,6 +250,21 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
       symbol = nonTerminal;
     }
     newItem(symbol);
+    return true;
+  }
+  
+  public boolean groupTokens(List<String> tokens, String groupName, String displayName) {
+    List<Terminal> terminals = new LinkedList<Terminal>();
+    for (String tokenName : tokens) {
+      Terminal terminal = runtimeData.findTerminalByName(tokenName);
+      if (terminal == null) {
+        environment.error(-1, "The token " + tokenName + " has not been defined.  Grouping cannot proceed.");
+        return false;
+      }
+      terminals.add(terminal);
+    }
+    TokenGroup group = new TokenGroup(terminals, groupName, displayName);
+    runtimeData.getErrorGroups().add(group);
     return true;
   }
   
@@ -1163,6 +1180,16 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   
     for (Type type : runtimeData.getTypes()) {
       environment.report.println(type.toString());
+    }
+    
+    environment.report.printf("\n");
+    environment.report
+        .printf("Error Groups\n");
+    environment.report
+        .printf("_____________________________________________\n");
+  
+    for (TokenGroup errorGroup : runtimeData.getErrorGroups()) {
+      environment.report.println(errorGroup.toString());
     }
   }
 

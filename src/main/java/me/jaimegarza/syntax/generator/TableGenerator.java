@@ -43,6 +43,7 @@ import me.jaimegarza.syntax.definition.RuleItem;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Symbol;
 import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.definition.TokenGroup;
 import me.jaimegarza.syntax.env.Environment;
 
 /**
@@ -373,7 +374,59 @@ public class TableGenerator extends AbstractPhase {
     } else {
       environment.report.printf("Error\n");
     }
-    
+  }
+  
+  /**
+   * Check the parsing line for tokens and see if all the groups' elements
+   * are there by counting them.
+   * @param group the group of error tokens
+   * @param parserLine the parsing line
+   * @return true if all of the groups'elements are in the parsing line
+   */
+  private boolean groupContainsAll(TokenGroup group, int parserLine[]) {
+    int count = 0;
+    for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
+      if (parserLine[i] != ACCEPT) {
+        Terminal t = runtimeData.findTerminalById(i);
+        if (group.getTokens().contains(t)) {
+          count++;
+        }
+      }
+    }
+    return count == group.getTokens().size();
+  }
+  
+  /**
+   * Check to see if this token is already covered in a set of groups.<p>
+   * This is done so that we report groups and only those tokens not covered 
+   * by groups.
+   * 
+   * @param t the token to check for inclusion
+   * @param groups the list of groups to check against
+   * @return true if the token is in any of the considered groups
+   */
+  private boolean tokenInGroups(Terminal t, List<TokenGroup> groups) {
+    for (TokenGroup group : groups) {
+      if (group.getTokens().contains(t)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  /**
+   * Find full goups as errors in the parser line
+   * @param parserLine the line of transitions
+   * @return the involved groups
+   */
+  private List<TokenGroup> getTokenGroups(int parserLine[]) {
+    List <TokenGroup> errorGroups = new LinkedList<TokenGroup>();
+    for (TokenGroup group : runtimeData.getErrorGroups()) {
+      if (groupContainsAll(group, parserLine)) {
+        errorGroups.add(group);
+      }
+    }
+    return errorGroups;
   }
   
   /**
@@ -393,15 +446,19 @@ public class TableGenerator extends AbstractPhase {
     Terminal theReducer = null;
     NonTerminal theNonTerminal = null;
 
+    List<TokenGroup> errorGroups = getTokenGroups(parserLine);
     for (int i = 0; i < parserLine.length; i++) {
       if (parserLine[i] == ACCEPT) {
         acceptCount++;
       } else if (parserLine[i] > 0) { // a shift or goto
         Terminal token = runtimeData.findTerminalById(i);
         if (token != null) { // a shift
-          tokenCount++;
-          if (tokenCount == 1) {
-            theToken = token;
+          // check to see if it is already in a group of tokens
+          if (!tokenInGroups(token, errorGroups)) {
+            tokenCount++;
+            if (tokenCount == 1) {
+              theToken = token;
+            }
           }
         } else { // a goto
           nonTerminalCount++;
@@ -416,11 +473,18 @@ public class TableGenerator extends AbstractPhase {
         }
       }
     }
+    // consider the groups as a single reporting token
+    tokenCount += errorGroups.size();
 
     environment.report.printf("\nErrors\n-------\n");
     if (tokenCount == 1) {
       String message = "";
-      message = theToken.getFullName() + " expected";
+      if (theToken != null) {
+        message = theToken.getFullName() + " expected";
+      } else {
+        // must be a group
+        message = errorGroups.get(0).getDisplayName() + " expected";
+      }
       environment.report.println("    " + message);
       I[stateNumber].setMessage(addErrorMessage(message));
     } else if (nonTerminalCount == 1 && theNonTerminal != null) {
@@ -432,12 +496,24 @@ public class TableGenerator extends AbstractPhase {
       environment.report.println("    " + message);
       I[stateNumber].setMessage(addErrorMessage(message));
     } else if (tokenCount != 0 && (tokenCount < nonTerminalCount || nonTerminalCount == 0)) {
+      // includes groups, so go for them first
       StringBuilder messageBuffer = new StringBuilder();
       int count = 0;
+      for (TokenGroup group : errorGroups) {
+        if (count > 0) {
+          if (count == tokenCount - 1) {
+            messageBuffer.append(" or ");
+          } else {
+            messageBuffer.append(", ");
+          }
+        }
+        messageBuffer.append(group.getDisplayName());
+        count ++;
+      }
       for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
         if (parserLine[i] > 0 && parserLine[i] != ACCEPT) {
           Terminal t = runtimeData.findTerminalById(i);
-          if (t != null) {
+          if (t != null && !tokenInGroups(t, errorGroups)) {
             if (count > 0) {
               if (count == tokenCount - 1) {
                 messageBuffer.append(" or ");
@@ -483,6 +559,17 @@ public class TableGenerator extends AbstractPhase {
     } else if (reduceCount != 0) {
       StringBuilder messageBuffer = new StringBuilder("");
       int count = 0;
+      for (TokenGroup group : errorGroups) {
+        if (count > 0) {
+          if (count == tokenCount - 1) {
+            messageBuffer.append(" or ");
+          } else {
+            messageBuffer.append(", ");
+          }
+        }
+        messageBuffer.append(group.getDisplayName());
+        count ++;
+      }
       for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
         if (parserLine[i] < 0) {
           Terminal t = runtimeData.findTerminalById(i);
@@ -506,7 +593,7 @@ public class TableGenerator extends AbstractPhase {
       } else if (count == 1) {
         message = "The symbol " + message;
       } else {
-        message = "One of the symbols " + message;
+        message = "One of " + message;
       }
       environment.report.println("    " + message);
       I[stateNumber].setMessage(addErrorMessage(message));

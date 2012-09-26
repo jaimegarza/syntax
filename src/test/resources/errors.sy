@@ -1,0 +1,52 @@
+%left             TOK_AND      256:"AND";
+%left             TOK_OR       257:"OR"; 
+%right            TOK_NOT      258:"NOT";
+%left             TOK_LE       259:"'<='"
+                , TOK_LT       260:"'<'"
+                , TOK_GE       261:"'>='"
+                , TOK_GT       262:"'>'"
+                , TOK_NE       263:"'<>'"
+                , TOK_EQ       264:"'=='";
+%left             '+' : "plus"
+                , '-' : '"minus"'
+%left             '*'
+                , '/';
+
+%right            TOK_UMINUS:"unary minus";
+
+%token            '(' : "left parenthesis"
+                , ')' : "right parenthesis";
+
+%token            TOK_NUMBER:"number";
+
+%group            arithmetic : 'arithmetic operator'
+                      '+', '-', '*', '/';
+%group            logic      : 'logic operator'
+                      TOK_AND, TOK_OR;
+%group            relational : 'relational operator'
+                      TOK_LE, TOK_LT, TOK_GE, TOK_GT, TOK_EQ, TOK_NE;
+
+%start Expression
+
+%name Expression:"an expression";
+
+%%
+Expression   :  Expression TOK_AND Expression
+             |  Expression TOK_OR Expression
+             |  TOK_NOT Expression
+             |  Expression TOK_LE Expression
+             |  Expression TOK_LT Expression
+             |  Expression TOK_GE Expression
+             |  Expression TOK_GT Expression
+             |  Expression TOK_NE Expression
+             |  Expression TOK_EQ Expression
+             |  Expression '+' Expression
+             |  Expression '-' Expression
+             |  Expression '*' Expression
+             |  Expression '/' Expression
+             |  '-' Expression %prec TOK_UMINUS
+             |  '(' Expression ')'
+             |  TOK_NUMBER
+             ;
+%%
+
