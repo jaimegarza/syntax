@@ -25,7 +25,7 @@ public class TestParser {
 }
 
 %left             TOK_AND      256:"AND" =  if ($c == '&') {$+; return TOK_AND;};
-%left             TOK_OR       257:"OR" =  if ($c == '|') {$+; return TOK_OR;}; 
+%left             TOK_OR       257:"OR" =   if ($c == '|') {$+; return TOK_OR;}; 
 %right            TOK_NOT      258:"NOT" =  if ($c == '!') {$+; return TOK_NOT;};
 %left             TOK_LE       259:"'<='",
                   TOK_LT       260:"'<'",
