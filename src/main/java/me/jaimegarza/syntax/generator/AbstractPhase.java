@@ -28,10 +28,9 @@
 */
 package me.jaimegarza.syntax.generator;
 
-import java.io.PrintStream;
-
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.env.RuntimeData;
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 /**
  * Base clase for all phases.  Common routines will be placed here
@@ -80,7 +79,7 @@ public abstract class AbstractPhase {
    * @param out is the output stream to be written to
    * @param n is the number of indentations.
    */
-  protected void indent(PrintStream out, int n) {
+  protected void indent(FormattingPrintStream out, int n) {
     environment.language.indent(out, n);
   }
 }

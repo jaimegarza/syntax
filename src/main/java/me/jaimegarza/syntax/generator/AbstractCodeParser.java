@@ -182,7 +182,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   protected boolean declareOneType(String typeName) {
     Type type = runtimeData.findType(typeName);
     if (type != null) {
-      environment.error(-1, "Type \'%s\' already defined.", typeName);
+      environment.error(-1, "Type \'%s\' already declared.", typeName);
       return false;
     }
     type = new Type(typeName);

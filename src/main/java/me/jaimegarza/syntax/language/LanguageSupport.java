@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package me.jaimegarza.syntax.language;
 
 import java.io.IOException;
-import java.io.PrintStream;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
@@ -38,6 +37,7 @@ import me.jaimegarza.syntax.definition.Action;
 import me.jaimegarza.syntax.definition.ErrorToken;
 import me.jaimegarza.syntax.definition.GoTo;
 import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 /**
  * Define the methods that are provided for each language.  These
@@ -97,7 +97,7 @@ public interface LanguageSupport {
    * 
    * @return the string with all the indents
    */
-  String indent(PrintStream out, int n);
+  String indent(FormattingPrintStream out, int n);
   
   /**
    * Indents a number of separators, returning the string
