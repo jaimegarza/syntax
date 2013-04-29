@@ -321,7 +321,7 @@ Equals        : '='                         = generateLexerCode("default");
               | '[' TOKEN ']' '='           = generateLexerCode($2);
               ;
 
-Slash         : '/' TOKEN                
+Slash         : '/' 
               ;
 
 RegExp        : RegExp PIPE Alternation = //$$ = AlternateNode($1, $3);

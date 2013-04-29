@@ -67,7 +67,7 @@ public class TestPascalExpandedParser extends AbstractGenerationBase {
     "Begin of Skeleton",
     "Pascal Skeleton",
     "StxLexer():longint",
-    "StxCode.*BOOLEAN",
+    "StxCode.*boolean",
     "End of parser"
   };
 
