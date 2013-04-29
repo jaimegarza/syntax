@@ -181,7 +181,7 @@ public class Pascal extends BaseLanguageSupport {
     environment.output.printf("\n")
                       .printf("{ Lexical Analyzer }\n")
                       .printf("\n")
-                      .printf("FUNCTION StxNextChar:char; FORWARD;\n")
+                      .printf("function StxNextChar:char; forward;\n")
                       .printf("\n")
                       .printf("VAR\n")
                       .printf("  StxChar:char;\n")
@@ -233,11 +233,11 @@ public class Pascal extends BaseLanguageSupport {
   @Override
   public void generateLexerModeCase(String lexerMode, int index) {
     indent(environment.output, environment.getIndent()+1);
-    environment.output.println(computeModeName(lexerMode).toUpperCase() + "_MODE: Begin");
+    environment.output.println(computeModeName(lexerMode).toUpperCase() + "_MODE: begin");
     indent(environment.output, environment.getIndent() + 2);
     environment.output.println("StxLexer := StxLexer_" + computeModeName(lexerMode) + "();");
     indent(environment.output, environment.getIndent() + 2);
-    environment.output.println("End;");
+    environment.output.println("end;");
     environment.output.println();
   }
 
@@ -254,19 +254,19 @@ public class Pascal extends BaseLanguageSupport {
                       .printf("    StxStack : Array [0..STACK_DEPTH] of TStack;\n")
                       .printf("    pStxStack: Integer;\n")
                       .printf("\n")
-                      .printf("FUNCTION StxCode(rule:INTEGER):BOOLEAN;\n")
-                      .printf("BEGIN\n");
+                      .printf("function StxCode(rule:integer):boolean;\n")
+                      .printf("begin\n");
     indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("Case rule Of\n");
+    environment.output.printf("case rule of\n");
   }
   
   @Override
   public void generateCodeGeneratorFooter() {
     indent(environment.output, environment.getIndent());
-    environment.output.printf("END;(* CASE *)\n");
+    environment.output.printf("end;(* CASE *)\n");
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("StxCode := true;\n");
-    environment.output.printf("END;(* StxCode *)\n");
+    environment.output.printf("end;(* StxCode *)\n");
   }
 
   @Override
@@ -281,11 +281,11 @@ public class Pascal extends BaseLanguageSupport {
     .printf("  StxStack : Array [0..512] of TStack;\n")
     .printf("  pStxStack: Integer;\n")
     .printf("\n")
-    .printf("FUNCTION StxCode(rule:INTEGER):BOOLEAN;\n")
-    .printf("BEGIN\n");
+    .printf("function StxCode(rule:integer):boolean;\n")
+    .printf("begin\n");
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("StxCode := true;\n");
-    environment.output.printf("END;(* StxCode *)\n");
+    environment.output.printf("end;(* StxCode *)\n");
   }
   
   @Override
