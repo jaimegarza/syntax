@@ -33,16 +33,22 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import me.jaimegarza.syntax.algorithm.Algorithm;
@@ -104,12 +110,12 @@ public class Environment {
   public AlgorithmicSupport algorithm = null;
   public LanguageSupport language = null;
   
+  public Map<String, FormattingPrintStream> lexerModes = new HashMap<String, FormattingPrintStream>();
+  
   private ResourceBundle fragments;
   private Locale locale;
 
   private Driver driver;
-
-
 
   /**
    * Construct an environment with the given arguments
@@ -470,6 +476,9 @@ public class Environment {
       // testing cases
       fileName = fileName.substring(CLASSPATH_PREFIX.length());
       URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
+      if (url == null) {
+        throw new CommandLineParseException("filename " + fileName + " not found in the class path");
+      }
       file = new File(URI.create(url.toString()));
     } else {
       file = new File(fileName);
@@ -504,7 +513,7 @@ public class Environment {
       this.reportFile = new File(replaceExtension(sourceFile.getPath(), ".txt"));
     }
     try {
-      source = new BufferedReader(new InputStreamReader(openFileForRead(sourceFile)));
+      source = new BufferedReader(openFileForRead(sourceFile));
     } catch (IOException e) {
       throw new CommandLineParseException("Cannot open file " + sourceFile);
     }
@@ -587,7 +596,7 @@ public class Environment {
    * @return the input stream
    * @throws IOException on error
    */
-  private InputStream openFileForRead(File file) throws IOException {
+  private Reader openFileForRead(File file) throws IOException {
     if (file.exists()) {
         if (file.isDirectory()) {
             throw new IOException("File " + file + " is a directory.  Exiting.");
@@ -598,7 +607,7 @@ public class Environment {
     } else {
         throw new FileNotFoundException("File " + file + " does not exist. Exiting.");
     }
-    return new FileInputStream(file);
+    return new FileReader(file);
   }
   /**
    * Open a file for writing, destroying the contents, if possible
@@ -606,7 +615,7 @@ public class Environment {
    * @return the output stream
    * @throws IOException on error
    */
-  private OutputStream openFileForWrite(File file) throws IOException {
+  private Writer openFileForWrite(File file) throws IOException {
     if (file.exists()) {
         if (file.isDirectory()) {
             throw new IOException("File " + file + " is a directory.  Exiting.");
@@ -622,7 +631,7 @@ public class Environment {
           }
       }
     }
-    return new FileOutputStream(file, false);
+    return new FileWriter(file, false);
   }
 
   /**
@@ -765,7 +774,23 @@ public class Environment {
     this.runtimeData = runtimeData;
     this.runtimeData.setEnvironment(this);
   }
-
+  
+  /**
+   * Obtain an existing or new formatting print stream for a lexer mode
+   * @param lexerMode is the mode to use
+   * @return a new, or existing, formatting print stream
+   */
+  public FormattingPrintStream getLexerModePrintStream(String lexerMode) {
+    FormattingPrintStream fps = lexerModes.get(lexerMode);
+    
+    if (fps == null) {
+      fps = new FormattingPrintStream(this, new StringWriter());
+      lexerModes.put(lexerMode, fps);
+    }
+    
+    return fps;
+  }
+  
   /**
    * @see java.lang.Object#toString()
    */

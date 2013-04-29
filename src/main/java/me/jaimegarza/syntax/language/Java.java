@@ -84,9 +84,11 @@ public class Java extends BaseLanguageSupport {
 
   @Override
   public void generateLexerHeader() {
-    environment.output.printf("\n");
+    environment.output.println();
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("// LexicalRecognizer\n");
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("private int parserElementMode = DEFAULT_LEXER_MODE;\n");
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("private char currentChar;\n\n");
     indent(environment.output, environment.getIndent() - 1);
@@ -99,11 +101,56 @@ public class Java extends BaseLanguageSupport {
     environment.output.printf("}\n\n");
     indent(environment.output, environment.getIndent());
     environment.output.printf("lexicalValue = new StackElement();\n\n");
+    
+    if (environment.lexerModes.size() > 1) {
+      indent(environment.output, environment.getIndent());
+      environment.output.println("switch (parserElementMode) {\n");
+    } else {
+      environment.output.println(environment.lexerModes.get("default").getWriter().toString());
+    }
+  }
+
+  @Override
+  public void generateLexerModeDefinition(String lexerMode, int index) {
+    indent(environment.include, environment.getIndent() - 1);
+    environment.include.println("private static final int " + computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE = " + index + ";");
+  }
+
+  @Override
+  public void generateLexerModeCase(String lexerMode, int index) {
+    indent(environment.output, environment.getIndent() + 1);
+    environment.output.println("case " + computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE:");
+    indent(environment.output, environment.getIndent() + 2);
+    environment.output.println("return ParserElement_" + computeModeName(lexerMode) + "();");
+    environment.output.println();
+  }
+
+  @Override
+  public void generateLexerModeHeader(String lexerMode) {
+    environment.output.println();
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("int ParserElement_" + computeModeName(lexerMode) + "() {\n");
+  }
+
+  @Override
+  public void generateLexerModeFooter(String lexerMode) {
+    if (environment.lexerModes.size() > 1) {
+      indent(environment.output, environment.getIndent());
+      environment.output.printf("return 0; // UNKNOWN\n");
+    } else {
+      environment.output.println();
+    }
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("}\n");
   }
 
   @Override
   public void generateLexerFooter() {
-    environment.output.println();
+    if (environment.lexerModes.size() > 1) {
+      indent(environment.output, environment.getIndent());
+      environment.output.println("}");
+      environment.output.println();
+    }
     indent(environment.output, environment.getIndent());
     environment.output.printf("return 0; // UNKNOWN\n");
     indent(environment.output, environment.getIndent() - 1);

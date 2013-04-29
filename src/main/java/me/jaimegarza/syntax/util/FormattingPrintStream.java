@@ -28,15 +28,16 @@
 */
 package me.jaimegarza.syntax.util;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Locale;
 
 import me.jaimegarza.syntax.env.Environment;
 
-public class FormattingPrintStream extends PrintStream {
+public class FormattingPrintStream extends PrintWriter {
 
   private Environment environment;
+  private Writer writer;
   
   public void printFragment(String key, Object... objects) {
     String fragment = environment.formatFragment(key, objects);
@@ -58,14 +59,14 @@ public class FormattingPrintStream extends PrintStream {
   }
 
   @Override
-  public PrintStream printf(Locale l, String format, Object... args) {
+  public PrintWriter printf(Locale l, String format, Object... args) {
     String crlf = System.getProperty("line.separator");
     format = format.replaceAll("\n", crlf);
     return super.printf(l, format, args);
   }
 
   @Override
-  public PrintStream printf(String format, Object... args) {
+  public PrintWriter printf(String format, Object... args) {
     String crlf = System.getProperty("line.separator");
     format = format.replaceAll("\n", crlf);
     return super.printf(format, args);
@@ -80,8 +81,9 @@ public class FormattingPrintStream extends PrintStream {
    * Construct a formatting print stream from an output stream
    * @param out the output stream
    */
-  public FormattingPrintStream(Environment environment, OutputStream out) {
+  public FormattingPrintStream(Environment environment, Writer out) {
     super(out);
+    this.writer = out;
     this.environment = environment;
   }
 
@@ -98,6 +100,13 @@ public class FormattingPrintStream extends PrintStream {
    */
   public void setEnvironment(Environment environment) {
     this.environment = environment;
+  }
+
+  /**
+   * @return the writer
+   */
+  public Writer getWriter() {
+    return writer;
   }
 
 }

@@ -1,6 +1,6 @@
 /*
  ===============================================================================
- Copyright (c) 1985, 2012, Jaime Garza
+ Copyright (c) 1985, 2013, Jaime Garza
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
@@ -26,39 +26,39 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.code;
-
-import java.util.ListResourceBundle;
+package me.jaimegarza.syntax.regex.node;
 
 /**
- * Fragments of code to be used for code generation
- * when the language is pascal
- *
- * Please be advised that {1} is interpreted to be the
- * indentation string required.  Always.  This is a
- * contract.
- *
- * @author jaimegarza@gmail.com
+ * Represents the repetition of a minimum of n times for a node
+ * @author jgarza
  *
  */
-public class Fragments_pascal extends ListResourceBundle {
+public class RepeatMinimumNTimes extends RegexNode {
+  private RegexNode left;
+  private int min;
+
+  public RepeatMinimumNTimes(RegexNode exp, int min) {
+    this.left = exp;
+    this.min = min;
+  }
+
+  /**
+   * @return the optional expression
+   */
+  @Override
+  public RegexNode getLeft() {
+    return left;
+  }
+
+  /**
+   * @return the min
+   */
+  public int getMin() {
+    return min;
+  }
 
   @Override
-  protected Object[][] getContents() {
-    return contents;
+  public String toString() {
+    return "(" + left + "){" + min + "}";
   }
-  
-  /**
-   * The fragments
-   */
-  Object[] contents [] = {
-      {Fragments.HELLO,"Pello Porld"}, // keep, for unit testing
-      {Fragments.STXSTACK, "StxStack[pStxStack{0}]"},
-      {Fragments.CURRENT_CHAR, "StxChar"},
-      {Fragments.LEXICAL_VALUE, "StxValue"},
-      {Fragments.GETC, "StxChar := StxNextChar"},
-      {Fragments.RETURN_VALUE, "StxLexer := {0}; exit"},
-      {Fragments.LEXER_MODE, "StxLexerMode"},
-  };
-
 }

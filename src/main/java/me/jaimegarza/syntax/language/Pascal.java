@@ -39,6 +39,7 @@ import me.jaimegarza.syntax.definition.NonTerminal;
 import me.jaimegarza.syntax.definition.Rule;
 import me.jaimegarza.syntax.definition.State;
 import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 /**
  * Routines for supporting the pascal language
@@ -154,6 +155,7 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   public void generateLexerHeader() {
+    environment.include.println();
     environment.include.println("{$MACRO ON}");
     if (environment.getDriver() == Driver.PARSER) {
       environment.include.println("{$DEFINE PARSER_MODE}");
@@ -184,17 +186,59 @@ public class Pascal extends BaseLanguageSupport {
                       .printf("VAR\n")
                       .printf("  StxChar:char;\n")
                       .printf("  StxValue:TSTACK;\n")
+                      .printf("  StxLexerMode:integer = DEFAULT_LEXER_MODE;\n")
                       .printf("\n")
                       .printf("function StxLexer:longint;\n")
+                      .printf("begin\n");
+    if (environment.lexerModes.size() > 1) {
+      indent(environment.output, environment.getIndent());
+      environment.output.println("case StxLexerMode of\n");
+    } else {
+      environment.output.println(environment.lexerModes.get("default").getWriter().toString());
+    }
+  }
+
+  @Override
+  public void generateLexerModeHeader(String lexerMode) {
+    environment.output.printf("\n")
+                      .printf("function StxLexer_" + computeModeName(lexerMode) + ":longint;\n")
                       .printf("begin\n");
   }
 
   @Override
-  public void generateLexerFooter() {
+  public void generateLexerModeFooter(String lexerMode) {
     environment.output.println();
-    indent(environment.output, environment.getIndent() - 1);
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("StxLexer_" + computeModeName(lexerMode) + " := 0;\n");
+    environment.output.printf("end;(* " + computeModeName(lexerMode) + " *)\n");
+  }
+
+  @Override
+  public void generateLexerFooter() {
+    if (environment.lexerModes.size() > 1) {
+      indent(environment.output, environment.getIndent());
+      environment.output.printf("end;(* case *)\n");
+      environment.output.println();
+    }
+    indent(environment.output, environment.getIndent());
     environment.output.printf("StxLexer := 0;\n");
-    environment.output.printf("END;(* StxLexer *)\n");
+    environment.output.printf("end;(* StxLexer *)\n");
+  }
+
+  @Override
+  public void generateLexerModeDefinition(String lexerMode, int index) {
+    environment.include.println("{$DEFINE " + computeModeName(lexerMode).toUpperCase() + "_MODE:=" + index + "}");
+  }
+
+  @Override
+  public void generateLexerModeCase(String lexerMode, int index) {
+    indent(environment.output, environment.getIndent()+1);
+    environment.output.println(computeModeName(lexerMode).toUpperCase() + "_MODE: Begin");
+    indent(environment.output, environment.getIndent() + 2);
+    environment.output.println("StxLexer := StxLexer_" + computeModeName(lexerMode) + "();");
+    indent(environment.output, environment.getIndent() + 2);
+    environment.output.println("End;");
+    environment.output.println();
   }
 
   @Override
@@ -365,29 +409,33 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  protected boolean lexerDollar(Lexer lexer) {
+  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
-      environment.output.printFragment("getc");
+      output.printFragment("getc");
       return true;
     } else if (runtime.currentCharacter == 'c') {
       lexer.getCharacter();
-      environment.output.printFragment("currentChar");
+      output.printFragment("currentChar");
+      return true;
+    } else if (runtime.currentCharacter == 'l') {
+      lexer.getCharacter();
+      output.printFragment("lexerMode");
       return true;
     } else if (runtime.currentCharacter == 'v') {
       lexer.getCharacter();
-      environment.output.printFragment(Fragments.LEXICAL_VALUE);
+      output.printFragment(Fragments.LEXICAL_VALUE);
       return true;
     } else if (runtime.currentCharacter == 'r') {
-      lexerReturnValue(lexer);
+      lexerReturnValue(output, lexer);
       return true;
     }
-    environment.output.print('$');
+    output.print('$');
     return false; 
   }
 
-  private void lexerReturnValue(Lexer lexer) {
+  private void lexerReturnValue(FormattingPrintStream output, Lexer lexer) {
     String follows = "";
     lexer.getCharacter();
     while (runtime.currentCharacter == ' ') {
@@ -419,9 +467,9 @@ public class Pascal extends BaseLanguageSupport {
       } else {
         environment.error(runtime.lineNumber, "Unfinished return value.  Recognized %s.", returnValue);
       }
-      environment.output.printFragment(Fragments.RETURN_VALUE, returnValue);
+      output.printFragment(Fragments.RETURN_VALUE, returnValue);
     } else {
-      environment.output.printf("StxLexer :=%s", follows);
+      output.printf("StxLexer :=%s", follows);
     }
   }
 
@@ -443,22 +491,22 @@ public class Pascal extends BaseLanguageSupport {
   }
   
   @Override
-  public boolean generateLexerCode(Lexer lexer) {
+  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer) {
     boolean end = false;
     boolean bStart = true;
 
     while (!end) {
       switch (runtime.currentCharacter) {
         case '$':
-          if (lexerDollar(lexer)) {
+          if (lexerDollar(output, lexer)) {
             continue;
           }
           break;
 
         case '{': /* COMMENT in PAS */
-          environment.output.print(runtime.currentCharacter);
+          output.print(runtime.currentCharacter);
           while ((lexer.getCharacter()) != '}') {
-            environment.output.print(runtime.currentCharacter);
+            output.print(runtime.currentCharacter);
           }
           break;
 
@@ -469,22 +517,22 @@ public class Pascal extends BaseLanguageSupport {
           continue;
 
         case '(': /* possible comment in PAS */
-          if(!lexerComment(lexer, ')')) {
+          if(!lexerComment(output, lexer, ')')) {
             return false;
           }
           continue;
 
         case '\'': /* constant */
         case '"': /* string */
-          if(!lexerString(lexer, runtime.currentCharacter)) {
+          if(!lexerString(output, lexer, runtime.currentCharacter)) {
             return false;
           }
           break;
 
         case '\n':
-          environment.output.printf("%c", runtime.currentCharacter);
+          output.printf("%c", runtime.currentCharacter);
           lexer.getCharacter();
-          indent(environment.output, environment.getIndent() + 1);
+          indent(output, environment.getIndent());
           continue;
 
         case 0:
@@ -493,7 +541,7 @@ public class Pascal extends BaseLanguageSupport {
 
       }
       if (!bStart || runtime.currentCharacter != '{') {
-        environment.output.print(runtime.currentCharacter);
+        output.print(runtime.currentCharacter);
       }
       if (runtime.currentCharacter > ' ') {
         bStart = false;

@@ -134,6 +134,16 @@ public interface LanguageSupport {
    * Emit the header of the lexer as needed.
    */
   void generateLexerHeader();
+  
+  /**
+   * Emit a lexer function header by mode
+   */
+  void generateLexerModeHeader(String mode);
+
+  /**
+   * Emit a lexer function footer by mode
+   */
+  void generateLexerModeFooter(String mode);
 
   /**
    * Generate the bottom of the lexer
@@ -199,7 +209,7 @@ public interface LanguageSupport {
    * @param lexer is the lexer to obtain more characters
    * @throws IOException 
    */
-  boolean generateLexerCode(Lexer lexer);
+  boolean generateLexerCode(FormattingPrintStream output, Lexer lexer);
 
   /**
    * print the declarations for the rest of the code
@@ -278,5 +288,16 @@ public interface LanguageSupport {
 
   void printParserErrors();
 
+  /**
+   * Generate the constant or 'define" for a given lexer mode
+   * @param mode
+   */
+  void generateLexerModeDefinition(String mode, int i);
+
+  /**
+   * Generate the constant or 'define" for a given lexer mode
+   * @param mode
+   */
+  void generateLexerModeCase(String mode, int i);
 
 }

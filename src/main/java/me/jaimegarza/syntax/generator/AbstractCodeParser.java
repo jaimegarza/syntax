@@ -29,6 +29,8 @@
 package me.jaimegarza.syntax.generator;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
@@ -46,6 +48,7 @@ import me.jaimegarza.syntax.definition.Terminal;
 import me.jaimegarza.syntax.definition.TokenGroup;
 import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 import me.jaimegarza.syntax.util.PathUtils;
 
 /**
@@ -58,6 +61,8 @@ import me.jaimegarza.syntax.util.PathUtils;
  *
  */
 public abstract class AbstractCodeParser extends AbstractPhase implements Lexer, EmbeddedCodeProcessor {
+  private static final String DEFAULT_LEXER_MODE = "default";
+
   protected static final String DISTINGUISHED_SYMBOL_NAME = "$start";
 
   protected Stack<Character> inputChars = new Stack<Character>();
@@ -325,7 +330,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     }
     NonTerminal nonTerminal = runtimeData.findNonTerminalByName(name);
     if (nonTerminal == null) {
-      runtimeData.getNonTerminals().add(new NonTerminal(name));
+      nonTerminal = new NonTerminal(name);
+      runtimeData.getNonTerminals().add(nonTerminal);
     } else {
       nonTerminal.setCount(nonTerminal.getCount() - 1);
     }
@@ -493,12 +499,16 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   
     // Get one char from stream
     try {
-      runtimeData.currentCharacter = (char) environment.source.read();
+      int rc = environment.source.read();
+      runtimeData.currentCharacter = (char) rc;
+      // EOF?
+      if (rc == -1) {
+        runtimeData.currentCharacter = 0;
+      }
     } catch (IOException e) {
       runtimeData.currentCharacter = 0;
     }
     
-    // EOF?
     if (runtimeData.currentCharacter == -1 || runtimeData.currentCharacter == 0) {
       return 0;
     }
@@ -838,14 +848,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * copy action until the next ';' or '}' that actually closes
    */
-  protected boolean generateLexerCode() {
-    if (tokenActionCount == 0) {
-      environment.language.generateLexerHeader();
-    }
-    environment.language.emitLine(runtimeData.lineNumber + 1);
-    indent(environment.output, environment.getIndent() + 1);
-    environment.language.generateLexerCode(this);
-    environment.output.println();
+  protected boolean generateLexerCode(String lexerMode) {
+    FormattingPrintStream output = environment.getLexerModePrintStream(lexerMode);
+    environment.language.generateLexerCode(output, this);
     tokenActionCount++;
     return true;
   }
@@ -866,7 +871,41 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   protected void generateLexerFooter() {
     if (tokenActionCount != 0) {
+      if (environment.lexerModes.get(DEFAULT_LEXER_MODE) == null) {
+        environment.getLexerModePrintStream(DEFAULT_LEXER_MODE);
+      }
+      List<String> modes = new ArrayList<String>(environment.lexerModes.keySet().size());
+      modes.addAll(environment.lexerModes.keySet());
+      Collections.sort(modes);
+
+      int index = 0;
+      if (modes.size() > 0) {
+        for (String mode: modes) {
+          environment.language.generateLexerModeDefinition(mode, index++);
+        }
+      }
+
+      environment.language.generateLexerHeader();
+      if (modes.size() > 1) {
+        index = 0;
+        for (String mode: modes) {
+          environment.language.generateLexerModeCase(mode, index++);
+        }
+      }
+      
       environment.language.generateLexerFooter();
+      
+      if (modes.size() > 1) {
+        for (String mode: modes) {
+          FormattingPrintStream stream = environment.lexerModes.get(mode);
+          String lexerCode = stream.getWriter().toString();
+          environment.language.emitLine(runtimeData.lineNumber + 1);
+          environment.language.generateLexerModeHeader(mode);
+          environment.output.print(lexerCode);
+          environment.output.println();
+          environment.language.generateLexerModeFooter(mode);
+        }
+      }
     }
   }
 

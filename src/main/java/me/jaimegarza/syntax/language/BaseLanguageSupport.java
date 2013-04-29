@@ -229,33 +229,37 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     return -1; // command a break
   }
 
-  protected boolean lexerDollar(Lexer lexer) {
+  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
-      environment.output.printFragment("getc");
+      output.printFragment("getc");
       return true;
     } else if (runtime.currentCharacter == 'c') {
       lexer.getCharacter();
-      environment.output.printFragment("currentChar");
+      output.printFragment("currentChar");
+      return true;
+    } else if (runtime.currentCharacter == 'l') {
+      lexer.getCharacter();
+      output.printFragment("lexerMode");
       return true;
     } else if (runtime.currentCharacter == 'v') {
       lexer.getCharacter();
-      environment.output.printFragment(Fragments.LEXICAL_VALUE);
+      output.printFragment(Fragments.LEXICAL_VALUE);
       return true;
     }
-    environment.output.print('$');
+    output.print('$');
     return false;
   }
 
-  protected boolean lexerComment(Lexer lexer, char characterToFind) {
-    environment.output.print(runtime.currentCharacter);
+  protected boolean lexerComment(FormattingPrintStream output, Lexer lexer, char characterToFind) {
+    output.print(runtime.currentCharacter);
     lexer.getCharacter();
     if (runtime.currentCharacter != '*') {
       return true;
     }
   
-    environment.output.print(runtime.currentCharacter);
+    output.print(runtime.currentCharacter);
     lexer.getCharacter();
     boolean bBreak = false;
     while (!bBreak) {
@@ -264,19 +268,19 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
         return false;
       }
       while (runtime.currentCharacter == '*') {
-        environment.output.print(runtime.currentCharacter);
+        output.print(runtime.currentCharacter);
         if ((lexer.getCharacter()) == characterToFind) {
           bBreak = true;
         }
       }
-      environment.output.print(runtime.currentCharacter);
+      output.print(runtime.currentCharacter);
       lexer.getCharacter();
     }
     return true;
   }
 
-  protected boolean lexerString(Lexer lexer, char characterToFind) {
-    environment.output.print(runtime.currentCharacter);
+  protected boolean lexerString(FormattingPrintStream output, Lexer lexer, char characterToFind) {
+    output.print(runtime.currentCharacter);
     while ((lexer.getCharacter()) != characterToFind) {
       if (runtime.currentCharacter == '\0') {
         environment.error(-1, "Statement ' .. ' or \" .. \" not ended");
@@ -287,25 +291,52 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
         break;
       }
       if (runtime.currentCharacter == '\\') {
-        environment.output.print(runtime.currentCharacter);
+        output.print(runtime.currentCharacter);
         lexer.getCharacter();
       }
-      environment.output.print(runtime.currentCharacter);
+      output.print(runtime.currentCharacter);
     }
     return true;
   }
   
+  static int modeNumber = 0;
+
+  protected String computeModeName(String lexerMode) {
+    modeNumber++;
+    if (lexerMode == null || lexerMode.length() == 0) {
+      return "_pe_" + modeNumber;
+    }
+    String id = "";
+    for (int i = 0; i < lexerMode.length(); i++) {
+      char c = lexerMode.charAt(i);
+      if (i == 0) {
+        if (Character.isJavaIdentifierStart(c)) {
+          id += c;
+        } else {
+          id = "_pe_";
+        }
+      } else {
+        if (Character.isJavaIdentifierPart(c)) {
+          id += c;
+        } else {
+          id += '_';
+        }
+      }
+    }
+    return id;
+  }
+
   @Override
-  public boolean generateLexerCode(Lexer lexer) {
+  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer) {
     int nBracks = 0;
     boolean end = false;
-    boolean bStart = true;
-    boolean bSkip = false;
+    boolean startingString = true;
+    boolean startedWithBracket = false;
   
     while (!end) {
       switch (runtime.currentCharacter) {
         case '$':
-          if (lexerDollar(lexer)) {
+          if (lexerDollar(output, lexer)) {
             continue;
           }
           break;
@@ -321,32 +352,32 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
           break;
   
         case '}': /* level -- in C */
-          if (--nBracks <= 0 && bSkip) {
+          if (--nBracks <= 0 && startedWithBracket) {
             end = true;
           }
-          if (end && bSkip) {
+          if (end && startedWithBracket) {
             lexer.getCharacter();
             continue;
           }
           break;
   
         case '/': /* possible comment in C */
-          if(!lexerComment(lexer, '/')) {
+          if(!lexerComment(output, lexer, '/')) {
             return false;
           }
           continue;
   
         case '\'': /* constant */
         case '"': /* string */
-          if (!lexerString(lexer, runtime.currentCharacter)) {
+          if (!lexerString(output, lexer, runtime.currentCharacter)) {
             return false;
           }
           break;
           
         case '\n':
-          environment.output.print(runtime.currentCharacter);
+          output.print(runtime.currentCharacter);
           lexer.getCharacter();
-          indent(environment.output, environment.getIndent() + 1);
+          indent(output, environment.getIndent() - (this instanceof C?1:0));
           continue;
   
         case 0:
@@ -354,16 +385,20 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
           return false;
   
       }
-      if (!bStart || runtime.currentCharacter != '{') {
-        environment.output.print(runtime.currentCharacter);
-      } else {
-        bSkip = true;
+      if (startingString && runtime.currentCharacter == '{') {
+        startedWithBracket = true;
+      } else if (!startingString || runtime.currentCharacter != ' ') {
+        if (startingString) {
+          indent(output, environment.getIndent() - (this instanceof C?1:0));
+        }
+        output.print(runtime.currentCharacter);
       }
       if (runtime.currentCharacter > ' ') {
-        bStart = false;
+        startingString = false;
       }
       lexer.getCharacter();
     }
+    output.println();
     return true;
   }
 

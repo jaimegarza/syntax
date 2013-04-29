@@ -1,16 +1,16 @@
 /*
  ===============================================================================
- Copyright (c) 1985, 2012, Jaime Garza
+ Copyright (c) 1985, 2013, Jaime Garza
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
-     * Redistributions of source code must retain the above copyright
+ * Redistributions of source code must retain the above copyright
        notice, this list of conditions and the following disclaimer.
-     * Redistributions in binary form must reproduce the above copyright
+ * Redistributions in binary form must reproduce the above copyright
        notice, this list of conditions and the following disclaimer in the
        documentation and/or other materials provided with the distribution.
-     * Neither the name of Jaime Garza nor the
+ * Neither the name of Jaime Garza nor the
        names of its contributors may be used to endorse or promote products
        derived from this software without specific prior written permission.
  
@@ -25,40 +25,40 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
-*/
-package me.jaimegarza.syntax.code;
-
-import java.util.ListResourceBundle;
+ */
+package me.jaimegarza.syntax.regex.node;
 
 /**
- * Fragments of code to be used for code generation
- * when the language is pascal
- *
- * Please be advised that {1} is interpreted to be the
- * indentation string required.  Always.  This is a
- * contract.
- *
- * @author jaimegarza@gmail.com
- *
+ * Represents a character node in a regex
+ * 
+ * @author jgarza
+ * 
  */
-public class Fragments_pascal extends ListResourceBundle {
+public class CharRangeNode extends RegexNode {
+  private char from;
+  private char to;
 
-  @Override
-  protected Object[][] getContents() {
-    return contents;
+  public CharRangeNode(char from, char to) {
+    this.from = from;
+    this.to = to;
   }
   
   /**
-   * The fragments
+   * @return the c
    */
-  Object[] contents [] = {
-      {Fragments.HELLO,"Pello Porld"}, // keep, for unit testing
-      {Fragments.STXSTACK, "StxStack[pStxStack{0}]"},
-      {Fragments.CURRENT_CHAR, "StxChar"},
-      {Fragments.LEXICAL_VALUE, "StxValue"},
-      {Fragments.GETC, "StxChar := StxNextChar"},
-      {Fragments.RETURN_VALUE, "StxLexer := {0}; exit"},
-      {Fragments.LEXER_MODE, "StxLexerMode"},
-  };
+  public char getFrom() {
+    return from;
+  }
 
+  /**
+   * @return the to
+   */
+  public char getTo() {
+    return to;
+  }
+
+  @Override
+  public String toString() {
+    return "[\\" + from + "-\\" + to + "]";
+  }
 }

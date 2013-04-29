@@ -158,11 +158,11 @@ public class NonTerminal extends Symbol {
   }
   
   /**
-   * Remove the goto identified by the destination
+   * Remove the gotos identified by the destination
    * @param destinationState is the destination state
    * @return the number of elements in the goto table, for convenience.
    */
-  public int removeGoto(int destinationState) {
+  public int removeGotos(int destinationState) {
     for (int i = 0; i < gotos.size(); ) {
       if (gotos.get(i).getDestination() == destinationState) {
         gotos.remove(i);

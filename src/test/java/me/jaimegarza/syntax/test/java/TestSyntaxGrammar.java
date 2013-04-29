@@ -49,10 +49,10 @@ public class TestSyntaxGrammar extends AbstractGenerationBase {
       "--language",
       "java",
       "--packing",
-      "tabular",
+      "packed", //"tabular",
       //"--debug",
       "src/main/grammar/syntax.sy",
-      "target/gensrc/me/jaimegarza/syntax/generator/SyntaxCodeParser.java"
+      "target/SyntaxCodeParser.java"
   };
 
   @BeforeTest

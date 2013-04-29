@@ -113,8 +113,8 @@ char StxNextChar()
 }
 
 
- int StxError(int state, int token, int top, char * message)
- {
+int StxError(int state, int token, int top, char * message)
+{
     printf("An error occurred in state %d with token %d on the position %d\n", state, token, top);
     printf("%s\n", message);
 #ifdef DEBUG

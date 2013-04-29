@@ -72,7 +72,7 @@ public class TableGenerator extends AbstractPhase {
   private State I[] = new State[MIN_STATE_ARRAY_LENGTH];
   private int finalState = 0;
   private int actionNumber = 0;
-  private int numberOfGotos;
+  private int numberOfGotos = 0;
   private List<String> errorMessages = new LinkedList<String>();
 
   /**
@@ -741,8 +741,9 @@ public class TableGenerator extends AbstractPhase {
     for (NonTerminal id : runtimeData.getNonTerminals()) {
       defaultValue = id.getDefaultGoto();
       if (defaultValue != 0) {
-        numElems = id.removeGoto(defaultValue);
-        numberOfGotos--;
+        int size = id.getGotos().size();
+        numElems = id.removeGotos(defaultValue);
+        numberOfGotos = numberOfGotos - size + numElems;
         id.setToken(position);
         id.appendGoto(-1, defaultValue);
         numberOfGotos++;

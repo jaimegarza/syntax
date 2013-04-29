@@ -100,37 +100,37 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 
 %token            MARK      : "'%%'"
 %token            START     : "'%start'"
-%token  <id>      TOKEN     : "Token"
+%token  <id>      TOKEN     : "token"
 %token            TYPE      : "'%type'"
 %token            UNION     : "'%union'"
-%token  <id>      TYPENAME  : "Type definition"
+%token  <id>      TYPENAME  : "type definition"
 %token            TERM      : "'%token'"
 %token            LEFT      : "'%left'"
 %token            RIGHT     : "'%right'"
 %token            BINARY    : "'%binary'"
 %token            ERRDEF    : "'%error'"
-%token  <value>   NUM       : "Number"
+%token  <value>   NUM       : "number"
 %token            PREC      : "'%prec'"
 %token            NAME      : "'%name'"
-%token            ERROR     : "Error"
+%token            ERROR     : "error"
 %token            LEXER     : "%lexer"
 %token            DECLARE   : "%declare"
 %token            GROUP     : "%group"
 
-%token <regex>    RX_PIPE   : "'|'"
-%token            RX_LPAR   : "'('"
-%token            RX_RPAR   : "')'"
-%token <regex>    RX_STAR   : "'*'" 
-%token <regex>    RX_PLUS   : "'+'" 
-%token <regex>    RX_HUH    : "'?'" 
-%token <regex>    RX_ANY    : "'.'"
-%token <regex>    RX_CHARS  : "Character or set of characters"
+%token <regex>    PIPE   : "'|'"
+%token <regex>    STAR   : "'*'" 
+%token <regex>    PLUS   : "'+'" 
+%token <regex>    HUH    : "'?'" 
+%token <regex>    ANY    : "'.'"
+%token <regex>    CHAR   : "regular expression character"
+
 %token            LEXCODE   : "lexical code"
-%token            CHARS     : "regular expression characters"
 
 %token            ';'              : "semicolon"
 %right            ':'              : "colon"
-%right            '='              : "equals sign"
+%right            '='              : "equals sign",
+                  '['              : "token mode marker",
+                  ']'              : "closing token mode marker"
 %token            ','              : "comma"
 %token            '|'              : "rule separator ('|')"
 %token            '('              : "opening parenthesis"
@@ -138,13 +138,17 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %token            '/'              : "regular expression marker ('/')"
 
 %type   <value>   Number;
-%type   <value>   Precedence;
-%type   <id>      ErrInfo;
+%type   <value>   Token;
+%type   <id>      TokenName;
 %type   <regex>   LexicAction;
 
 %type   <regex>   BasicElement;
-%type   <regex>   ConcatElement;
+%type   <regex>   Alternation;
+%type   <regex>   Concatenation;
 %type   <regex>   RegExp;
+%type   <regex>   RepeatRange;  
+%type   <regex>   CharacterClass;  
+%type   <regex>   CharRange;
 
 %type   <ids>     GroupTokens;
 %type   <id>      GroupToken;
@@ -152,157 +156,130 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %name Declarations                  : "declarations";
 %name Declaration                   : "a declaration";
 %name Actions                       : "code section";
-%name Precedence                    : "a token definition";
+%name Token                         : "a token definition";
 %name Symbol                        : "token, precedence declaration or '='";
 %name GrammarRule                   : "parser rule definition";
 %name LexicAction                   : "lexical token definition";
 %name Name                          : "a token:name pair";
 %name RegExp                        : "regular expression";
-%name ConcatElement                 : "operator expression";
+%name Alternation                   : "or regular expression";
+%name Concatenation                 : "concatenation expression";
 %name BasicElement                  : "basic element";
+%name RepeatRange                   : "repetition specification"  
+%name CharacterClass                : "character class"
+%name CharRange                     : "character range"  
+%name GroupTokens                   : "group of tokens"
+%name GroupToken                    : "token in a group"
+%name TokenName                     : "name of the token"
+%name NonTerminals                  : "group of non-terminal tokens"
+%name TokenNames                    : "token names"
+%name Precedence                    : "precedence definition"
+%name Definition                    : "a definition"
+%name Equals                        : "an equals sign (starting of a token action)"
+%name Type                          : "type definition"
+%name Tokens                        : "token declarations"
+%name Slash                         : "'/'"
+%name Rules                         : "rule definitions"
+%name Rule                          : "rule definition"
+%name Descriptor                    : "syntax grammar"  
+%name SectionMarker                 : "end of declarations marker '%%'"
+%name Productions                   : "productions"
+%name Number                        : "number"
 
 %start Descriptor
 
 %error ';'
 
 %%
-Descriptor   :  Declarations DeclMarker Productions Actions
-             |  DeclMarker  Productions Actions
-             ;
+Descriptor    :  Declarations SectionMarker Productions Actions
+              |  SectionMarker  Productions Actions
+              ;
              
-DeclMarker   : MARK                         = generateLexerFooter();
-             ;
+SectionMarker : MARK                        = generateLexerFooter();
+              ;
 
-Actions      :                              = {
+Actions       :                             = {
                                                 generateCodeGeneratorFooter();
                                                 finalActions = false;
                                               }
-             |  MARK                        = {
+              |  MARK                       = {
                                                 generateCodeGeneratorFooter();
                                                 finalActions = true;
                                               }
-             ;
+              ;
 
-Declarations :  Declarations Declaration
-             |  Declaration
-             ;
+Declarations  :  Declarations Declaration
+              |  Declaration
+              ;
 
-Declaration  :  ';'
-             |  START TOKEN                 = if (!declareStart($TOKEN)) return false;
-             |  LEXCODE TOKEN 
-             |  TYPE TYPENAME               = currentTypeName = $TYPENAME;
-                         Tokens             = currentTypeName = null;
-             |  DECLARE TYPENAME            = declareOneType($TYPENAME);
-             |  NAME TokenNames
-             |  UNION                       = if (!generateStructure()) return false;
-             |  PrecDef Definition          = currentType = null;
-             |  '{'                         = if (!generateDeclaration()) return false;
-             |  LEXER Equals TOKEN
-             |  GROUP TOKEN ':' TOKEN 
+Declaration   :  ';'
+              |  START TOKEN                = if (!declareStart($TOKEN)) return false;
+              |  LEXCODE TOKEN 
+              |  TYPE TYPENAME              = currentTypeName = $TYPENAME;
+                         NonTerminals       = currentTypeName = null;
+              |  DECLARE TYPENAME           = declareOneType($TYPENAME);
+              |  NAME TokenNames
+              |  UNION                      = if (!generateStructure()) return false;
+              |  Precedence Definition      = currentType = null;
+              |  '{'                        = if (!generateDeclaration()) return false;
+              |  LEXER Equals TOKEN
+              |  GROUP TOKEN ':' TOKEN 
                                 GroupTokens = if(!groupTokens($GroupTokens, $TOKEN[1], $TOKEN[2])) return false;
-             ;
+              ;
 
-PrecDef      :  TERM                        = {
+Precedence    :  TERM                       = {
                                                 ruleAssociativity = Associativity.NONE;
                                                 isErrorToken = false;
                                               }
-             |  LEFT                        = {
+              |  LEFT                       = {
                                                 rulePrecedence++;
                                                 ruleAssociativity = Associativity.LEFT;
                                                 isErrorToken = false;
                                               }
-             |  RIGHT                       = {
+              |  RIGHT                      = {
                                                 rulePrecedence++;
                                                 ruleAssociativity = Associativity.RIGHT;
                                                 isErrorToken = false;
                                               }
-             |  BINARY                      = {
+              |  BINARY                     = {
                                                 rulePrecedence++;
                                                 ruleAssociativity = Associativity.BINARY;
                                                 isErrorToken = false;
                                               }
-             |  ERRDEF                      = {
+              |  ERRDEF                     = {
                                                 ruleAssociativity = Associativity.NONE;
                                                 isErrorToken = true;
                                               }
-             ;
+              ;
 
-Tokens       :  Tokens ',' TOKEN            = if (!declareOneNonTerminal(currentTypeName, $TOKEN)) return false;
-             |  TOKEN                       = if (!declareOneNonTerminal(currentTypeName, $TOKEN)) return false;
-             ;
+NonTerminals  :  NonTerminals ',' TOKEN     = if (!declareOneNonTerminal(currentTypeName, $TOKEN)) return false;
+              |  TOKEN                      = if (!declareOneNonTerminal(currentTypeName, $TOKEN)) return false;
+              ;
 
-TokenNames   :  TokenNames ',' Name
-             |  Name
-             ;
+TokenNames    :  TokenNames ',' Name
+              |  Name
+              ;
              
-Name         : TOKEN ':' TOKEN              = if (!nameOneNonTerminal($TOKEN[1], $TOKEN[2])) return false;
-             ;
+Name          : TOKEN ':' TOKEN             = if (!nameOneNonTerminal($TOKEN[1], $TOKEN[2])) return false;
+              ;
              
-GroupTokens  : GroupTokens ',' GroupToken   = $GroupTokens.add($GroupToken);
-             | GroupToken                   = {
+GroupTokens   : GroupTokens ',' GroupToken  = $GroupTokens.add($GroupToken);
+              | GroupToken                  = {
                                                 $GroupTokens = new LinkedList<String>();
                                                 $GroupTokens.add($GroupToken);
                                               }
-             ;
+              ;
              
-GroupToken   : TOKEN                        = {
+GroupToken    : TOKEN                       = {
                                                 if (!declareOneTerminal($TOKEN, false, Associativity.NONE, rulePrecedence, null, -1, null)) return false;
                                                 $GroupToken = $TOKEN;
                                               }
-             ;
-
-Definition   :  Type Precedences
-             ;
-
-Precedences  :  Precedences ',' Precedence
-             |  Precedence
-             ;
-
-Precedence   :  TOKEN Number ErrInfo
-                                LexicAction = {
-                                                if ($2 != -1) {
-                                                  $$ = $2;
-                                                }
-                                                if (!declareOneTerminal($1, isErrorToken, ruleAssociativity, rulePrecedence, currentType, $$, $3)) return false;
-                                              }
-             ;
-
-Number       :  NUM
-             |                              = $<>$ = new StackElement(0, -1, false, "", null);
-             ;
-
-ErrInfo      : ':' TOKEN                    = $$ = $2; 
-             | %prec ':'                    = $<>$ = new StackElement(0, 0, false, "", null);
-             ;
-
-LexicAction  : Equals TOKEN                 = $$ = null;
-             | Slash RegExp Slash           = //$$ = AddTree($2);
-             | %prec '='                    = $<>$ = new StackElement(0, -1, false, "", null);
-             ;
-
-Slash        : '/' TOKEN                
-             ;
-
-RegExp        : RegExp ConcatElement        = //$$ = SequentialNode($1, $2);
-              | RegExp RX_PIPE ConcatElement= //$$ = AlternateNode($1, $3);
-              | ConcatElement
-              ;
-         
-ConcatElement : BasicElement RX_STAR        = //$$ = ZeroOrManyNode($1);
-              | BasicElement RX_PLUS        = //$$ = OneOrManyNode($1);
-              | BasicElement RX_HUH         = //$$ = ZeroOrOneNode($1);
-              | BasicElement
-              ;
-              
-BasicElement  : RX_LPAR RegExp RX_RPAR      = $$ = $2;
-              | CHARS                       = //CharNode($$);
-              | RX_ANY                      = //AnyNode();
               ;
 
-Equals       : '='                          = generateLexerCode();
-             ;
+Definition    :  Type Tokens
+              ;
 
-Type         :  TYPENAME                    = {
+Type          :  TYPENAME                   = {
                                                 currentType = new Type($1);
                                                 if (runtimeData.getTypes().contains(currentType)) {
                                                   currentType = runtimeData.getTypes().get(runtimeData.getTypes().indexOf(currentType));
@@ -310,43 +287,115 @@ Type         :  TYPENAME                    = {
                                                   runtimeData.getTypes().add(currentType);
                                                 }
                                               }
-             |                              = currentType = null;
-             ;
+              |                             = currentType = null;
+              ;
 
+Tokens        :  Tokens ',' Token
+              |  Token
+              ;
 
-Productions  :  Productions TOKEN ':' Rules ';'  = if (!setLeftHandOfLastRule($2)) return false;
-             |  TOKEN ':' Rules ';'              = if (!setLeftHandOfLastRule($1)) return false;
-             ;
+Token         :  TOKEN Number TokenName
+                                LexicAction = {
+                                                if ($2 != -1) {
+                                                  $$ = $2;
+                                                }
+                                                if (!declareOneTerminal($1, isErrorToken, ruleAssociativity, rulePrecedence, currentType, $$, $3)) return false;
+                                              }
+              ;
 
-Rules        :  Rules '|' GrammarRule       = {
+Number        :  NUM
+              |                             = $<>$ = new StackElement(0, -1, false, "", null);
+              ;
+
+TokenName     : ':' TOKEN                   = $$ = $2; 
+              | %prec ':'                   = $<>$ = new StackElement(0, 0, false, "", null);
+              ;
+
+LexicAction   : Equals TOKEN                = $$ = null;
+              | Slash RegExp Slash %prec '=' = //$$ = AddTree($2);
+              | Slash RegExp Slash Equals   = //$$ = AddTree($2);
+              | %prec '='                   = $<>$ = new StackElement(0, -1, false, "", null);
+              ;
+
+Equals        : '='                         = generateLexerCode("default");
+              | '[' TOKEN ']' '='           = generateLexerCode($2);
+              ;
+
+Slash         : '/' TOKEN                
+              ;
+
+RegExp        : RegExp PIPE Alternation = //$$ = AlternateNode($1, $3);
+              | Alternation
+              ;
+              
+Alternation   : Alternation Concatenation
+              | Concatenation
+              ;
+         
+Concatenation : BasicElement STAR           = //$$ = ZeroOrManyNode($1);
+              | BasicElement PLUS           = //$$ = OneOrManyNode($1);
+              | BasicElement HUH            = //$$ = ZeroOrOneNode($1);
+              | BasicElement RepeatRange
+              | BasicElement
+              ;
+              
+RepeatRange   : '{' NUM '}'
+              | '{' NUM ',' NUM '}'
+              ;
+              
+BasicElement  : '(' RegExp ')'              = $$ = $2;
+              | CHAR                        = //CharNode($$);
+              | '[' CharacterClass ']'
+              | ANY                         = //AnyNode();
+              ;
+CharacterClass: '^' CharRange
+              | '^' ']' CharRange
+              | '^' '-' CharRange
+              | '^' ']' '-' CharRange
+              | ']' CharRange
+              | ']' '-' CharRange
+              | '-' CharRange
+              | CharRange
+              ;
+              
+CharRange     : CHAR
+              | CHAR '-' CHAR
+              | CHAR '-'
+              ;
+
+Productions   :  Productions TOKEN ':' Rules ';'  = if (!setLeftHandOfLastRule($2)) return false;
+              |  TOKEN ':' Rules ';'              = if (!setLeftHandOfLastRule($1)) return false;
+              ;
+
+Rules         :  Rules '|' GrammarRule      = {
                                                 newRule();
                                                 bActionDone = false;
                                               }
-             |  GrammarRule                 = {
+              |  GrammarRule                = {
                                                 newRule();
                                                 currentRuleIndex = runtimeData.getRules().size() - 1;
                                                 bActionDone = false;
                                               }
-             ;
+              ;
 
-GrammarRule  :  Rule
-             |                              = {
+GrammarRule   :  Rule
+              |                             = {
                                                 bActionDone = false;
                                               }
-             ;
+              ;
 
-Rule         :  Rule Symbol
-             |  Symbol
-             ;
+Rule          :  Rule Symbol
+              |  Symbol
+              ;
 
-Symbol       :  TOKEN                       = {
+Symbol        :  TOKEN                      = {
                                                 if ($TOKEN.length() == 0) {
                                                   break;
                                                 }
                                                 if (!declareOneItem($TOKEN, $<value>TOKEN, $<mustClose>TOKEN)) return false;
                                               }
-             |  PREC TOKEN                  = if(!computeAssociativityAndPrecedence($TOKEN)) return false;
-             |  '='                         = {
+              |  PREC TOKEN                 = if(!computeAssociativityAndPrecedence($TOKEN)) return false;
+              |  '='                        = {
                                                 int i = runtimeData.currentRuleItems != null ? runtimeData.currentRuleItems.size() : 0;
                                                 if (!ruleAction(runtimeData.getRules().size(), i, currentNonTerminalName)) {
                                                   return false;
@@ -426,31 +475,31 @@ Symbol       :  TOKEN                       = {
   
     if (runtimeData.currentCharacter == '|') {
       getCharacter();
-      return RX_PIPE;
+      return PIPE;
     }
     if (runtimeData.currentCharacter == '(') {
       getCharacter();
-      return RX_LPAR;
+      return '(';
     }
     if (runtimeData.currentCharacter == ')') {
       getCharacter();
-      return RX_RPAR;
+      return ')';
     }
     if (runtimeData.currentCharacter == '*') {
       getCharacter();
-      return RX_STAR;
+      return STAR;
     }
     if (runtimeData.currentCharacter == '+') {
       getCharacter();
-      return RX_PLUS;
+      return PLUS;
     }
     if (runtimeData.currentCharacter == '?') {
       getCharacter();
-      return RX_HUH;
+      return HUH;
     }
     if (runtimeData.currentCharacter == '.') {
       getCharacter();
-      return RX_ANY;
+      return ANY;
     }
     if (runtimeData.currentCharacter == '/') {
       isRegex = false;
@@ -474,7 +523,7 @@ Symbol       :  TOKEN                       = {
      * StxValue.node.ranges.prev = NULL; StxValue.node.ranges.charStart = c2;
      * StxValue.node.ranges.charEnd = c2;
      */
-    return CHARS;
+    return CHAR;
   }
 
   @Override
@@ -603,6 +652,16 @@ Symbol       :  TOKEN                       = {
       return '|';
     }
   
+    if (runtimeData.currentCharacter == '[') {
+      getCharacter();
+      return '[';
+    }
+  
+    if (runtimeData.currentCharacter == ']') {
+      getCharacter();
+      return ']';
+    }
+  
     if (runtimeData.currentCharacter == '=') {
       getCharacter();
       isEqual = true;
@@ -663,7 +722,7 @@ Symbol       :  TOKEN                       = {
       if (runtimeData.currentCharacter == '\0') {
         break;
       }
-      if (!mustClose && "%\\;,:|={< \r\t\n".indexOf(runtimeData.currentCharacter) >= 0) {
+      if (!mustClose && "%\\;,:[]|={< \r\t\n".indexOf(runtimeData.currentCharacter) >= 0) {
         break;
       }
     } while (runtimeData.currentCharacter != c2);

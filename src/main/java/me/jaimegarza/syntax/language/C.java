@@ -114,6 +114,7 @@ public class C extends BaseLanguageSupport {
 
   @Override
   public void generateLexerHeader() {
+    environment.include.println();
     if (environment.getDriver() == Driver.PARSER) {
       environment.include.println("#define PARSER_MODE");
       environment.include.println("#define ACCEPTED 1");
@@ -142,16 +143,56 @@ public class C extends BaseLanguageSupport {
                       .printf("extern TSTACK StxValue;\n")
                       .printf("char          StxNextChar();\n");
     environment.output.printf("\n")
+                      .printf("int StxLexerMode = DEFAULT_LEXER_MODE;\n\n")
                       .printf("unsigned long int StxLexer()\n")
                       .printf("{\n");
+    if (environment.lexerModes.size() > 1) {
+      indent(environment.output, environment.getIndent()-1);
+      environment.output.println("switch (StxLexerMode) {\n");
+    } else {
+      environment.output.println(environment.lexerModes.get("default").getWriter().toString());
+    }
   }
 
   @Override
+  public void generateLexerModeHeader(String lexerMode) {
+    environment.output.printf("\n")
+                      .printf("unsigned long int StxLexer_" + computeModeName(lexerMode) + "()\n")
+                      .printf("{\n");
+  }
+    
+  @Override
+  public void generateLexerModeFooter(String lexerMode) {
+    environment.include.println();
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("return 0; /* UNKNOWN */\n");
+    environment.output.printf("}/* End of StxLexer_" + computeModeName(lexerMode) + " */\n");
+  }
+  
+  @Override
   public void generateLexerFooter() {
-    environment.output.println();
+    if (environment.lexerModes.size() > 1) {
+      indent(environment.output, environment.getIndent() - 1);
+      environment.output.println("}");
+      environment.output.println();
+    }
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("return 0; /* UNKNOWN */\n");
     environment.output.printf("}/* End of StxLexer */\n");
+  }
+
+  @Override
+  public void generateLexerModeDefinition(String lexerMode, int index) {
+    environment.include.println("#define " + computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE  " + index);
+  }
+
+  @Override
+  public void generateLexerModeCase(String lexerMode, int index) {
+    indent(environment.output, environment.getIndent());
+    environment.output.println("case " + computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE:");
+    indent(environment.output, environment.getIndent() + 1);
+    environment.output.println("return ParserElement_" + computeModeName(lexerMode) + "();");
+    environment.output.println();
   }
 
   @Override

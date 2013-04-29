@@ -10,14 +10,16 @@ tests:
         - me.jaimegarza.syntax.test.c.TestCExpandedScanner
         - me.jaimegarza.syntax.test.c.TestCPackedParser
         - me.jaimegarza.syntax.test.c.TestCPackedScanner
+        - me.jaimegarza.syntax.test.c.TestCLexerModes
         - me.jaimegarza.syntax.test.java.TestJavaExpandedParser
         - me.jaimegarza.syntax.test.java.TestJavaExpandedScanner
         - me.jaimegarza.syntax.test.java.TestJavaPackedParser
         - me.jaimegarza.syntax.test.java.TestJavaPackedScanner
-        - me.jaimegarza.syntax.test.java.TestSyntaxGrammar
+        - me.jaimegarza.syntax.test.java.TestJavaLexerModes
         - me.jaimegarza.syntax.test.java.TestFeatures
         - me.jaimegarza.syntax.test.pascal.TestPascalExpandedParser
         - me.jaimegarza.syntax.test.pascal.TestPascalExpandedScanner
         - me.jaimegarza.syntax.test.pascal.TestPascalPackedParser
         - me.jaimegarza.syntax.test.pascal.TestPascalPackedScanner
+        - me.jaimegarza.syntax.test.pascal.TestPascalLexerModes
         - me.jaimegarza.syntax.test.TestExternalCompilers

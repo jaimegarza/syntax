@@ -58,6 +58,7 @@ public class Fragments_java extends ListResourceBundle {
       {Fragments.LEXICAL_VALUE, "lexicalValue"},
       {Fragments.GETC, "currentChar = getNextChar(false)"},
       {Fragments.RETURN_VALUE, "return {0}"},
+      {Fragments.LEXER_MODE, "parserElementMode"},
   };
 
 }

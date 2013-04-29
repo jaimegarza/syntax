@@ -1,0 +1,103 @@
+%{
+{Program that gets compiled and executed by free pascal}
+PROGRAM lexermode;
+USES sysutils;
+{$I $$b.inc}
+{$DEFINE DEBUG}
+VAR
+    number : LONGINT;
+%}
+
+%token a:" an a symbol" = 
+if   $c = 'a'
+then begin
+     $+; 
+     return a;
+     end;
+%
+
+%token b:"a b symbol" [B] = 
+if   $c = 'b'
+then begin
+     $+; 
+     return b;
+     end;
+%
+       
+%token c:"a c symbol" [C] =
+if   $c = 'c'
+then begin
+     $+; 
+     return c;
+     end;
+%
+
+%lexer [B] = 
+if   $c = 'a'
+then begin
+     $+; 
+     $l := DEFAULT_LEXER_MODE; 
+     return a;
+     end;
+%
+
+%lexer [C] = 
+if   $c = 'a'
+then begin
+     $+; 
+     $l := DEFAULT_LEXER_MODE; 
+     return a;
+     end;
+%
+
+%lexer =
+if   $c = 'b'
+then begin
+     $l := B_LEXER_MODE;
+     $+;
+     return b;
+     end;
+  
+if   $c = 'c'
+then begin
+     $l := C_LEXER_MODE;
+     $+;
+     return c;
+     end
+%
+
+%%
+
+A : a
+  | b
+  | c
+  ;
+  
+%%
+
+VAR
+    charNum : INTEGER = 1;
+
+CONST
+    expression = '(1 + 3) *4 / 5 + -20';
+
+FUNCTION StxNextChar: CHAR;
+BEGIN
+    IF   charNum <= LENGTH(expression) 
+    THEN BEGIN
+         writeln('Char ', expression[charNum]);
+         StxNextChar := expression[charNum];
+         charNum := charNum + 1;
+         END
+    ELSE StxNextChar := CHR(EOS);
+END;
+
+FUNCTION StxError(StxState:INTEGER; StxSym: INTEGER; pStxStack: INTEGER; aMessage:STRING):INTEGER;
+BEGIN
+    writeln('An error occurred in state ', StxState, ' with token ', StxSym, ' on the position ', pStxStack);
+    writeln(aMessage);
+{$IFDEF DEBUG}
+    StxPrintStack();
+{$ENDIF}
+    StxError := ERROR_RE_ATTEMPT;
+END;
