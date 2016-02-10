@@ -73,7 +73,9 @@ import me.jaimegarza.syntax.util.PathUtils;
  */
 @SuppressWarnings("unused")
 public class Environment {
-  private static final String CLASSPATH_PREFIX = "classpath:";
+  private static final String DEFAULT_RIGHT_MARGIN = "8000";
+
+private static final String CLASSPATH_PREFIX = "classpath:";
 
   private static final long serialVersionUID = -4212115971332112220L;
 
@@ -232,7 +234,7 @@ public class Environment {
         "Algorithm, either s|l (For SLR and LALR, default LALR)", "algorithm");
     add("g", "debug", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Prints debug information", "");
     add("n", "noline", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Disable #line directives in C, default enabled", "");
-    add("m", "margin", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Right margin on generated source, default 8000",
+    add("m", "margin", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Right margin on generated source, default " + DEFAULT_RIGHT_MARGIN,
         "margin");
     add("i", "indent", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Indent by n spaces, default 2", "spaces");
     add("p", "packing", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
@@ -296,7 +298,7 @@ public class Environment {
       }
     }
     if (this.languageEnum == null) {
-      throw new CommandLineParseException("Option -a|--algorithm is not valid :" + value);
+      throw new CommandLineParseException("Option -l|--language is not valid :" + value);
     }
     this.language = this.languageEnum.support();
     if (this.language == null) {
@@ -408,7 +410,7 @@ public class Environment {
   private void setMargin() throws CommandLineParseException {
     int value = 0;
     try {
-      value = Integer.parseInt(get("m", "8000"));
+      value = Integer.parseInt(get("m", DEFAULT_RIGHT_MARGIN));
     } catch (NumberFormatException e) {
       throw new CommandLineParseException("Option -m|--margin is not valid :" + value);
     }
@@ -430,7 +432,7 @@ public class Environment {
       throw new CommandLineParseException("Option -i|--indent is not valid :" + value);
     }
     if (value < 2) {
-      throw new CommandLineParseException("Option -m|--margin should be greater than 2 :" + value);
+      throw new CommandLineParseException("Option -i|--indent should be greater or equal to 2 :" + value);
     }
     this.indent = value;
   }
