@@ -1,7 +1,7 @@
 /*
 Syntax is distibuted under the Revised, or 3-clause, BSD license
 ===================================================================
-Copyright (c) 1985, 2012, Jaime Garza
+Copyright (c) 1985, 2012, 2016, Jaime Garza
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

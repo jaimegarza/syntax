@@ -12,7 +12,7 @@
     top be included in the generated code.
     Modify at your own risk.
 
-    Copyright (c), 1985-2012 Jaime Garza
+    Copyright (c), 1985-2016 Jaime Garza
 
 /*/
 
