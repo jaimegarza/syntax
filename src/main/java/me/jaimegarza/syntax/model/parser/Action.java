@@ -26,60 +26,37 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.definition;
+package me.jaimegarza.syntax.model.parser;
 
 /**
  * <i>~pojo class</i><br><br>
  * 
- * During the parsing process, the grammar is represented as a list of {@link Rule}s.
- * Each rule is composed of a list of zero or many RuleItems. This representation
- * is used throughout the multiple processes to generate the structure of the syntax
- * including computing first, follow, lookaheads, states, actions, grammar tables, and 
- * finally parsing tables.
+ * For packed parsers, the parsing table is divided in a list of
+ * {@link Action} and {@link GoTo}.  The parsing table just points at the 
+ * entry point of the actions.
  * 
- *  This class defines a whole rule.
- *  
+ * This class describes a transition from one state to another by 
+ * specifying the symbol and the destination.  It is a mapping for a set of states
+ * over a symbol.
+ *
  * @author jaimegarza@gmail.com
  *
- */public class RuleItem {
-  /**
-   * The symbol associated to the item.
-   */
+ */
+public class Action {
+  /** The {@link Symbol} with wich the transition is to happen */
   Symbol symbol;
-  /**
-   * The parent rule of the rule item.
-   */
-  Rule rule;
+  /** The new state to which to move to */
+  int stateNumber;
 
   /**
-   * Construct a rule item with the given symbol
-   * @param symbol
+   * Construct an action
+   * @param symbol the symbol that will cause the action
+   * @param stateNumber the destination state
    */
-  public RuleItem(Symbol symbol) {
+  public Action(Symbol symbol, int stateNumber) {
     super();
     this.symbol = symbol;
-  }
-
-  /**
-   * Convenience method to get the id of the symbol in the rule item
-   * @return the id of the symbol
-   */
-  public int getSymbolId() {
-    return symbol.getId();
-  }
-
-  /**
-   * Move to the next item in the rule
-   * @return the next item, or null if at the end
-   */
-  public RuleItem next() {
-    for (int i = 0; i < rule.getItems().size(); i++) {
-      RuleItem r = rule.getItem(i);
-      if (this.equals(r)) {
-        return rule.getItem(i + 1);
-      }
-    }
-    return null;
+    this.stateNumber = stateNumber;
   }
   
   /* Getters and setters */
@@ -99,17 +76,17 @@ package me.jaimegarza.syntax.definition;
   }
 
   /**
-   * @return the rule
+   * @return the stateNumber
    */
-  public Rule getRule() {
-    return rule;
+  public int getStateNumber() {
+    return stateNumber;
   }
 
   /**
-   * @param rule the rule to set
+   * @param stateNumber the stateNumber to set
    */
-  public void setRule(Rule rule) {
-    this.rule = rule;
+  public void setStateNumber(int stateNumber) {
+    this.stateNumber = stateNumber;
   }
 
   /**
@@ -122,16 +99,8 @@ package me.jaimegarza.syntax.definition;
     }
 
     try {
-      RuleItem ri = (RuleItem) obj;
-      if (getSymbolId() != ri.getSymbolId()) {
-        return false;
-      }
-      if (!rule.equals(ri.rule)) {
-        return false;
-      }
-      int ix1 = rule.exactIndexOf(this);
-      int ix2 = ri.rule.exactIndexOf(ri);
-      return ix1 == ix2;
+      Action a = (Action) obj;
+      return symbol.equals(a.symbol) && stateNumber == a.stateNumber;
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {
@@ -140,24 +109,11 @@ package me.jaimegarza.syntax.definition;
   }
 
   /**
-   * Utility method to compare two items, accounting for nulls
-   * @param a the first element.  Can be null.
-   * @param b the second element.  Can be null.
-   * @return true if both are null, otherwise the result of a.equals(b)
-   */
-  public static boolean equals(RuleItem a, RuleItem b) {
-    if (a == null) return b == null; // now a is NOT null
-    if (b == null) return false; // now none is null
-    return a.equals(b);
-  }
-  
-  /**
-   * Returns the symbol string value.
+   * Returns a phrase with the symbol and its destination
    * @see java.lang.Object#toString()
    */
   @Override
   public String toString() {
-    return symbol.toString();
+    return "with " + symbol + " goto " + stateNumber;
   }
-
 }

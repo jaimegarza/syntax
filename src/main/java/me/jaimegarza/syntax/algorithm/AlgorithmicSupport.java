@@ -30,11 +30,11 @@ package me.jaimegarza.syntax.algorithm;
 
 import java.util.List;
 
-import me.jaimegarza.syntax.definition.Dot;
-import me.jaimegarza.syntax.definition.LookAhead;
-import me.jaimegarza.syntax.definition.Rule;
-import me.jaimegarza.syntax.definition.RuleItem;
-import me.jaimegarza.syntax.definition.State;
+import me.jaimegarza.syntax.model.parser.Dot;
+import me.jaimegarza.syntax.model.parser.LookAhead;
+import me.jaimegarza.syntax.model.parser.Rule;
+import me.jaimegarza.syntax.model.parser.RuleItem;
+import me.jaimegarza.syntax.model.parser.State;
 
 public interface AlgorithmicSupport {
   /**

@@ -26,67 +26,64 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.definition;
+package me.jaimegarza.syntax.model.parser;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <i>~pojo class</i><br><br>
- * 
- * For packed parsers, the parsing table is divided in a list of
- * {@link Action} and {@link GoTo}.  The parsing table just points at the 
- * entry point of the actions.
- * 
- * This class describes a transition from one state to another by 
- * specifying the symbol and the destination.  It is a mapping for a set of states
- * over a symbol.
  *
+ * When the parser table is generated with a LALR parser, a set of
+ * lookaheads is computed.  This is similar to a follow set except
+ * that the lookahead is more fine grained than the coarse follow set.
+ * 
+ * Lookaheads are associated to dots, not non-terminals.
+ * 
+ * A lookahead is computed on a per state basis.  A state is observed 
+ * and the set of follow-like terminals is obtained, only on the c
+ * context of that state.
+ * 
  * @author jaimegarza@gmail.com
  *
  */
-public class Action {
-  /** The {@link Symbol} with wich the transition is to happen */
-  Symbol symbol;
-  /** The new state to which to move to */
-  int stateNumber;
+public class LookAhead {
+  /**
+   * The set of symbol ids that make a lookahead
+   */
+  Set<Integer> symbolIds = new HashSet<Integer>();
+  /**
+   * A carry is obtained when a rule is at the end, and the follow
+   * may require additional computations.
+   */
+  boolean carry = true;
 
   /**
-   * Construct an action
-   * @param symbol the symbol that will cause the action
-   * @param stateNumber the destination state
+   * @return the symbolIds
    */
-  public Action(Symbol symbol, int stateNumber) {
-    super();
-    this.symbol = symbol;
-    this.stateNumber = stateNumber;
-  }
-  
-  /* Getters and setters */
-
-  /**
-   * @return the symbol
-   */
-  public Symbol getSymbol() {
-    return symbol;
+  public Set<Integer> getSymbolIds() {
+    return symbolIds;
   }
 
   /**
-   * @param symbol the symbol to set
+   * @param symbolIds the symbolIds to set
    */
-  public void setSymbol(Symbol symbol) {
-    this.symbol = symbol;
+  public void setSymbolIds(Set<Integer> symbolIds) {
+    this.symbolIds = symbolIds;
   }
 
   /**
-   * @return the stateNumber
+   * @return the carry
    */
-  public int getStateNumber() {
-    return stateNumber;
+  public boolean isCarry() {
+    return carry;
   }
 
   /**
-   * @param stateNumber the stateNumber to set
+   * @param carry the carry to set
    */
-  public void setStateNumber(int stateNumber) {
-    this.stateNumber = stateNumber;
+  public void setCarry(boolean carry) {
+    this.carry = carry;
   }
 
   /**
@@ -99,8 +96,8 @@ public class Action {
     }
 
     try {
-      Action a = (Action) obj;
-      return symbol.equals(a.symbol) && stateNumber == a.stateNumber;
+      LookAhead la = (LookAhead) obj;
+      return carry == la.carry && symbolIds.equals(la.symbolIds);
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {
@@ -108,12 +105,4 @@ public class Action {
     }
   }
 
-  /**
-   * Returns a phrase with the symbol and its destination
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return "with " + symbol + " goto " + stateNumber;
-  }
 }

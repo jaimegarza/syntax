@@ -26,53 +26,70 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.definition;
+package me.jaimegarza.syntax.model.parser;
 
 /**
  * <i>~pojo class</i><br><br>
+ *
+ * A goto is associated to a non-terminal, and defines the transitions 
+ * from a state to the destination state with the {@link NonTerminal}.
+ * A non-terminal actually has a set of states.
  * 
- * Represents a terminal (lexical element) in the grammar (i.e. number, identifier, 
- * '+').  Symbols have the 
- * following hierarchy:
- * <pre>
- *  -+ {@link Symbol}
- *   |
- *   +--+ Terminal     - Lexical Symbol (i.e. number, id '+')
- *   |  |
- *   |  +-- {@link ErrorToken} - Lexical Symbol declared with <b>%error</b>
- *   |
- *   +-- <b>{@link NonTerminal}</b>   - Syntactical symbol (i.e. Expression, Statement)
- *   </pre>
- * 
+ *  The purpose of the list of gotos in a non-terminal is for table generation
+ *  purposes.  It can actually reflect the fact that the gotos reflect the
+ *  packed nature of the parser.
+ *  
  * @author jaimegarza@gmail.com
  *
  */
-public class Terminal extends Symbol {
+public class GoTo {
 
   /**
-   * Construct one non terminal
-   * @param name is the name of the non terminal
+   * origin state of the goto
    */
-  public Terminal(String name) {
-    super(name);
+  private int origin;
+  /**
+   * destination of the goto
+   */
+  private int destination;
+
+  /**
+   * Construct the GoTo
+   * @param origin is the from state
+   * @param destination is the to state
+   */
+  public GoTo(int origin, int destination) {
+    super();
+    this.origin = origin;
+    this.destination = destination;
   }
 
   /**
-   * Convert a non-terminal to a terminal (as part of the grammar analysis,
-   * when an element has not been declared, a warning will be raised and then
-   * declared as a terminal.
-   * @param nonTerminal is the existing non terminal.
+   * @return the origin
    */
-  public Terminal(NonTerminal nonTerminal) {
-    super(nonTerminal.name);
-    this.count = nonTerminal.count;
-    this.associativity = nonTerminal.associativity;
-    this.fullName = nonTerminal.fullName;
-    this.id = nonTerminal.id;
-    this.precedence = nonTerminal.precedence;
-    this.token = nonTerminal.token;
-    this.type = nonTerminal.type;
-    this.variable = nonTerminal.variable;
+  public int getOrigin() {
+    return origin;
+  }
+
+  /**
+   * @param origin the origin to set
+   */
+  public void setOrigin(int origin) {
+    this.origin = origin;
+  }
+
+  /**
+   * @return the destination
+   */
+  public int getDestination() {
+    return destination;
+  }
+
+  /**
+   * @param destination the destination to set
+   */
+  public void setDestination(int destination) {
+    this.destination = destination;
   }
 
 }

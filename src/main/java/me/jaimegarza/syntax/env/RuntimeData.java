@@ -31,14 +31,14 @@ package me.jaimegarza.syntax.env;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.definition.NonTerminal;
-import me.jaimegarza.syntax.definition.Rule;
-import me.jaimegarza.syntax.definition.RuleItem;
-import me.jaimegarza.syntax.definition.State;
-import me.jaimegarza.syntax.definition.Symbol;
-import me.jaimegarza.syntax.definition.Terminal;
-import me.jaimegarza.syntax.definition.TokenGroup;
-import me.jaimegarza.syntax.definition.Type;
+import me.jaimegarza.syntax.model.parser.NonTerminal;
+import me.jaimegarza.syntax.model.parser.Rule;
+import me.jaimegarza.syntax.model.parser.RuleItem;
+import me.jaimegarza.syntax.model.parser.State;
+import me.jaimegarza.syntax.model.parser.Symbol;
+import me.jaimegarza.syntax.model.parser.Terminal;
+import me.jaimegarza.syntax.model.parser.TokenGroup;
+import me.jaimegarza.syntax.model.parser.Type;
 
 /**
  * Class that is used to hold the state of the phases.

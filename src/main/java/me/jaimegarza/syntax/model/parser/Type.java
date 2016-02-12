@@ -26,42 +26,97 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.definition;
+package me.jaimegarza.syntax.model.parser;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * <i>~pojo class</i><br><br>
  * 
- * Represents an error non terminal in the grammar . Error tokens are defined 
- * with <b>%error</b>.  They are used by the grammar to generate an error
- * recovery table.  When an error is found during the resulting code's parsing phase,
- * the recover table is used to try to recover the engine to a valid state where
- * compilation could continue so that the parsing does not stop at the first
- * error.<p>
+ * defines the convenience type used for $$, $1, $2 etc to be used in code
+ * generation rules.  This applies to both terminals and non terminals.
  * 
- * The error recovery system is based on an algorithm that drops stack states until one
- * with a proper error token transition is found.<p>
- * 
- * Other than that, error tokens are just another non-terminal symbol.<p>
- * 
- * Symbols have the following hierarchy:
- * <pre>
- *  -+ {@link Symbol}
- *   |
- *   +--+ {@link Terminal}     - Lexical Symbol (i.e. number, id '+')
- *   |  |
- *   |  +-- ErrorToken - Lexical Symbol declared with <b>%error</b>
- *   |
- *   +-- <b>{@link NonTerminal}</b>   - Syntactical symbol (i.e. Expression, Statement)
- *   </pre>
- *   
- *
  * @author jaimegarza@gmail.com
  *
  */
-public class ErrorToken extends Terminal {
+public class Type {
+   
+   public static final Type NullType = new Type("<null>");
+   
+   /**
+    * The type name.  
+    * It is up to the user to make sure that it is syntactically valid in 
+    * the target language.
+    */
+  String name;
+  /**
+   * The list of terminals and non terminals that reference it
+   */
+  List<Symbol> usedBy = new LinkedList<Symbol>();
 
-  public ErrorToken(String name) {
-    super(name);
+  public void addUsage(Symbol symbol) {
+    if (!usedBy.contains(symbol)) {
+      usedBy.add(symbol);
+    }
+  }
+  
+  /** 
+   * Construct a type
+   * @param name is the type name
+   */
+  public Type(String name) {
+    super();
+    this.name = name;
+  }
+
+  /**
+   * @return the name
+   */
+  public String getName() {
+    return name;
+  }
+
+  /**
+   * @param name the name to set
+   */
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    try {
+      Type t = (Type) obj;
+      return name.equals(t.name);
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
+  }
+
+  /**
+   * Returns the name of the type
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    String s = name;
+    if (usedBy.size() > 0) {
+      s += "\n    Used by:";
+      for (Symbol symbol : usedBy) {
+        s += "\n    +-- " + symbol;
+      }
+    }
+    return s;
   }
 
 }

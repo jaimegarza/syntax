@@ -26,70 +26,32 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.definition;
+package me.jaimegarza.syntax.model.parser;
 
 /**
- * <i>~pojo class</i><br><br>
- *
- * A goto is associated to a non-terminal, and defines the transitions 
- * from a state to the destination state with the {@link NonTerminal}.
- * A non-terminal actually has a set of states.
- * 
- *  The purpose of the list of gotos in a non-terminal is for table generation
- *  purposes.  It can actually reflect the fact that the gotos reflect the
- *  packed nature of the parser.
- *  
- * @author jaimegarza@gmail.com
+ * A parser can be driven by a traditional parsing technique of reading the input stream
+ * until the end of string is reached.  This is the parser mode<p>
+ * Alternatively, a parser can be called token by token when the need to stop
+ * parsing after a token has been managed<p>
+ * <ul>
+ * <li>In the first case we can say that the parser is the master and the scanner is the slave<p>
+ * <li>In the second case we can say that the scanner, or the token, is the master and the parsing
+ * algorithm is the slave.
+ * </ul>
+ * @author jgarza
  *
  */
-public class GoTo {
-
-  /**
-   * origin state of the goto
-   */
-  private int origin;
-  /**
-   * destination of the goto
-   */
-  private int destination;
-
-  /**
-   * Construct the GoTo
-   * @param origin is the from state
-   * @param destination is the to state
-   */
-  public GoTo(int origin, int destination) {
-    super();
-    this.origin = origin;
-    this.destination = destination;
+public enum Driver {
+  PARSER("parser"),
+  SCANNER("scanner");
+  
+  String skeletonName;
+  
+  Driver(String skeletonName) {
+    this.skeletonName = skeletonName;
   }
-
-  /**
-   * @return the origin
-   */
-  public int getOrigin() {
-    return origin;
+  
+  public String skeleton() {
+    return "skeleton/" + this.skeletonName;
   }
-
-  /**
-   * @param origin the origin to set
-   */
-  public void setOrigin(int origin) {
-    this.origin = origin;
-  }
-
-  /**
-   * @return the destination
-   */
-  public int getDestination() {
-    return destination;
-  }
-
-  /**
-   * @param destination the destination to set
-   */
-  public void setDestination(int destination) {
-    this.destination = destination;
-  }
-
 }

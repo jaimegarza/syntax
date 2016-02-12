@@ -30,14 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package me.jaimegarza.syntax.language;
 
 import me.jaimegarza.syntax.Lexer;
-import me.jaimegarza.syntax.definition.Action;
-import me.jaimegarza.syntax.definition.Driver;
-import me.jaimegarza.syntax.definition.ErrorToken;
-import me.jaimegarza.syntax.definition.GoTo;
-import me.jaimegarza.syntax.definition.NonTerminal;
-import me.jaimegarza.syntax.definition.Rule;
-import me.jaimegarza.syntax.definition.State;
-import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.model.parser.Action;
+import me.jaimegarza.syntax.model.parser.Driver;
+import me.jaimegarza.syntax.model.parser.ErrorToken;
+import me.jaimegarza.syntax.model.parser.GoTo;
+import me.jaimegarza.syntax.model.parser.NonTerminal;
+import me.jaimegarza.syntax.model.parser.Rule;
+import me.jaimegarza.syntax.model.parser.State;
+import me.jaimegarza.syntax.model.parser.Terminal;
 
 
 /**

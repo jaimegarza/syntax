@@ -56,10 +56,10 @@ import me.jaimegarza.syntax.algorithm.AlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.LalrAlgorithmicSupport;
 import me.jaimegarza.syntax.algorithm.SlrAlgorithmicSupport;
 import me.jaimegarza.syntax.code.Fragments;
-import me.jaimegarza.syntax.definition.Driver;
 import me.jaimegarza.syntax.language.BaseLanguageSupport;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.language.LanguageSupport;
+import me.jaimegarza.syntax.model.parser.Driver;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 import me.jaimegarza.syntax.util.PathUtils;
 

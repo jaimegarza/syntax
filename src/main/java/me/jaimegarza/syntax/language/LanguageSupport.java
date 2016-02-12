@@ -33,10 +33,10 @@ import java.io.IOException;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
-import me.jaimegarza.syntax.definition.Action;
-import me.jaimegarza.syntax.definition.ErrorToken;
-import me.jaimegarza.syntax.definition.GoTo;
-import me.jaimegarza.syntax.definition.Terminal;
+import me.jaimegarza.syntax.model.parser.Action;
+import me.jaimegarza.syntax.model.parser.ErrorToken;
+import me.jaimegarza.syntax.model.parser.GoTo;
+import me.jaimegarza.syntax.model.parser.Terminal;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 /**

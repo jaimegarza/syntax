@@ -32,19 +32,19 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.definition.Action;
-import me.jaimegarza.syntax.definition.Associativity;
-import me.jaimegarza.syntax.definition.Dot;
-import me.jaimegarza.syntax.definition.Driver;
-import me.jaimegarza.syntax.definition.GoTo;
-import me.jaimegarza.syntax.definition.NonTerminal;
-import me.jaimegarza.syntax.definition.Rule;
-import me.jaimegarza.syntax.definition.RuleItem;
-import me.jaimegarza.syntax.definition.State;
-import me.jaimegarza.syntax.definition.Symbol;
-import me.jaimegarza.syntax.definition.Terminal;
-import me.jaimegarza.syntax.definition.TokenGroup;
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.model.parser.Action;
+import me.jaimegarza.syntax.model.parser.Associativity;
+import me.jaimegarza.syntax.model.parser.Dot;
+import me.jaimegarza.syntax.model.parser.Driver;
+import me.jaimegarza.syntax.model.parser.GoTo;
+import me.jaimegarza.syntax.model.parser.NonTerminal;
+import me.jaimegarza.syntax.model.parser.Rule;
+import me.jaimegarza.syntax.model.parser.RuleItem;
+import me.jaimegarza.syntax.model.parser.State;
+import me.jaimegarza.syntax.model.parser.Symbol;
+import me.jaimegarza.syntax.model.parser.Terminal;
+import me.jaimegarza.syntax.model.parser.TokenGroup;
 
 /**
  * Phases:

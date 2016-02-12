@@ -28,7 +28,7 @@
 */
 package me.jaimegarza.syntax;
 
-import me.jaimegarza.syntax.definition.Type;
+import me.jaimegarza.syntax.model.parser.Type;
 
 public interface EmbeddedCodeProcessor {
   /**

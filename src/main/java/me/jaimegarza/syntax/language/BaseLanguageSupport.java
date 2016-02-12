@@ -32,11 +32,11 @@ package me.jaimegarza.syntax.language;
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.code.Fragments;
-import me.jaimegarza.syntax.definition.State;
-import me.jaimegarza.syntax.definition.Symbol;
-import me.jaimegarza.syntax.definition.Type;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.env.RuntimeData;
+import me.jaimegarza.syntax.model.parser.State;
+import me.jaimegarza.syntax.model.parser.Symbol;
+import me.jaimegarza.syntax.model.parser.Type;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 /**
