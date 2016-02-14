@@ -31,6 +31,7 @@ package me.jaimegarza.syntax.env;
 import java.util.LinkedList;
 import java.util.List;
 
+import me.jaimegarza.syntax.model.nfa.DirectedGraph;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
 import me.jaimegarza.syntax.model.parser.Rule;
 import me.jaimegarza.syntax.model.parser.RuleItem;
@@ -139,6 +140,11 @@ public class RuntimeData {
    * The environment
    */
   private Environment environment;
+  
+  /**
+   * The NFA directed graph for regular expressions
+   */
+  private DirectedGraph nfa = new DirectedGraph();
 
   /**
    * Check to see if a rule identified by nonTerminalId is empty, i.e. it has no
@@ -489,6 +495,13 @@ public class RuntimeData {
    */
   public List<TokenGroup> getErrorGroups() {
     return errorGroups;
+  }
+
+  /**
+   * @return the nfa
+   */
+  public DirectedGraph getNfa() {
+    return nfa;
   }
 
 }
