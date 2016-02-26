@@ -40,4 +40,9 @@ public class EpsilonTransition extends Transition {
     return true;
   }
 
+  @Override
+  public String toString() {
+    return "EpsilonTransition [from=" + getFrom().getId() + ", to=" + getTo().getId() + "]";
+  }
+
 }

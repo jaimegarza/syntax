@@ -77,6 +77,10 @@ public class Node {
   public void addTransition(Transition transition) {
     transitions.add(transition);
   }
+  
+  public void removeTransition(Transition transition) {
+    transitions.remove(transition);
+  }
 
   /**
    * @return the transitions
@@ -97,5 +101,10 @@ public class Node {
    */
   public DirectedGraph getGraph() {
     return graph;
+  }
+
+  @Override
+  public String toString() {
+    return "Node [id=" + id + ", transitions=" + transitions + ", accept=" + accept + ", starting=" + starting + "]";
   }
 }

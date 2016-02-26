@@ -29,26 +29,60 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-public class CharacterRangeTransition extends Transition {
+import java.util.HashSet;
+import java.util.Set;
 
-  private char fromCharacter;
-  private char toCharacter;
-
-  public CharacterRangeTransition(Node from, Node to, char fromCharacter, char toCharacter) {
-    super(from, to, false);
-    // rearrange from, to as needed
-    if (fromCharacter < toCharacter) {
-      this.fromCharacter = fromCharacter;
-      this.toCharacter = toCharacter;
-    } else {
-      this.fromCharacter = toCharacter;
-      this.toCharacter = fromCharacter;
+public class CharacterClass {
+  
+  private boolean negate;
+  private Set<CharacterRange> ranges = new HashSet<>();
+  
+  public boolean matches(char c) {
+    boolean matches = false;
+    for (CharacterRange r: ranges) {
+      if (r.matches(c)) {
+        matches = true;
+        break;
+      }
     }
+    return negate? !matches: matches;
+  }
+  
+  public void addRange(char from, char to) {
+    CharacterRange r = new CharacterRange(from, to);
+    addRange(r);
+  }
+  
+  public void addRange(char c) {
+    CharacterRange r = new CharacterRange(c);
+    addRange(r);
+  }
+  
+  public void addRange(CharacterRange r) {
+    if (!ranges.contains(r)) {
+      ranges.add(r);
+    }
+  }
+  
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    try {
+      CharacterClass cc = (CharacterClass) o;
+      return negate == cc.negate && ranges.equals(cc.ranges);
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
+
   }
 
   @Override
-  public boolean matches(char c) {
-    return c >= fromCharacter && c <= toCharacter;
+  public String toString() {
+    return "CharacterClass [negate=" + negate + ", ranges=" + ranges + "]";
   }
 
 }

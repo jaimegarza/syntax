@@ -89,6 +89,7 @@ private static final String CLASSPATH_PREFIX = "classpath:";
   private String relatedTitle;
   private String[] args;
   private CommandLine cmd = null;
+  private boolean tokenizerMode;
   private Language languageEnum;
   private Algorithm algorithmEnum;
   private boolean verbose;
@@ -182,6 +183,7 @@ private static final String CLASSPATH_PREFIX = "classpath:";
         printHelp();
         System.exit(0);
       }
+      setTokenizerMode();
       setLanguage();
       setVerbose();
       setDebug();
@@ -227,6 +229,8 @@ private static final String CLASSPATH_PREFIX = "classpath:";
   private void init() {
     cmd = new CommandLine(args);
     add("h", "help", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "displays the usage of the tool", "");
+    add("t", "tokenizer", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "Run only the tokenizer, dumping the tokens in the process.", "tokenizer");
     add("l", "language", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Setup the syntax and output to be either java|c|pascal, default c", "language");
     add("v", "verbose", NO_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED, "Verbose output, default no", "");
@@ -282,6 +286,14 @@ private static final String CLASSPATH_PREFIX = "classpath:";
    */
   private boolean getHelp() throws CommandLineParseException {
     return has("h");
+  }
+  
+  /**
+   * Compute the tokenizer flag
+   * @throws CommandLineParseException 
+   */
+  private void setTokenizerMode() throws CommandLineParseException {
+    this.tokenizerMode = has("t");
   }
 
   /**
@@ -655,6 +667,13 @@ private static final String CLASSPATH_PREFIX = "classpath:";
    */
   public CommandLine getCmd() {
     return cmd;
+  }
+
+  /**
+   * @return the language
+   */
+  public boolean isTokenizerMode() {
+    return tokenizerMode;
   }
 
   /**

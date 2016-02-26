@@ -29,6 +29,9 @@
 package me.jaimegarza.syntax;
 
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.exception.AnalysisException;
+import me.jaimegarza.syntax.exception.OutputException;
+import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.generator.AbstractCodeParser;
 import me.jaimegarza.syntax.generator.SyntaxCodeParser;
 //import me.jaimegarza.syntax.generator.CodeParser;
@@ -129,10 +132,14 @@ public class Syntax {
     StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
     TableGenerator generator = new TableGenerator(environment);
     CodeWriter writer = new CodeWriter(environment);
-    parser.execute();
-    analyzer.execute();
-    generator.execute();
-    writer.execute();
+    if (environment.isTokenizerMode()) {
+      parser.dumpTokens();
+    } else {
+      parser.execute();
+      analyzer.execute();
+      generator.execute();
+      writer.execute();
+    }
   }
 
   /**

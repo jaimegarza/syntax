@@ -29,20 +29,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-public class AnyCharacterTransition extends Transition {
+public class CharacterClassTransition extends Transition {
 
-  public AnyCharacterTransition(Node from, Node to) {
+  private CharacterClass characterClass;
+  
+  public CharacterClassTransition(Node from, Node to, CharacterClass characterClass) {
     super(from, to, false);
+    this.characterClass = characterClass;
   }
 
   @Override
   public boolean matches(char c) {
-    return true;
-  }
-
-  @Override
-  public String toString() {
-    return "AnyCharacterTransition [from=" + getFrom().getId() + ", to=" + getTo().getId() + "]";
+    return characterClass.matches(c);
   }
 
 }

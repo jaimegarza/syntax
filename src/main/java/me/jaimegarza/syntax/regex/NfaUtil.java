@@ -29,7 +29,8 @@
 package me.jaimegarza.syntax.regex;
 
 import me.jaimegarza.syntax.model.nfa.AnyCharacterTransition;
-import me.jaimegarza.syntax.model.nfa.CharacterRangeTransition;
+import me.jaimegarza.syntax.model.nfa.CharacterClass;
+import me.jaimegarza.syntax.model.nfa.CharacterClassTransition;
 import me.jaimegarza.syntax.model.nfa.CharacterTransition;
 import me.jaimegarza.syntax.model.nfa.Construct;
 import me.jaimegarza.syntax.model.nfa.DirectedGraph;
@@ -45,13 +46,13 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
-  public static Construct characterRange(DirectedGraph graph, char from, char to) {
+  public static Construct characterClass(DirectedGraph graph, CharacterClass cc) {
     Node start = graph.newNode();
     Node end = graph.newNode();
-    new CharacterRangeTransition(start, end, from, to);
+    new CharacterClassTransition(start, end, cc);
     return new Construct(start, end);
   }
-
+  
   public static Construct any(DirectedGraph graph) {
     Node start = graph.newNode();
     Node end = graph.newNode();
@@ -59,7 +60,7 @@ public class NfaUtil {
     return new Construct(start, end);
   }
   
-  public static Construct concat(DirectedGraph graph, Construct from, Construct to) {
+  public static Construct concatenate(DirectedGraph graph, Construct from, Construct to) {
     new EpsilonTransition(from.getEnd(), to.getStart());
     return new Construct(from.getStart(), to.getEnd());
   }

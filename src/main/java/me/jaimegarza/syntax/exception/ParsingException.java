@@ -26,7 +26,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax;
+package me.jaimegarza.syntax.exception;
 
 /**
  * This Exception is a generic wrapping exception that is thrown when the parse

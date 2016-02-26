@@ -29,20 +29,57 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-public class AnyCharacterTransition extends Transition {
-
-  public AnyCharacterTransition(Node from, Node to) {
-    super(from, to, false);
+public class CharacterRange {
+  private char from;
+  private char to;
+  
+  public CharacterRange(char from, char to) {
+    this.from = from;
+    this.to = to;
+  }
+  
+  public CharacterRange(char c) {
+    this.from = this.to = c;
   }
 
-  @Override
-  public boolean matches(char c) {
-    return true;
+  /**
+   * @return the from
+   */
+  public char getFrom() {
+    return from;
+  }
+
+  /**
+   * @return the to
+   */
+  public char getTo() {
+    return to;
   }
 
   @Override
   public String toString() {
-    return "AnyCharacterTransition [from=" + getFrom().getId() + ", to=" + getTo().getId() + "]";
+    return "CharacterRange [from=" + from + ", to=" + to + "]";
   }
+  
+  public boolean matches(char c) {
+    return c >= from && c <= to;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    try {
+      CharacterRange cr = (CharacterRange) obj;
+      return from == cr.from && to == cr.to;
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
+  }
+
 
 }

@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.model.parser.Associativity;
 import me.jaimegarza.syntax.model.parser.ErrorToken;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
@@ -43,8 +43,11 @@ import me.jaimegarza.syntax.model.parser.RuleItem;
 import me.jaimegarza.syntax.model.parser.Symbol;
 import me.jaimegarza.syntax.model.parser.Terminal;
 import me.jaimegarza.syntax.model.parser.Type;
+import me.jaimegarza.syntax.model.nfa.Construct;
+import me.jaimegarza.syntax.model.nfa.CharacterClass;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.regex.RegexUtil;
+import me.jaimegarza.syntax.regex.NfaUtil;
 
 /**
  * Parser for a grammar.<p>
@@ -77,6 +80,8 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %declare <id>
 %declare <regex>
 %declare <c>
+%declare <cc>
+%declare <construct>
 %stack {
     public int stateNumber;
     public int value;
@@ -85,6 +90,8 @@ public class SyntaxCodeParser extends AbstractCodeParser {
     public String regex;
     public char c;
     public List<String> ids = new LinkedList<String>();
+    public CharacterClass cc;
+    public Construct construct;
 
     StackElement(int state, int value, boolean mustClose, String id, String regex, char c) {
       super();
@@ -96,66 +103,74 @@ public class SyntaxCodeParser extends AbstractCodeParser {
       this.c = c;
     }
 
+    StackElement(Construct construct) {
+      super();
+      this.construct = construct;
+    }
+
+    StackElement(CharacterClass cc) {
+      super();
+      this.cc = cc;
+    }
+
     @Override
     public String toString() {
-      return "state:" + stateNumber + ", value:" + value + ", mustClose:" + mustClose + ", id:" + id + ", c:" + c;
+      return "state:" + stateNumber + ", value:" + value + ", mustClose:" + mustClose + ", id:" + id + ", c:" + c + ", cc:" + cc + ", construct:" + construct;
     }
 }
 
-%token            MARK      : "'%%'"
-%token            START     : "'%start'"
-%token  <id>      TOKEN     : "token"
-%token            TYPE      : "'%type'"
-%token            UNION     : "'%union'"
-%token  <id>      TYPENAME  : "type definition"
-%token            TERM      : "'%token'"
-%token            LEFT      : "'%left'"
-%token            RIGHT     : "'%right'"
-%token            BINARY    : "'%binary'"
-%token            ERRDEF    : "'%error'"
-%token  <value>   NUM       : "number"
-%token            PREC      : "'%prec'"
-%token            NAME      : "'%name'"
-%token            ERROR     : "error"
-%token            LEXER     : "%lexer"
-%token            DECLARE   : "%declare"
-%token            GROUP     : "%group"
+%token            MARK             : "'%%'"
+%token            START            : "'%start'"
+%token  <id>      TOKEN            : "token"
+%token            TYPE             : "'%type'"
+%token            UNION            : "'%union'"
+%token  <id>      TYPENAME         : "type definition"
+%token            TERM             : "'%token'"
+%token            LEFT             : "'%left'"
+%token            RIGHT            : "'%right'"
+%token            BINARY           : "'%binary'"
+%token            ERRDEF           : "'%error'"
+%token  <value>   NUM              : "number"
+%token            PREC             : "'%prec'"
+%token            NAME             : "'%name'"
+%token            ERROR            : "error"
+%token            LEXER            : "%lexer"
+%token            DECLARE          : "%declare"
+%token            GROUP            : "%group"
 
-%token <regex>    PIPE      : "'|'"
-%token <regex>    STAR      : "'*'" 
-%token <regex>    PLUS      : "'+'" 
-%token <regex>    HUH       : "'?'" 
-%token <regex>    ANY       : "'.'"
-%token <c>        CHAR      : "character"
+%token <regex>    PIPE             : "'|'"
+%token <regex>    STAR             : "'*'" 
+%token <regex>    PLUS             : "'+'" 
+%token <regex>    HUH              : "'?'" 
+%token <regex>    ANY              : "'.'"
+%token <c>        CHAR             : "character"
+%token <cc>       CHARACTER_CLASS  : "a valid character class"
 
-%token            LEXCODE   : "lexical code"
+%token            LEXCODE          : "lexical code"
 
-%token            ';'       : "semicolon"
-%right            ':'       : "colon"
-%right            '='       : "equals sign",
-                  '['       : "token mode marker",
-                  ']'       : "closing token mode marker"
-%token            ','       : "comma"
-%token            '|'       : "rule separator ('|')"
-%token            '('       : "opening parenthesis"
-%token            ')'       : "closing parenthesis"
-%token            '/'       : "regular expression marker ('/')"
+%token            ';'              : "semicolon"
+%right            ':'              : "colon"
+%right            '='              : "equals sign",
+                  '['              : "token mode marker",
+                  ']'              : "closing token mode marker"
+%token            ','              : "comma"
+%token            '|'              : "rule separator ('|')"
+%token            '('              : "opening parenthesis"
+%token            ')'              : "closing parenthesis"
+%token            '/'              : "regular expression marker ('/')"
 
-%type   <value>   Number;
-%type   <value>   Token;
-%type   <id>      TokenName;
-%type   <regex>   LexicAction;
+%type   <value>     Number;
+%type   <value>     Token;
+%type   <id>        TokenName;
+%type   <regex>     LexicAction;
 
-%type   <regex>   BasicElement;
-%type   <regex>   Alternation;
-%type   <regex>   Concatenation;
-%type   <regex>   RegExp;
-%type   <regex>   RepeatRange;  
-%type   <regex>   CharacterClass;  
-%type   <regex>   CharRange;
+%type   <construct> BasicElement;
+%type   <construct> Alternation;
+%type   <construct> Concatenation;
+%type   <construct> RegExp;
 
-%type   <ids>     GroupTokens;
-%type   <id>      GroupToken;
+%type   <ids>       GroupTokens;
+%type   <id>        GroupToken;
 
 %name Declarations          : "declarations";
 %name Declaration           : "a declaration";
@@ -169,9 +184,6 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %name Alternation           : "or regular expression";
 %name Concatenation         : "concatenation expression";
 %name BasicElement          : "basic element";
-%name RepeatRange           : "repetition specification"  
-%name CharacterClass        : "character class"
-%name CharRange             : "character range"  
 %name GroupTokens           : "group of tokens"
 %name GroupToken            : "token in a group"
 %name TokenName             : "name of the token"
@@ -328,43 +340,24 @@ Equals        : '='                          = generateLexerCode("default");
 Slash         : '/' TOKEN                
               ;
 
-RegExp        : RegExp PIPE Alternation      = //$$ = AlternateNode($1, $3);
-              | Alternation
+RegExp        : RegExp PIPE Alternation      = $$ = NfaUtil.alternate(runtimeData.getNfa(), $1, $3);
+              | Alternation                  = $$ = $1;
               ;
               
-Alternation   : Alternation Concatenation
-              | Concatenation
+Alternation   : Alternation Concatenation    = $$ = NfaUtil.concatenate(runtimeData.getNfa(), $1, $2);
+              | Concatenation                = $$ = $1;
               ;
          
-Concatenation : BasicElement STAR            = //$$ = ZeroOrManyNode($1);
-              | BasicElement PLUS            = //$$ = OneOrManyNode($1);
-              | BasicElement HUH             = //$$ = ZeroOrOneNode($1);
-              | BasicElement RepeatRange
-              | BasicElement
-              ;
-              
-RepeatRange   : '{' NUM '}'
-              | '{' NUM ',' NUM '}'
+Concatenation : BasicElement STAR            = $$ = NfaUtil.zeroOrMany(runtimeData.getNfa(), $1);
+              | BasicElement PLUS            = $$ = NfaUtil.oneOrMany(runtimeData.getNfa(), $1);
+              | BasicElement HUH             = $$ = NfaUtil.optional(runtimeData.getNfa(), $1);
+              | BasicElement                 = $$ = $1;
               ;
               
 BasicElement  : '(' RegExp ')'               = $$ = $2;
-              | CHAR                         = //RegexUtil.character;
-              | '[' CharacterClass ']'
-              | ANY                          = //AnyNode();
-              ;
-CharacterClass: '^' CharRange
-              | '^' ']' CharRange
-              | '^' '-' CharRange
-              | '^' ']' '-' CharRange
-              | ']' CharRange
-              | ']' '-' CharRange
-              | '-' CharRange
-              | CharRange
-              ;
-              
-CharRange     : CHAR
-              | CHAR '-' CHAR
-              | CHAR '-'
+              | CHAR                         = $$ = NfaUtil.character(runtimeData.getNfa(), $1);
+              | '[' CHARACTER_CLASS ']'      = $$ = NfaUtil.characterClass(runtimeData.getNfa(), $2);
+              | ANY                          = $$ = NfaUtil.any(runtimeData.getNfa());
               ;
 
 Productions   :  Productions TOKEN ':' Rules ';'  = if (!setLeftHandOfLastRule($2)) return false;

@@ -37,8 +37,8 @@ import java.util.Stack;
 
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
-import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.model.parser.Associativity;
 import me.jaimegarza.syntax.model.parser.ErrorToken;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
@@ -1334,6 +1334,6 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   }
 
   public abstract void execute() throws ParsingException;
-
+  public abstract void dumpTokens() throws ParsingException; 
 
 }

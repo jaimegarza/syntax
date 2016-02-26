@@ -26,7 +26,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
-*/package me.jaimegarza.syntax.model.nfa;
+*/
+package me.jaimegarza.syntax.model.nfa;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -63,5 +64,13 @@ public class DirectedGraph {
       }
       out.println();
     }
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return "DirectedGraph [nodes=" + nodes + ", starting=" + starting == null ? "null" : starting.getId() + "]";
   }
 }

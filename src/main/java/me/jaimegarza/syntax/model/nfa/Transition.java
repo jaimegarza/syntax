@@ -69,4 +69,9 @@ public abstract class Transition {
     return epsilon;
   }
 
+  @Override
+  public String toString() {
+    return "Transition [from=" + from + ", to=" + to + "]";
+  }
+
 }

@@ -31,11 +31,11 @@ package me.jaimegarza.syntax.test;
 import java.io.File;
 import java.io.IOException;
 
-import me.jaimegarza.syntax.AnalysisException;
-import me.jaimegarza.syntax.OutputException;
-import me.jaimegarza.syntax.ParsingException;
 import me.jaimegarza.syntax.Syntax;
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.exception.AnalysisException;
+import me.jaimegarza.syntax.exception.OutputException;
+import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.language.Language;
 
 import org.apache.commons.jci.compilers.CompilationResult;

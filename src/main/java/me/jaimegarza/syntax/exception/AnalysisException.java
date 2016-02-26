@@ -26,24 +26,24 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax;
+package me.jaimegarza.syntax.exception;
 
 /**
- * This Exception is a generic wrapping exception that is thrown when the output
+ * This Exception is a generic wrapping exception that is thrown when the analysis
  * phase has an error.
  * 
- * The output phase is the one where the code is emitted and completed.
+ * The analysis phase is what follows after a parsing is completed, to perform the
+ * computation of the grammar structure.
  *
  * @author jaimegarza@gmail.com
  *
  */
+public class AnalysisException extends Exception {
 
-public class OutputException extends Exception {
-
-  private static final long serialVersionUID = 3894726711472166627L;
+  private static final long serialVersionUID = -6530606290254900119L;
 
   /**
-   * Constructs a new output exception with the specified detail message and
+   * Constructs a new analysis exception with the specified detail message and
    * cause.  <p>Note that the detail message associated with
    * <code>cause</code> is <i>not</i> automatically incorporated in
    * this exception's detail message.
@@ -55,19 +55,19 @@ public class OutputException extends Exception {
    *         permitted, and indicates that the cause is nonexistent or
    *         unknown.)
    */
-  public OutputException(String message, Throwable cause) {
-    super("parsing error:" + message, cause);
+  public AnalysisException(String message, Throwable cause) {
+    super("analysis error:" + message, cause);
   }
 
   /**
-   * Constructs a new output exception with the specified detail 
+   * Constructs a new analysis exception with the specified detail 
    * message.  The cause is not initialized, and may subsequently be initialized
    * by a call to {@link #initCause}.
    *
    * @param   message   the detail message. The detail message is saved for 
    *          later retrieval by the {@link #getMessage()} method.
    */
-  public OutputException(String message) {
+  public AnalysisException(String message) {
     super(message);
   }
 

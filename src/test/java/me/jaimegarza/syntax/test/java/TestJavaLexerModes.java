@@ -38,9 +38,9 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import me.jaimegarza.syntax.AnalysisException;
-import me.jaimegarza.syntax.OutputException;
-import me.jaimegarza.syntax.ParsingException;
+import me.jaimegarza.syntax.exception.AnalysisException;
+import me.jaimegarza.syntax.exception.OutputException;
+import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 

@@ -133,6 +133,7 @@
           <outputFile>${project.build.directory}/gensrc/me/jaimegarza/syntax/generator/SyntaxCodeParser.java</outputFile>
           <verbose>true</verbose>
           <debug>false</debug>
+          <packed>false</packed>
         </configuration>
       </plugin>
       <plugin>

@@ -34,8 +34,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import me.jaimegarza.syntax.OutputException;
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.exception.OutputException;
 import me.jaimegarza.syntax.model.parser.Action;
 import me.jaimegarza.syntax.model.parser.GoTo;
 import me.jaimegarza.syntax.model.parser.NonTerminal;

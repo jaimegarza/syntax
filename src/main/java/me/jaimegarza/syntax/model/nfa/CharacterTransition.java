@@ -42,4 +42,9 @@ public class CharacterTransition extends Transition {
     return c == character;
   }
 
+  @Override
+  public String toString() {
+    return "CharacterTransition [character=" + character + ", from=" + getFrom().getId() + ", to=" + getTo().getId() + "]";
+  }
+
 }

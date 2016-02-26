@@ -32,9 +32,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import me.jaimegarza.syntax.AnalysisException;
 import me.jaimegarza.syntax.algorithm.Algorithm;
 import me.jaimegarza.syntax.env.Environment;
+import me.jaimegarza.syntax.exception.AnalysisException;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
 import me.jaimegarza.syntax.model.parser.Rule;
 import me.jaimegarza.syntax.model.parser.RuleItem;
