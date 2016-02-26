@@ -75,7 +75,8 @@ import me.jaimegarza.syntax.util.PathUtils;
 public class Environment {
   private static final String DEFAULT_RIGHT_MARGIN = "8000";
 
-private static final String CLASSPATH_PREFIX = "classpath:";
+  private static final String CLASSPATH_PREFIX = "classpath:";
+  private static final String TEMP_PREFIX = "temp:";
 
   private static final long serialVersionUID = -4212115971332112220L;
 
@@ -494,6 +495,16 @@ private static final String CLASSPATH_PREFIX = "classpath:";
         throw new CommandLineParseException("filename " + fileName + " not found in the class path");
       }
       file = new File(URI.create(url.toString()));
+    } else if (fileName.startsWith(TEMP_PREFIX)) {
+        // unwanted results mostly
+        fileName = fileName.substring(TEMP_PREFIX.length());
+        String root = PathUtils.getFileNameNoExtension(fileName);
+        String extension = "." + PathUtils.getFileExtension(fileName);
+        try {
+          file = File.createTempFile(root, extension);
+        } catch (IOException e) {
+          throw new CommandLineParseException(e.getMessage());
+        }
     } else {
       file = new File(fileName);
     }
