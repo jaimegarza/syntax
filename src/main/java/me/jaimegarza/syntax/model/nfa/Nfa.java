@@ -29,23 +29,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-public class CharacterClassTransition extends Transition {
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 
-  private CharacterClass characterClass;
+public class Nfa extends DirectedGraph {
+
+  public Node newNode() {
+    Node node = new NfaNode(this);
+    nodes.add(node);
+    return node;
+  }
   
-  public CharacterClassTransition(Node from, Node to, CharacterClass characterClass) {
-    super(from, to, false);
-    this.characterClass = characterClass;
-  }
-
-  @Override
-  public boolean matches(char c) {
-    return characterClass.matches(c);
-  }
-
-  @Override
-  public String canonical() {
-    return "[" + characterClass + "]";
+  public void print(FormattingPrintStream out) {
+    out.println("NFA");
+    out.println("==================================================================");
+    
+    for (Node n: nodes) {
+      out.printf("%8d - ", n.getId());
+      for (Transition t: n.getTransitions()) {
+        out.printf("%s ", t.toString());
+      }
+      out.println();
+    }
   }
 
 }

@@ -47,6 +47,7 @@ public abstract class Transition {
   }
   
   public abstract boolean matches(char c);
+  public abstract String canonical();
 
   /**
    * @return the from
@@ -71,7 +72,7 @@ public abstract class Transition {
 
   @Override
   public String toString() {
-    return "Transition [from=" + from + ", to=" + to + "]";
+    return from.getId() + "(" + canonical() + ")->" + to.getId();
   }
 
 }

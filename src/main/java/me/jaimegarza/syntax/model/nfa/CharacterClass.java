@@ -48,20 +48,24 @@ public class CharacterClass {
     return negate? !matches: matches;
   }
   
-  public void addRange(char from, char to) {
-    CharacterRange r = new CharacterRange(from, to);
-    addRange(r);
+  public void negate() {
+    this.negate = true;
   }
   
-  public void addRange(char c) {
-    CharacterRange r = new CharacterRange(c);
-    addRange(r);
-  }
-  
-  public void addRange(CharacterRange r) {
+  public void range(CharacterRange r) {
     if (!ranges.contains(r)) {
       ranges.add(r);
     }
+  }
+  
+  public void range(char from, char to) {
+    CharacterRange r = new CharacterRange(from, to);
+    range(r);
+  }
+  
+  public void character(char c) {
+    CharacterRange r = new CharacterRange(c);
+    range(r);
   }
   
   public boolean equals(Object o) {
@@ -82,7 +86,14 @@ public class CharacterClass {
 
   @Override
   public String toString() {
-    return "CharacterClass [negate=" + negate + ", ranges=" + ranges + "]";
+    StringBuilder sb = new StringBuilder();
+    if (negate) {
+      sb.append("^");
+    }
+    for (CharacterRange r : ranges) {
+      sb.append(r);
+    }
+    return sb.toString();
   }
 
 }

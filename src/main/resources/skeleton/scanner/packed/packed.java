@@ -80,15 +80,21 @@
     int i;
 
     System.out.print("States: [");
-    for(i=0;i<=stackTop;i++) {
-      System.out.print(stateStack[i] + " ");
+    for(i=stackTop; i>=0; i--) {
+      System.out.printf("%04d %s", i, stateStack[i]);
+      if (i == stackTop) {
+        System.out.println("<--Top Of Stack (" + stackTop + ")");
+      }
+      System.out.println();
     }
-    System.out.println("<--Top Of Stack (" + stackTop + ")");
     System.out.print("Values: [");
-    for(i=0;i<=stackTop;i++) {
-      System.out.print("|" + (stack[i] != null ? stack[i].toString() : "(nothing)") + "| ");
+    for(i=stackTop;i >=0; i--) {
+      System.out.printf("%04d %s", i, (stack[i] != null ? stack[i].toString() : "(nothing)"));
+      if (i == stackTop) {
+        System.out.println("<--Top Of Stack (" + stackTop + ")");
+      }
+      System.out.println();
     }
-    System.out.println("<--Top Of Stack (" + stackTop + ")\n");
   }
 
   /**
@@ -256,8 +262,10 @@
    */
   public void dumpTokens() {
     lexicalToken = parserElement(true);
+    lexicalValue == null;
     while (lexicalToken != 0) {
-      System.out.println("Token: " + getTokenName(lexicalToken) + "(" + lexicalToken + "):" + lexicalValue.toString());
+      System.out.println("Token: " + getTokenName(lexicalToken) + "(" + lexicalToken + "):" + (lexicalValue == null? "null": lexicalValue.toString()));
+      lexicalValue = null;
       lexicalToken = parserElement(false);
     }
   }

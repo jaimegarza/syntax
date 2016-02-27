@@ -72,8 +72,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   protected int markers = 0;
   protected boolean isCurlyBrace;
   protected boolean isEqual;
+  protected boolean isRegexSlash;
   protected boolean isError;
-  protected boolean isRegex;
   protected int tokenNumber;
   protected String currentNonTerminalName;
   protected boolean mustClose;

@@ -32,45 +32,28 @@ package me.jaimegarza.syntax.model.nfa;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.util.FormattingPrintStream;
-
-public class DirectedGraph {
-  private final List<Node> nodes = new LinkedList<>();
-  private final Node starting = new Node(this);
+public abstract class DirectedGraph {
+  protected final List<Node> nodes = new LinkedList<>();
   
   public DirectedGraph() {
-    starting.setStarting(true);
   }
   
-  public Node newNode() {
-    Node node = new Node(this);
+  public Node newDfaNode() {
+    Node node = new DfaNode(this);
     nodes.add(node);
     return node;
   }
   
-  public void addConstruct(Construct c) {
-    new EpsilonTransition(starting, c.getStart());
-    c.getEnd().setAccept(true);
-  }
-  
-  public void print(FormattingPrintStream out) {
-    out.println("NFA");
-    out.println("==================================================================");
-    
-    for (Node n: nodes) {
-      out.printf("%8d - ", n.getId());
-      for (Transition t: n.getTransitions()) {
-        out.printf("%s ", t.toString());
-      }
-      out.println();
-    }
+  /**
+   * @return the nodes
+   */
+  public List<Node> getNodes() {
+    return nodes;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
-    return "DirectedGraph [nodes=" + nodes + ", starting=" + starting == null ? "null" : starting.getId() + "]";
+    return "DirectedGraph [nodes=" + nodes + "]";
   }
+
 }

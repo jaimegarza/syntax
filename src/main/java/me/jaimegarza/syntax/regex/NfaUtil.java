@@ -28,44 +28,47 @@
  */
 package me.jaimegarza.syntax.regex;
 
+import java.util.Set;
+
 import me.jaimegarza.syntax.model.nfa.AnyCharacterTransition;
 import me.jaimegarza.syntax.model.nfa.CharacterClass;
 import me.jaimegarza.syntax.model.nfa.CharacterClassTransition;
 import me.jaimegarza.syntax.model.nfa.CharacterTransition;
 import me.jaimegarza.syntax.model.nfa.Construct;
-import me.jaimegarza.syntax.model.nfa.DirectedGraph;
 import me.jaimegarza.syntax.model.nfa.EpsilonTransition;
+import me.jaimegarza.syntax.model.nfa.Nfa;
+import me.jaimegarza.syntax.model.nfa.NfaNode;
 import me.jaimegarza.syntax.model.nfa.Node;
 
 public class NfaUtil {
 
-  public static Construct character(DirectedGraph graph, char c) {
+  public static Construct character(Nfa graph, char c) {
     Node start = graph.newNode();
     Node end = graph.newNode();
     new CharacterTransition(start, end, c);
     return new Construct(start, end);
   }
 
-  public static Construct characterClass(DirectedGraph graph, CharacterClass cc) {
+  public static Construct characterClass(Nfa graph, CharacterClass cc) {
     Node start = graph.newNode();
     Node end = graph.newNode();
     new CharacterClassTransition(start, end, cc);
     return new Construct(start, end);
   }
   
-  public static Construct any(DirectedGraph graph) {
+  public static Construct any(Nfa graph) {
     Node start = graph.newNode();
     Node end = graph.newNode();
     new AnyCharacterTransition(start, end);
     return new Construct(start, end);
   }
   
-  public static Construct concatenate(DirectedGraph graph, Construct from, Construct to) {
+  public static Construct concatenate(Nfa graph, Construct from, Construct to) {
     new EpsilonTransition(from.getEnd(), to.getStart());
     return new Construct(from.getStart(), to.getEnd());
   }
   
-  public static Construct alternate(DirectedGraph graph, Construct a, Construct b) {
+  public static Construct alternate(Nfa graph, Construct a, Construct b) {
     Node start = graph.newNode();
     Node end = graph.newNode();
     new EpsilonTransition(start, a.getStart());
@@ -75,7 +78,7 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
-  public static Construct zeroOrMany(DirectedGraph graph, Construct a) {
+  public static Construct zeroOrMany(Nfa graph, Construct a) {
     Node start = graph.newNode();
     Node end = graph.newNode();
     new EpsilonTransition(start, a.getStart());
@@ -85,7 +88,7 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
-  public static Construct oneOrMany(DirectedGraph graph, Construct a) {
+  public static Construct oneOrMany(Nfa graph, Construct a) {
     Node start = graph.newNode();
     Node end = graph.newNode();
     new EpsilonTransition(start, a.getStart());
@@ -94,9 +97,19 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
-  public static Construct optional(DirectedGraph graph, Construct a) {
+  public static Construct optional(Nfa graph, Construct a) {
     new EpsilonTransition(a.getStart(), a.getEnd());
     return a;
+  }
+  
+  public static void finalize(Nfa graph, Construct c) {
+    c.getEnd().setAccept(true);
+    for (Node n: graph.getNodes()) {
+      NfaNode node = (NfaNode) n;
+      Set<NfaNode> closure = node.eclosure();
+      System.out.println(closure);
+    }
+    
   }
   
 }

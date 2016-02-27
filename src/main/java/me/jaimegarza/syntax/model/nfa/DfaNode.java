@@ -29,23 +29,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-public class CharacterClassTransition extends Transition {
+import java.util.HashSet;
+import java.util.Set;
 
-  private CharacterClass characterClass;
+public class DfaNode extends Node {
+  private static int sequence = 0;
   
-  public CharacterClassTransition(Node from, Node to, CharacterClass characterClass) {
-    super(from, to, false);
-    this.characterClass = characterClass;
+  @SuppressWarnings("unused")
+  private Set<NfaNode> nodes = new HashSet<>();
+  
+  public DfaNode(DirectedGraph graph) {
+    super(graph, sequence++);
   }
-
-  @Override
-  public boolean matches(char c) {
-    return characterClass.matches(c);
-  }
-
-  @Override
-  public String canonical() {
-    return "[" + characterClass + "]";
-  }
-
 }

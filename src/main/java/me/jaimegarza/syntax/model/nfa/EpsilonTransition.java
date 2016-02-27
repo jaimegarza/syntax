@@ -41,8 +41,8 @@ public class EpsilonTransition extends Transition {
   }
 
   @Override
-  public String toString() {
-    return "EpsilonTransition [from=" + getFrom().getId() + ", to=" + getTo().getId() + "]";
+  public String canonical() {
+    return "e";
   }
 
 }

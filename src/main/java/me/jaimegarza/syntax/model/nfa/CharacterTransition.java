@@ -43,8 +43,8 @@ public class CharacterTransition extends Transition {
   }
 
   @Override
-  public String toString() {
-    return "CharacterTransition [character=" + character + ", from=" + getFrom().getId() + ", to=" + getTo().getId() + "]";
+  public String canonical() {
+    return "'" + character + "'";
   }
 
 }

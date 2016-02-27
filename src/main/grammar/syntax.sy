@@ -67,7 +67,13 @@ import me.jaimegarza.syntax.regex.NfaUtil;
 public class SyntaxCodeParser extends AbstractCodeParser {
 
   private String currentTypeName = null;
+  private CharacterClass currentCharacterClass = null;
+  private LexerMode lexerMode = LexerMode.NORMAL;
 
+  private enum LexerMode {
+    NORMAL, REGEX, CHARACTER_CLASS
+  }
+  
   public SyntaxCodeParser(Environment env) {
     super(env);
   }
@@ -78,7 +84,6 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %declare <value>
 %declare <mustClose>
 %declare <id>
-%declare <regex>
 %declare <c>
 %declare <cc>
 %declare <construct>
@@ -87,19 +92,17 @@ public class SyntaxCodeParser extends AbstractCodeParser {
     public int value;
     public boolean mustClose;
     public String id;
-    public String regex;
     public char c;
     public List<String> ids = new LinkedList<String>();
     public CharacterClass cc;
     public Construct construct;
 
-    StackElement(int state, int value, boolean mustClose, String id, String regex, char c) {
+    StackElement(int state, int value, boolean mustClose, String id, char c) {
       super();
       this.stateNumber = state;
       this.value = value;
       this.mustClose = mustClose;
       this.id = id;
-      this.regex = regex;
       this.c = c;
     }
 
@@ -108,14 +111,40 @@ public class SyntaxCodeParser extends AbstractCodeParser {
       this.construct = construct;
     }
 
-    StackElement(CharacterClass cc) {
+    StackElement(CharacterClass cc, String id) {
       super();
       this.cc = cc;
+      this.id = id;
+    }
+
+    StackElement() {
+      super();
     }
 
     @Override
     public String toString() {
-      return "state:" + stateNumber + ", value:" + value + ", mustClose:" + mustClose + ", id:" + id + ", c:" + c + ", cc:" + cc + ", construct:" + construct;
+      StringBuilder sb = new StringBuilder();
+      boolean comma = false;
+      if (stateNumber != -1) {
+        sb.append("state: ").append(stateNumber);
+        comma = true;
+      }
+      if (comma)
+        sb.append(", ");
+      sb.append("value: ").append(value).append(", mustClose: ").append(mustClose);
+      if (c != '\0')
+        sb.append(", c:\'").append(""+c).append("\'");;
+      if (id != null) {
+        sb.append(", id:").append(id);
+      }
+      if (cc != null) {
+        sb.append(", cc:").append(cc);
+      }
+      if (construct != null) {
+        sb.append(", construct:").append(construct);
+      }
+      
+      return sb.toString();
     }
 }
 
@@ -138,11 +167,11 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %token            DECLARE          : "%declare"
 %token            GROUP            : "%group"
 
-%token <regex>    PIPE             : "'|'"
-%token <regex>    STAR             : "'*'" 
-%token <regex>    PLUS             : "'+'" 
-%token <regex>    HUH              : "'?'" 
-%token <regex>    ANY              : "'.'"
+%token <c>        PIPE             : "'|'"
+%token <c>        STAR             : "'*'" 
+%token <c>        PLUS             : "'+'" 
+%token <c>        HUH              : "'?'" 
+%token <c>        ANY              : "'.'"
 %token <c>        CHAR             : "character"
 %token <cc>       CHARACTER_CLASS  : "a valid character class"
 
@@ -162,11 +191,10 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %type   <value>     Number;
 %type   <value>     Token;
 %type   <id>        TokenName;
-%type   <regex>     LexicAction;
 
 %type   <construct> BasicElement;
-%type   <construct> Alternation;
 %type   <construct> Concatenation;
+%type   <construct> UnaryRegex;
 %type   <construct> RegExp;
 
 %type   <ids>       GroupTokens;
@@ -181,8 +209,8 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %name LexicAction           : "lexical token definition";
 %name Name                  : "a token:name pair";
 %name RegExp                : "regular expression";
-%name Alternation           : "or regular expression";
 %name Concatenation         : "concatenation expression";
+%name UnaryRegex            : "unary regex expression";
 %name BasicElement          : "basic element";
 %name GroupTokens           : "group of tokens"
 %name GroupToken            : "token in a group"
@@ -320,43 +348,43 @@ Token         :  TOKEN Number TokenName
               ;
 
 Number        :  NUM
-              |                              = $<>$ = new StackElement(0, -1, false, "", null, '\0');
+              |                              = $<>$ = new StackElement(0, -1, false, "", '\0');
               ;
 
 TokenName     : ':' TOKEN                    = $$ = $2; 
-              | %prec ':'                    = $<>$ = new StackElement(0, 0, false, "", null, '\0');
+              | %prec ':'                    = $<>$ = new StackElement(0, 0, false, "", '\0');
               ;
 
 LexicAction   : Equals TOKEN                 = $$ = null;
-              | Slash RegExp Slash %prec '=' = //$$ = AddTree($2);
-              | Slash RegExp Slash Equals    = //$$ = AddTree($2);
-              | %prec '='                    = $<>$ = new StackElement(0, -1, false, "", null, '\0');
+              | Slash RegExp Slash %prec '=' = NfaUtil.finalize(runtimeData.getNfa(), $RegExp);
+              | Slash RegExp Slash Equals    = NfaUtil.finalize(runtimeData.getNfa(), $RegExp);
+              | %prec '='                    = $<>$ = new StackElement(0, -1, false, "", '\0');
               ;
 
 Equals        : '='                          = generateLexerCode("default");
-              | '[' TOKEN ']' '='            = generateLexerCode($2);
+              | '[' TOKEN ']' '='            = generateLexerCode($TOKEN);
               ;
 
 Slash         : '/' TOKEN                
               ;
 
-RegExp        : RegExp PIPE Alternation      = $$ = NfaUtil.alternate(runtimeData.getNfa(), $1, $3);
-              | Alternation                  = $$ = $1;
+RegExp        : RegExp PIPE Concatenation    = $$ = NfaUtil.alternate(runtimeData.getNfa(), $RegExp, $Concatenation);
+              | Concatenation                = $$ = $Concatenation;
               ;
               
-Alternation   : Alternation Concatenation    = $$ = NfaUtil.concatenate(runtimeData.getNfa(), $1, $2);
-              | Concatenation                = $$ = $1;
+Concatenation : Concatenation UnaryRegex     = $$ = NfaUtil.concatenate(runtimeData.getNfa(), $Concatenation, $UnaryRegex);
+              | UnaryRegex                   = $$ = $UnaryRegex;
               ;
          
-Concatenation : BasicElement STAR            = $$ = NfaUtil.zeroOrMany(runtimeData.getNfa(), $1);
-              | BasicElement PLUS            = $$ = NfaUtil.oneOrMany(runtimeData.getNfa(), $1);
-              | BasicElement HUH             = $$ = NfaUtil.optional(runtimeData.getNfa(), $1);
-              | BasicElement                 = $$ = $1;
+UnaryRegex    : BasicElement STAR            = $$ = NfaUtil.zeroOrMany(runtimeData.getNfa(), $BasicElement);
+              | BasicElement PLUS            = $$ = NfaUtil.oneOrMany(runtimeData.getNfa(), $BasicElement);
+              | BasicElement HUH             = $$ = NfaUtil.optional(runtimeData.getNfa(), $BasicElement);
+              | BasicElement                 = $$ = $BasicElement;
               ;
               
-BasicElement  : '(' RegExp ')'               = $$ = $2;
-              | CHAR                         = $$ = NfaUtil.character(runtimeData.getNfa(), $1);
-              | '[' CHARACTER_CLASS ']'      = $$ = NfaUtil.characterClass(runtimeData.getNfa(), $2);
+BasicElement  : '(' RegExp ')'               = $$ = $RegExp;
+              | CHAR                         = $$ = NfaUtil.character(runtimeData.getNfa(), $CHAR);
+              | '[' CHARACTER_CLASS ']'      = $$ = NfaUtil.characterClass(runtimeData.getNfa(), $CHARACTER_CLASS);
               | ANY                          = $$ = NfaUtil.any(runtimeData.getNfa());
               ;
 
@@ -414,18 +442,31 @@ Symbol        :  TOKEN                       = {
     if (init) {
       getNextChar(init);
     }
-    if (isRegex) {
-      rc = getRegexSymbol();
-      if (environment.isVerbose()) {
-        System.out.printf("RegexScanner: %d\n", rc);
-      }
-    } else {
-      rc = getNormalSymbol();
-      lexicalValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, null, '\0');
-      if (environment.isDebug()) {
-        System.out.printf("* StdScanner: %s(%d) {%s}\n",
+    switch (lexerMode) {
+      case REGEX:
+        rc = getRegexSymbol();
+        if (environment.isDebug()) {
+          System.out.printf("RegexScanner: %s(%d)\n", getTokenName(rc), rc);
+        }
+        break;
+      
+      case CHARACTER_CLASS:
+        rc = getCharacterClassSymbol();
+        lexicalValue = new StackElement(currentCharacterClass, runtimeData.currentStringValue);
+        if (environment.isDebug()) {
+          System.out.printf("CharacterClassScanner %s(%d): %s\n", getTokenName(rc), rc, runtimeData.currentStringValue);
+        }
+        break;
+        
+      case NORMAL:
+      default:
+        rc = getNormalSymbol();
+        lexicalValue = new StackElement(-1, tokenNumber, mustClose, runtimeData.currentStringValue, '\0');
+        if (environment.isDebug()) {
+          System.out.printf("* StdScanner: %s(%d) {%s}\n",
             getTokenName(rc), rc, lexicalValue != null ? lexicalValue.toString() : "");
-      }
+        }
+        break;
     }
     return rc;
   }
@@ -453,6 +494,48 @@ Symbol        :  TOKEN                       = {
   }
   
   /**
+   * Get a symbol while in a character class
+   */
+  public int getCharacterClassSymbol() {
+
+	while (2 > 1) { //forever
+      if (runtimeData.currentCharacter == '\0') {
+        isError = true;
+        environment.error(-1, "Statement \"" + runtimeData.currentStringValue + "\" not properly ended with ']'.");
+        return ERROR;
+      }
+
+      if (runtimeData.currentCharacter == ']') {
+        // do not advance string
+        lexerMode = LexerMode.REGEX;
+        return CHARACTER_CLASS;
+      }
+      
+      char c1 = runtimeData.currentCharacter;
+      getCharacter();
+      if (runtimeData.currentCharacter == '-') {
+        getCharacter();
+        if (runtimeData.currentCharacter == ']' || runtimeData.currentCharacter == '\0') { // last char, so use as a char
+          // do not advance string
+          currentCharacterClass.character(c1);
+          currentCharacterClass.character('-');
+          runtimeData.currentStringValue += "" + c1 + '-';
+        } else {
+          char c2 = runtimeData.currentCharacter;
+          runtimeData.currentStringValue += "" + c1 + '-' + c2;
+          currentCharacterClass.range(c1, c2);
+          getCharacter();
+        }
+      } else {
+        // already advanced
+        currentCharacterClass.character(c1);
+        runtimeData.currentStringValue += "" + c1;
+      }
+    }
+  }
+   
+  
+  /**
    * Get the next character
    * @param init indicates if this is the first call
    */
@@ -463,9 +546,11 @@ Symbol        :  TOKEN                       = {
   @Override
   public int getRegexSymbol() {
     char c2;
+    
+    lexicalValue = new StackElement();
   
-    if (isEqual) {
-      isEqual = false;
+    if (isRegexSlash) {
+      isRegexSlash = false;
       runtimeData.currentStringValue = "";
       return TOKEN;
     }
@@ -499,10 +584,40 @@ Symbol        :  TOKEN                       = {
       return ANY;
     }
     if (runtimeData.currentCharacter == '/') {
-      isRegex = false;
-      isEqual = true;
+      lexerMode = LexerMode.NORMAL;
+      isRegexSlash = true;
       getCharacter();
       return '/';
+    }
+    if (runtimeData.currentCharacter == '[') {
+      runtimeData.currentStringValue = "";
+      currentCharacterClass = new CharacterClass();
+      lexerMode = LexerMode.CHARACTER_CLASS;
+      getCharacter();
+      if (runtimeData.currentCharacter == '^') {
+        runtimeData.currentStringValue += '^';
+        currentCharacterClass.negate();
+        getCharacter();
+      }
+      if (runtimeData.currentCharacter == '-') {
+        runtimeData.currentStringValue += '-';
+        currentCharacterClass.character('-');
+        getCharacter();
+      } else if (runtimeData.currentCharacter == ']') {
+        runtimeData.currentStringValue += ']';
+        currentCharacterClass.character(']');
+        getCharacter();
+        if (runtimeData.currentCharacter == '-') {
+          runtimeData.currentStringValue += '-';
+          currentCharacterClass.character('-');
+          getCharacter();
+        }
+      }
+      return '[';
+    }
+    if (runtimeData.currentCharacter == ']') {
+      getCharacter();
+      return ']';
     }
   
     if (runtimeData.currentCharacter == '\\') {
@@ -520,6 +635,8 @@ Symbol        :  TOKEN                       = {
      * StxValue.node.ranges.prev = NULL; StxValue.node.ranges.charStart = c2;
      * StxValue.node.ranges.charEnd = c2;
      */
+    lexicalValue = new StackElement(-1, tokenNumber, false, "", runtimeData.currentCharacter);
+    getCharacter();
     return CHAR;
   }
 
@@ -543,6 +660,12 @@ Symbol        :  TOKEN                       = {
   
     if (isEqual) {
       isEqual = false;
+      runtimeData.currentStringValue = "";
+      return TOKEN;
+    }
+  
+    if (isRegexSlash) {
+      isRegexSlash = false;
       runtimeData.currentStringValue = "";
       return TOKEN;
     }
@@ -687,8 +810,8 @@ Symbol        :  TOKEN                       = {
     }
   
     if (runtimeData.currentCharacter == '/') {
-      isRegex = true;
-      isEqual = true;
+      lexerMode = LexerMode.REGEX;
+      isRegexSlash = true;
       getCharacter();
       return '/';
     }

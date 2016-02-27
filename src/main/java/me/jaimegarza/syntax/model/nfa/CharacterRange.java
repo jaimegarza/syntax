@@ -58,7 +58,12 @@ public class CharacterRange {
 
   @Override
   public String toString() {
-    return "CharacterRange [from=" + from + ", to=" + to + "]";
+    if (from == to) {
+      return "" + from;
+    }
+    else {
+      return "" + from + "-" + to;
+    }
   }
   
   public boolean matches(char c) {

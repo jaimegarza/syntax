@@ -1,11 +1,10 @@
 %token A /_?[A-Za-z][A-Za-z0-9-]*/
-%token B = if ($c == 'A') {$+; return B;}
-%token C = if ($c == 'C') {$+; return C;}
-%token D = if ($c == 'D') {$+; return D;}
+%token B /[]]/
+%token C /[-]/
+%token D /[-]]/
+%token E /[]-]/
+%token F /.?x+y*(a|b)*/
 
-%lexer {
-  // second portion
-}
 %start S;
 
 %name S : "anything";
@@ -15,6 +14,8 @@ S    : A
      | B
      | C
      | D
+     | E
+     | F
      ;
 
 %%

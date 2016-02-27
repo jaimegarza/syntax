@@ -32,17 +32,15 @@ package me.jaimegarza.syntax.model.nfa;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Node {
-  private static int sequence = 0;
+public abstract class Node {
+  protected int id;
+  protected DirectedGraph graph;
+  protected Set<Transition> transitions = new HashSet<>();
+  protected boolean accept = false;
+  protected boolean starting = false;
   
-  private int id;
-  private DirectedGraph graph;
-  private Set<Transition> transitions = new HashSet<>();
-  private boolean accept = false;
-  private boolean starting = false;
-  
-  public Node(DirectedGraph graph) {
-    id = ++sequence;
+  public Node(DirectedGraph graph, int id) {
+    this.id = id;
     this.graph = graph;
   }
   
@@ -105,6 +103,22 @@ public class Node {
 
   @Override
   public String toString() {
-    return "Node [id=" + id + ", transitions=" + transitions + ", accept=" + accept + ", starting=" + starting + "]";
+    StringBuilder sb = new StringBuilder();
+    sb.append('(');
+    if (starting) {
+      sb.append("*");
+    }
+    if (accept) {
+      sb.append("(");
+    }
+    sb.append(id);
+    if (accept) {
+      sb.append(")");
+    }
+    for (Transition t: transitions) {
+      sb.append(' ').append(t.canonical()).append("->").append(t.getTo().getId());
+    }
+    sb.append(")");
+    return sb.toString();
   }
 }
