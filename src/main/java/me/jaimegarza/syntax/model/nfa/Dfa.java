@@ -29,31 +29,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-import java.util.HashSet;
 import java.util.Set;
 
-public class NfaNode extends Node {
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 
-  private static int sequence = 0;
+public class Dfa extends DirectedGraph<DfaNode> {
 
-  public NfaNode(Nfa graph) {
-    super(graph, sequence++);
+  public DfaNode newNode(Set<NfaNode> closure) {
+    DfaNode node = new DfaNode(this, closure);
+    nodes.add(node);
+    return node;
   }
   
-  protected void eclosure(Set<NfaNode> closure) {
-    closure.add(this);
-    for (Transition t: transitions) {
-      if (t.isEpsilon() && !closure.contains(t.getTo())) {
-        ((NfaNode) t.getTo()).eclosure(closure);
+  public void print(FormattingPrintStream out) {
+    out.println("DFA");
+    out.println("==================================================================");
+    
+    for (DfaNode n: nodes) {
+      out.printf("%8d - ", n.getId());
+      for (Transition t: n.getTransitions()) {
+        out.printf("%s ", t.toString());
       }
+      out.println();
     }
-  }
-  
-  @Override
-  public Set<NfaNode> eclosure() {
-    Set<NfaNode> closure = new HashSet<>();
-    eclosure(closure);
-    return closure;
   }
 
 }

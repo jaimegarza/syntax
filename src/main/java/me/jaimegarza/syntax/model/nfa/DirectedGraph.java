@@ -32,22 +32,16 @@ package me.jaimegarza.syntax.model.nfa;
 import java.util.LinkedList;
 import java.util.List;
 
-public abstract class DirectedGraph {
-  protected final List<Node> nodes = new LinkedList<>();
+public abstract class DirectedGraph<T extends Node> {
+  protected final List<T> nodes = new LinkedList<>();
   
   public DirectedGraph() {
-  }
-  
-  public Node newDfaNode() {
-    Node node = new DfaNode(this);
-    nodes.add(node);
-    return node;
   }
   
   /**
    * @return the nodes
    */
-  public List<Node> getNodes() {
+  public List<T> getNodes() {
     return nodes;
   }
 

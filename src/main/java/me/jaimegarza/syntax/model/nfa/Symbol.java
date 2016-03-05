@@ -29,31 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-import java.util.HashSet;
-import java.util.Set;
-
-public class NfaNode extends Node {
-
-  private static int sequence = 0;
-
-  public NfaNode(Nfa graph) {
-    super(graph, sequence++);
-  }
-  
-  protected void eclosure(Set<NfaNode> closure) {
-    closure.add(this);
-    for (Transition t: transitions) {
-      if (t.isEpsilon() && !closure.contains(t.getTo())) {
-        ((NfaNode) t.getTo()).eclosure(closure);
-      }
-    }
-  }
-  
-  @Override
-  public Set<NfaNode> eclosure() {
-    Set<NfaNode> closure = new HashSet<>();
-    eclosure(closure);
-    return closure;
-  }
+public abstract class Symbol {
 
 }

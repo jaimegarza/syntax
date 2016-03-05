@@ -31,10 +31,10 @@ package me.jaimegarza.syntax.model.nfa;
 
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 
-public class Nfa extends DirectedGraph {
+public class Nfa extends DirectedGraph<NfaNode> {
 
-  public Node newNode() {
-    Node node = new NfaNode(this);
+  public NfaNode newNode() {
+    NfaNode node = new NfaNode(this);
     nodes.add(node);
     return node;
   }

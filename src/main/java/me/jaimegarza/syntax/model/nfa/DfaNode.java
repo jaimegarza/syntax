@@ -29,16 +29,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.nfa;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class DfaNode extends Node {
   private static int sequence = 0;
   
-  @SuppressWarnings("unused")
-  private Set<NfaNode> nodes = new HashSet<>();
+  private Set<NfaNode> closure;
   
-  public DfaNode(DirectedGraph graph) {
+  public DfaNode(Dfa graph, Set<NfaNode> closure) {
     super(graph, sequence++);
+    this.closure = closure;
   }
+  
+  @Override
+  public Set<NfaNode> eclosure() {
+    return closure;
+  }
+  
 }

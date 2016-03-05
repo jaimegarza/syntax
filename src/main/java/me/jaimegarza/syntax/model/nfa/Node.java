@@ -34,15 +34,17 @@ import java.util.Set;
 
 public abstract class Node {
   protected int id;
-  protected DirectedGraph graph;
+  protected DirectedGraph<? extends Node> graph;
   protected Set<Transition> transitions = new HashSet<>();
   protected boolean accept = false;
   protected boolean starting = false;
   
-  public Node(DirectedGraph graph, int id) {
+  public Node(DirectedGraph<? extends Node> graph, int id) {
     this.id = id;
     this.graph = graph;
   }
+  
+  public abstract Set<NfaNode> eclosure();
   
   /**
    * @return the accept
@@ -97,7 +99,7 @@ public abstract class Node {
   /**
    * @return the graph
    */
-  public DirectedGraph getGraph() {
+  public DirectedGraph<? extends Node> getGraph() {
     return graph;
   }
 

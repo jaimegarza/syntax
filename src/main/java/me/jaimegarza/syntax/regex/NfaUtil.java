@@ -103,6 +103,7 @@ public class NfaUtil {
   }
   
   public static void finalize(Nfa graph, Construct c) {
+    c.getStart().setStarting(true);
     c.getEnd().setAccept(true);
     for (Node n: graph.getNodes()) {
       NfaNode node = (NfaNode) n;
