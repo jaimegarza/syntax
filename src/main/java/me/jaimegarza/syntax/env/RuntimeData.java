@@ -31,7 +31,7 @@ package me.jaimegarza.syntax.env;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.model.nfa.Nfa;
+import me.jaimegarza.syntax.model.graph.Nfa;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
 import me.jaimegarza.syntax.model.parser.Rule;
 import me.jaimegarza.syntax.model.parser.RuleItem;

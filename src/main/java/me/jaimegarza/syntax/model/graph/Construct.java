@@ -27,23 +27,34 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph;
 
-import java.util.Set;
+public class Construct {
+  private Node start;
+  private Node end;
 
-public class DfaNode extends Node {
-  private static int sequence = 0;
-  
-  private Set<NfaNode> closure;
-  
-  public DfaNode(Dfa graph, Set<NfaNode> closure) {
-    super(graph, sequence++);
-    this.closure = closure;
+  public Construct(Node start, Node end) {
+    super();
+    this.start = start;
+    this.end = end;
   }
-  
+
+  /**
+   * @return the start
+   */
+  public Node getStart() {
+    return start;
+  }
+
+  /**
+   * @return the end
+   */
+  public Node getEnd() {
+    return end;
+  }
+
   @Override
-  public Set<NfaNode> eclosure() {
-    return closure;
+  public String toString() {
+    return "Construct [start=" + start + ", end=" + end + "]";
   }
-  
 }

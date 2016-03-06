@@ -27,34 +27,100 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph;
 
-public class Construct {
-  private Node start;
-  private Node end;
+import java.util.HashSet;
+import java.util.Set;
 
-  public Construct(Node start, Node end) {
-    super();
-    this.start = start;
-    this.end = end;
+public abstract class Node {
+  protected int id;
+  protected DirectedGraph<? extends Node> graph;
+  protected Set<Transition> transitions = new HashSet<>();
+  protected boolean accept = false;
+  protected boolean starting = false;
+  
+  public Node(DirectedGraph<? extends Node> graph, int id) {
+    this.id = id;
+    this.graph = graph;
+  }
+  
+  public abstract Set<NfaNode> eclosure();
+  
+  /**
+   * @return the accept
+   */
+  public boolean isAccept() {
+    return accept;
   }
 
   /**
-   * @return the start
+   * @param accept the accept to set
    */
-  public Node getStart() {
-    return start;
+  public void setAccept(boolean accept) {
+    this.accept = accept;
   }
 
   /**
-   * @return the end
+   * @return the starting
    */
-  public Node getEnd() {
-    return end;
+  public boolean isStarting() {
+    return starting;
+  }
+
+  /**
+   * @param starting the starting to set
+   */
+  public void setStarting(boolean starting) {
+    this.starting = starting;
+  }
+
+  public void addTransition(Transition transition) {
+    transitions.add(transition);
+  }
+  
+  public void removeTransition(Transition transition) {
+    transitions.remove(transition);
+  }
+
+  /**
+   * @return the transitions
+   */
+  public Set<Transition> getTransitions() {
+    return transitions;
+  }
+
+  /**
+   * @return the id
+   */
+  public int getId() {
+    return id;
+  }
+
+  /**
+   * @return the graph
+   */
+  public DirectedGraph<? extends Node> getGraph() {
+    return graph;
   }
 
   @Override
   public String toString() {
-    return "Construct [start=" + start + ", end=" + end + "]";
+    StringBuilder sb = new StringBuilder();
+    sb.append('(');
+    if (starting) {
+      sb.append("*");
+    }
+    if (accept) {
+      sb.append("(");
+    }
+    sb.append(id);
+    if (accept) {
+      sb.append(")");
+    }
+    for (Transition t: transitions) {
+      sb.append(' ').append(t.canonical()).append("->").append(t.getTo().getId());
+    }
+    sb.append(")");
+    return sb.toString();
   }
 }

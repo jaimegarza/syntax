@@ -30,75 +30,75 @@ package me.jaimegarza.syntax.regex;
 
 import java.util.Set;
 
-import me.jaimegarza.syntax.model.nfa.AnyCharacterTransition;
-import me.jaimegarza.syntax.model.nfa.CharacterClass;
-import me.jaimegarza.syntax.model.nfa.CharacterClassTransition;
-import me.jaimegarza.syntax.model.nfa.CharacterTransition;
-import me.jaimegarza.syntax.model.nfa.Construct;
-import me.jaimegarza.syntax.model.nfa.EpsilonTransition;
-import me.jaimegarza.syntax.model.nfa.Nfa;
-import me.jaimegarza.syntax.model.nfa.NfaNode;
-import me.jaimegarza.syntax.model.nfa.Node;
+import me.jaimegarza.syntax.model.graph.Construct;
+import me.jaimegarza.syntax.model.graph.Nfa;
+import me.jaimegarza.syntax.model.graph.NfaNode;
+import me.jaimegarza.syntax.model.graph.Node;
+import me.jaimegarza.syntax.model.graph.Transition;
+import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
+import me.jaimegarza.syntax.model.graph.symbol.Epsilon;
+import me.jaimegarza.syntax.model.graph.symbol.AnyCharacter;
+import me.jaimegarza.syntax.model.graph.symbol.Character;
 
 public class NfaUtil {
 
   public static Construct character(Nfa graph, char c) {
     Node start = graph.newNode();
     Node end = graph.newNode();
-    new CharacterTransition(start, end, c);
+    new Transition(start, end, new Character(c));
     return new Construct(start, end);
   }
 
   public static Construct characterClass(Nfa graph, CharacterClass cc) {
     Node start = graph.newNode();
     Node end = graph.newNode();
-    new CharacterClassTransition(start, end, cc);
+    new Transition(start, end, cc);
     return new Construct(start, end);
   }
   
   public static Construct any(Nfa graph) {
     Node start = graph.newNode();
     Node end = graph.newNode();
-    new AnyCharacterTransition(start, end);
+    new Transition(start, end, new AnyCharacter());
     return new Construct(start, end);
   }
   
   public static Construct concatenate(Nfa graph, Construct from, Construct to) {
-    new EpsilonTransition(from.getEnd(), to.getStart());
+    new Transition(from.getEnd(), to.getStart(), new Epsilon());
     return new Construct(from.getStart(), to.getEnd());
   }
   
   public static Construct alternate(Nfa graph, Construct a, Construct b) {
     Node start = graph.newNode();
     Node end = graph.newNode();
-    new EpsilonTransition(start, a.getStart());
-    new EpsilonTransition(start, b.getStart());
-    new EpsilonTransition(a.getEnd(), end);
-    new EpsilonTransition(b.getEnd(), end);
+    new Transition(start, a.getStart(), new Epsilon());
+    new Transition(start, b.getStart(), new Epsilon());
+    new Transition(a.getEnd(), end, new Epsilon());
+    new Transition(b.getEnd(), end, new Epsilon());
     return new Construct(start, end);
   }
 
   public static Construct zeroOrMany(Nfa graph, Construct a) {
     Node start = graph.newNode();
     Node end = graph.newNode();
-    new EpsilonTransition(start, a.getStart());
-    new EpsilonTransition(a.getEnd(), end);
-    new EpsilonTransition(start, end);
-    new EpsilonTransition(a.getEnd(), a.getStart());
+    new Transition(start, a.getStart(), new Epsilon());
+    new Transition(a.getEnd(), end, new Epsilon());
+    new Transition(start, end, new Epsilon());
+    new Transition(a.getEnd(), a.getStart(), new Epsilon());
     return new Construct(start, end);
   }
 
   public static Construct oneOrMany(Nfa graph, Construct a) {
     Node start = graph.newNode();
     Node end = graph.newNode();
-    new EpsilonTransition(start, a.getStart());
-    new EpsilonTransition(a.getEnd(), end);
-    new EpsilonTransition(a.getEnd(), a.getStart());
+    new Transition(start, a.getStart(), new Epsilon());
+    new Transition(a.getEnd(), end, new Epsilon());
+    new Transition(a.getEnd(), a.getStart(), new Epsilon());
     return new Construct(start, end);
   }
 
   public static Construct optional(Nfa graph, Construct a) {
-    new EpsilonTransition(a.getStart(), a.getEnd());
+    new Transition(a.getStart(), a.getEnd(), new Epsilon());
     return a;
   }
   

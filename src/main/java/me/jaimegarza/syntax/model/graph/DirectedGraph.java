@@ -27,8 +27,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph;
 
-public abstract class Symbol {
+import java.util.LinkedList;
+import java.util.List;
+
+public abstract class DirectedGraph<T extends Node> {
+  protected final List<T> nodes = new LinkedList<>();
+  
+  public DirectedGraph() {
+  }
+  
+  /**
+   * @return the nodes
+   */
+  public List<T> getNodes() {
+    return nodes;
+  }
+
+  @Override
+  public String toString() {
+    return "DirectedGraph [nodes=" + nodes + "]";
+  }
 
 }

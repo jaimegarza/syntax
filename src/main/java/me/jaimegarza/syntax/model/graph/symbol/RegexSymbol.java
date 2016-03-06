@@ -27,31 +27,14 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph.symbol;
 
-import java.util.Set;
+public abstract class RegexSymbol {
 
-import me.jaimegarza.syntax.util.FormattingPrintStream;
+	public abstract boolean isEpsilon();
 
-public class Dfa extends DirectedGraph<DfaNode> {
-
-  public DfaNode newNode(Set<NfaNode> closure) {
-    DfaNode node = new DfaNode(this, closure);
-    nodes.add(node);
-    return node;
-  }
-  
-  public void print(FormattingPrintStream out) {
-    out.println("DFA");
-    out.println("==================================================================");
-    
-    for (DfaNode n: nodes) {
-      out.printf("%8d - ", n.getId());
-      for (Transition t: n.getTransitions()) {
-        out.printf("%s ", t.toString());
-      }
-      out.println();
-    }
-  }
+	public abstract String canonical();
+	
+	public abstract boolean matches(char c);
 
 }

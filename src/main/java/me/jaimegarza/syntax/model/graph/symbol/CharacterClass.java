@@ -27,100 +27,84 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph.symbol;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class Node {
-  protected int id;
-  protected DirectedGraph<? extends Node> graph;
-  protected Set<Transition> transitions = new HashSet<>();
-  protected boolean accept = false;
-  protected boolean starting = false;
+public class CharacterClass extends RegexSymbol {
   
-  public Node(DirectedGraph<? extends Node> graph, int id) {
-    this.id = id;
-    this.graph = graph;
-  }
+  private boolean negate;
+  private Set<CharacterRange> ranges = new HashSet<>();
   
-  public abstract Set<NfaNode> eclosure();
-  
-  /**
-   * @return the accept
-   */
-  public boolean isAccept() {
-    return accept;
-  }
-
-  /**
-   * @param accept the accept to set
-   */
-  public void setAccept(boolean accept) {
-    this.accept = accept;
-  }
-
-  /**
-   * @return the starting
-   */
-  public boolean isStarting() {
-    return starting;
-  }
-
-  /**
-   * @param starting the starting to set
-   */
-  public void setStarting(boolean starting) {
-    this.starting = starting;
-  }
-
-  public void addTransition(Transition transition) {
-    transitions.add(transition);
+  @Override
+  public boolean matches(char c) {
+    boolean matches = false;
+    for (CharacterRange r: ranges) {
+      if (r.matches(c)) {
+        matches = true;
+        break;
+      }
+    }
+    return negate? !matches: matches;
   }
   
-  public void removeTransition(Transition transition) {
-    transitions.remove(transition);
+  public void negate() {
+    this.negate = true;
+  }
+  
+  public void range(CharacterRange r) {
+    if (!ranges.contains(r)) {
+      ranges.add(r);
+    }
+  }
+  
+  public void range(char from, char to) {
+    CharacterRange r = new CharacterRange(from, to);
+    range(r);
+  }
+  
+  public void character(char c) {
+    CharacterRange r = new CharacterRange(c);
+    range(r);
+  }
+  
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    try {
+      CharacterClass cc = (CharacterClass) o;
+      return negate == cc.negate && ranges.equals(cc.ranges);
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
+
+  }
+  
+  @Override
+  public boolean isEpsilon() {
+	  return false;
   }
 
-  /**
-   * @return the transitions
-   */
-  public Set<Transition> getTransitions() {
-    return transitions;
-  }
-
-  /**
-   * @return the id
-   */
-  public int getId() {
-    return id;
-  }
-
-  /**
-   * @return the graph
-   */
-  public DirectedGraph<? extends Node> getGraph() {
-    return graph;
+  @Override
+  public String canonical() {
+    return "[" + toString() + "]";
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append('(');
-    if (starting) {
-      sb.append("*");
+    if (negate) {
+      sb.append("^");
     }
-    if (accept) {
-      sb.append("(");
+    for (CharacterRange r : ranges) {
+      sb.append(r);
     }
-    sb.append(id);
-    if (accept) {
-      sb.append(")");
-    }
-    for (Transition t: transitions) {
-      sb.append(' ').append(t.canonical()).append("->").append(t.getTo().getId());
-    }
-    sb.append(")");
     return sb.toString();
   }
+
 }

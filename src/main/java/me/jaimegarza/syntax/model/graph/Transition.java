@@ -27,33 +27,78 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph;
 
-import java.util.HashSet;
-import java.util.Set;
+import me.jaimegarza.syntax.model.graph.symbol.Character;
+import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 
-public class NfaNode extends Node {
+public class Transition {
+  private Node from;
+  private Node to;
+  private RegexSymbol symbol;
 
-  private static int sequence = 0;
-
-  public NfaNode(Nfa graph) {
-    super(graph, sequence++);
+  public Transition(Node from, Node to, RegexSymbol symbol) {
+    if (from == null || to == null) {
+      throw new IllegalArgumentException("transition's from and to have to be non null");
+    }
+    this.from = from;
+    this.to = to;
+    this.symbol = symbol;
+    
+    // update from node's transitions
+    from.addTransition(this);
   }
-  
-  protected void eclosure(Set<NfaNode> closure) {
-    closure.add(this);
-    for (Transition t: transitions) {
-      if (t.isEpsilon() && !closure.contains(t.getTo())) {
-        ((NfaNode) t.getTo()).eclosure(closure);
-      }
+
+  /**
+   * @return the from
+   */
+  public Node getFrom() {
+    return from;
+  }
+
+  /**
+   * @return the to
+   */
+  public Node getTo() {
+    return to;
+  }
+
+  /**
+   * @return the epsilon
+   */
+  public boolean isEpsilon() {
+    return symbol.isEpsilon();
+  }
+
+  public String canonical() {
+    return symbol.canonical();
+  }
+
+  public boolean matches(char c) {
+    return symbol.matches(c);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    
+    try {
+      Transition t = (Transition) o;
+      return from.equals(t.from) && 
+             to.equals(t.to) &&
+             symbol.equals(t.symbol);
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
     }
   }
   
   @Override
-  public Set<NfaNode> eclosure() {
-    Set<NfaNode> closure = new HashSet<>();
-    eclosure(closure);
-    return closure;
+  public String toString() {
+    return from.getId() + "(" + symbol.canonical() + ")->" + to.getId();
   }
 
 }

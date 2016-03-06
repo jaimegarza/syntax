@@ -27,29 +27,33 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph;
 
-import me.jaimegarza.syntax.util.FormattingPrintStream;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Nfa extends DirectedGraph<NfaNode> {
+public class NfaNode extends Node {
 
-  public NfaNode newNode() {
-    NfaNode node = new NfaNode(this);
-    nodes.add(node);
-    return node;
+  private static int sequence = 0;
+
+  public NfaNode(Nfa graph) {
+    super(graph, sequence++);
   }
   
-  public void print(FormattingPrintStream out) {
-    out.println("NFA");
-    out.println("==================================================================");
-    
-    for (Node n: nodes) {
-      out.printf("%8d - ", n.getId());
-      for (Transition t: n.getTransitions()) {
-        out.printf("%s ", t.toString());
+  protected void eclosure(Set<NfaNode> closure) {
+    closure.add(this);
+    for (Transition t: transitions) {
+      if (t.isEpsilon() && !closure.contains(t.getTo())) {
+        ((NfaNode) t.getTo()).eclosure(closure);
       }
-      out.println();
     }
+  }
+  
+  @Override
+  public Set<NfaNode> eclosure() {
+    Set<NfaNode> closure = new HashSet<>();
+    eclosure(closure);
+    return closure;
   }
 
 }

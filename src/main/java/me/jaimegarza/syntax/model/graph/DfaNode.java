@@ -27,73 +27,23 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph;
 
-import java.util.HashSet;
 import java.util.Set;
 
-public class CharacterClass {
+public class DfaNode extends Node {
+  private static int sequence = 0;
   
-  private boolean negate;
-  private Set<CharacterRange> ranges = new HashSet<>();
+  private Set<NfaNode> closure;
   
-  public boolean matches(char c) {
-    boolean matches = false;
-    for (CharacterRange r: ranges) {
-      if (r.matches(c)) {
-        matches = true;
-        break;
-      }
-    }
-    return negate? !matches: matches;
+  public DfaNode(Dfa graph, Set<NfaNode> closure) {
+    super(graph, sequence++);
+    this.closure = closure;
   }
   
-  public void negate() {
-    this.negate = true;
-  }
-  
-  public void range(CharacterRange r) {
-    if (!ranges.contains(r)) {
-      ranges.add(r);
-    }
-  }
-  
-  public void range(char from, char to) {
-    CharacterRange r = new CharacterRange(from, to);
-    range(r);
-  }
-  
-  public void character(char c) {
-    CharacterRange r = new CharacterRange(c);
-    range(r);
-  }
-  
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-
-    try {
-      CharacterClass cc = (CharacterClass) o;
-      return negate == cc.negate && ranges.equals(cc.ranges);
-    } catch (NullPointerException unused) {
-      return false;
-    } catch (ClassCastException unused) {
-      return false;
-    }
-
-  }
-
   @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    if (negate) {
-      sb.append("^");
-    }
-    for (CharacterRange r : ranges) {
-      sb.append(r);
-    }
-    return sb.toString();
+  public Set<NfaNode> eclosure() {
+    return closure;
   }
-
+  
 }

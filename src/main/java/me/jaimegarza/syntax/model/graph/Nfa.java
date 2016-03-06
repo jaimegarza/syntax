@@ -27,64 +27,29 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph;
 
-public class CharacterRange {
-  private char from;
-  private char to;
-  
-  public CharacterRange(char from, char to) {
-    this.from = from;
-    this.to = to;
+import me.jaimegarza.syntax.util.FormattingPrintStream;
+
+public class Nfa extends DirectedGraph<NfaNode> {
+
+  public NfaNode newNode() {
+    NfaNode node = new NfaNode(this);
+    nodes.add(node);
+    return node;
   }
   
-  public CharacterRange(char c) {
-    this.from = this.to = c;
-  }
-
-  /**
-   * @return the from
-   */
-  public char getFrom() {
-    return from;
-  }
-
-  /**
-   * @return the to
-   */
-  public char getTo() {
-    return to;
-  }
-
-  @Override
-  public String toString() {
-    if (from == to) {
-      return "" + from;
-    }
-    else {
-      return "" + from + "-" + to;
+  public void print(FormattingPrintStream out) {
+    out.println("NFA");
+    out.println("==================================================================");
+    
+    for (Node n: nodes) {
+      out.printf("%8d - ", n.getId());
+      for (Transition t: n.getTransitions()) {
+        out.printf("%s ", t.toString());
+      }
+      out.println();
     }
   }
-  
-  public boolean matches(char c) {
-    return c >= from && c <= to;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-
-    try {
-      CharacterRange cr = (CharacterRange) obj;
-      return from == cr.from && to == cr.to;
-    } catch (NullPointerException unused) {
-      return false;
-    } catch (ClassCastException unused) {
-      return false;
-    }
-  }
-
 
 }

@@ -27,25 +27,64 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 */
-package me.jaimegarza.syntax.model.nfa;
+package me.jaimegarza.syntax.model.graph.symbol;
 
-public class CharacterClassTransition extends Transition {
-
-  private CharacterClass characterClass;
+public class CharacterRange {
+  private char from;
+  private char to;
   
-  public CharacterClassTransition(Node from, Node to, CharacterClass characterClass) {
-    super(from, to, false);
-    this.characterClass = characterClass;
+  public CharacterRange(char from, char to) {
+    this.from = from;
+    this.to = to;
+  }
+  
+  public CharacterRange(char c) {
+    this.from = this.to = c;
+  }
+
+  /**
+   * @return the from
+   */
+  public char getFrom() {
+    return from;
+  }
+
+  /**
+   * @return the to
+   */
+  public char getTo() {
+    return to;
   }
 
   @Override
+  public String toString() {
+    if (from == to) {
+      return "" + from;
+    }
+    else {
+      return "" + from + "-" + to;
+    }
+  }
+  
   public boolean matches(char c) {
-    return characterClass.matches(c);
+    return c >= from && c <= to;
   }
 
   @Override
-  public String canonical() {
-    return "[" + characterClass + "]";
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    try {
+      CharacterRange cr = (CharacterRange) obj;
+      return from == cr.from && to == cr.to;
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
   }
+
 
 }
