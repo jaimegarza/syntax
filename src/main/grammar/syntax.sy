@@ -452,7 +452,7 @@ Symbol        :  TOKEN                       = {
       case REGEX:
         rc = getRegexSymbol();
         if (environment.isDebug()) {
-          System.out.printf("RegexScanner: %s(%d)\n", getTokenName(rc), rc);
+          System.out.printf("* RegexScanner: %s(%d) %s\n", getTokenName(rc), rc, rc == CHAR ? "\'" + lexicalValue.c + "\'":"");
         }
         break;
       
@@ -460,7 +460,7 @@ Symbol        :  TOKEN                       = {
         rc = getCharacterClassSymbol();
         lexicalValue = new StackElement(currentCharacterClass, runtimeData.currentStringValue);
         if (environment.isDebug()) {
-          System.out.printf("CharacterClassScanner %s(%d): %s\n", getTokenName(rc), rc, runtimeData.currentStringValue);
+          System.out.printf("* CharacterClassScanner %s(%d): %s\n", getTokenName(rc), rc, runtimeData.currentStringValue);
         }
         break;
         
