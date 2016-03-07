@@ -29,7 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
+import java.util.HashSet;
 import java.util.Set;
+
+import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 
 public class DfaNode extends Node {
   private static int sequence = 0;
@@ -45,5 +48,51 @@ public class DfaNode extends Node {
   public Set<NfaNode> eclosure() {
     return closure;
   }
+
+  public Set<RegexSymbol> getTransitionSymbols() {
+    Set<RegexSymbol> set = new HashSet<>();
+    for (NfaNode nfaNode : closure) {
+      for (Transition t : nfaNode.getTransitions()) {
+        RegexSymbol symbol = t.getSymbol();
+        if (!set.contains(symbol)) {
+          set.add(symbol);
+        }
+      }
+    }
+    return set;
+  }
+
+  public Set<NfaNode> getNfaTransitions(RegexSymbol symbol) {
+    Set<NfaNode> set = new HashSet<>();
+    for (NfaNode nfaNode : closure) {
+      for (Transition t : nfaNode.getTransitions()) {
+        RegexSymbol transitionSymbol = t.getSymbol();
+        if (transitionSymbol.equals(symbol)) {
+          set.add((NfaNode) t.getTo());
+        }
+      }
+    }
+    return set;
+  }
   
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    
+    try {
+      DfaNode d = (DfaNode) o;
+      return d.id == id;
+    } catch (ClassCastException unused) {
+      return false;
+    } catch (NullPointerException unused) {
+      return false;
+    }
+  }
+  
+  @Override
+  public int hashCode() {
+    return Integer.hashCode(id);
+  }
 }

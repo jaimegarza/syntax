@@ -44,6 +44,7 @@ import me.jaimegarza.syntax.model.parser.Symbol;
 import me.jaimegarza.syntax.model.parser.Terminal;
 import me.jaimegarza.syntax.model.parser.Type;
 import me.jaimegarza.syntax.model.graph.Construct;
+import me.jaimegarza.syntax.model.graph.Nfa;
 import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.regex.RegexUtil;
@@ -69,6 +70,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
   private String currentTypeName = null;
   private CharacterClass currentCharacterClass = null;
   private LexerMode lexerMode = LexerMode.NORMAL;
+  private Nfa currentNfa = null;
 
   private enum LexerMode {
     NORMAL, REGEX, CHARACTER_CLASS
@@ -222,7 +224,8 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %name Equals                : "an equals sign (starting of a token action)"
 %name Type                  : "type definition"
 %name Tokens                : "token declarations"
-%name Slash                 : "'/'"
+%name RStart                : "'/'"
+%name REnd                  : "'/'"
 %name Rules                 : "rule definitions"
 %name Rule                  : "rule definition"
 %name Descriptor            : "syntax grammar"  
@@ -356,8 +359,8 @@ TokenName     : ':' TOKEN                    = $$ = $2;
               ;
 
 LexicAction   : Equals TOKEN                 = $$ = null;
-              | Slash RegExp Slash %prec '=' = NfaUtil.finalize(runtimeData.getNfa(), $RegExp);
-              | Slash RegExp Slash Equals    = NfaUtil.finalize(runtimeData.getNfa(), $RegExp);
+              | RStart RegExp REnd %prec '=' = NfaUtil.finalize(currentNfa, $RegExp);
+              | RStart RegExp REnd Equals    = NfaUtil.finalize(currentNfa, $RegExp);
               | %prec '='                    = $<>$ = new StackElement(0, -1, false, "", '\0');
               ;
 
@@ -365,27 +368,30 @@ Equals        : '='                          = generateLexerCode("default");
               | '[' TOKEN ']' '='            = generateLexerCode($TOKEN);
               ;
 
-Slash         : '/' TOKEN                
+RStart        : '/' TOKEN                    = currentNfa = new Nfa();
               ;
 
-RegExp        : RegExp PIPE Concatenation    = $$ = NfaUtil.alternate(runtimeData.getNfa(), $RegExp, $Concatenation);
+REnd          : '/' TOKEN
+              ;
+
+RegExp        : RegExp PIPE Concatenation    = $$ = NfaUtil.alternate(currentNfa, $RegExp, $Concatenation);
               | Concatenation                = $$ = $Concatenation;
               ;
               
-Concatenation : Concatenation UnaryRegex     = $$ = NfaUtil.concatenate(runtimeData.getNfa(), $Concatenation, $UnaryRegex);
+Concatenation : Concatenation UnaryRegex     = $$ = NfaUtil.concatenate(currentNfa, $Concatenation, $UnaryRegex);
               | UnaryRegex                   = $$ = $UnaryRegex;
               ;
          
-UnaryRegex    : BasicElement STAR            = $$ = NfaUtil.zeroOrMany(runtimeData.getNfa(), $BasicElement);
-              | BasicElement PLUS            = $$ = NfaUtil.oneOrMany(runtimeData.getNfa(), $BasicElement);
-              | BasicElement HUH             = $$ = NfaUtil.optional(runtimeData.getNfa(), $BasicElement);
+UnaryRegex    : BasicElement STAR            = $$ = NfaUtil.zeroOrMany(currentNfa, $BasicElement);
+              | BasicElement PLUS            = $$ = NfaUtil.oneOrMany(currentNfa, $BasicElement);
+              | BasicElement HUH             = $$ = NfaUtil.optional(currentNfa, $BasicElement);
               | BasicElement                 = $$ = $BasicElement;
               ;
               
 BasicElement  : '(' RegExp ')'               = $$ = $RegExp;
-              | CHAR                         = $$ = NfaUtil.character(runtimeData.getNfa(), $CHAR);
-              | '[' CHARACTER_CLASS ']'      = $$ = NfaUtil.characterClass(runtimeData.getNfa(), $CHARACTER_CLASS);
-              | ANY                          = $$ = NfaUtil.any(runtimeData.getNfa());
+              | CHAR                         = $$ = NfaUtil.character(currentNfa, $CHAR);
+              | '[' CHARACTER_CLASS ']'      = $$ = NfaUtil.characterClass(currentNfa, $CHARACTER_CLASS);
+              | ANY                          = $$ = NfaUtil.any(currentNfa);
               ;
 
 Productions   :  Productions TOKEN ':' Rules ';'  = if (!setLeftHandOfLastRule($2)) return false;

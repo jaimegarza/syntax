@@ -61,6 +61,13 @@ public class Transition {
   public Node getTo() {
     return to;
   }
+  
+  /**
+   * return the symbol
+   */
+  public RegexSymbol getSymbol() {
+    return symbol;
+  }
 
   /**
    * @return the epsilon
@@ -95,6 +102,14 @@ public class Transition {
     }
   }
   
+  @Override
+  public int hashCode() {
+    int hash = 1;
+    hash = hash * 31 + (from == null ? 0: from.hashCode());
+    hash = hash * 31 + (to == null ? 0: to.hashCode());
+    hash = hash * 31 + (symbol == null ? 0: symbol.hashCode());
+    return hash;
+  }
   @Override
   public String toString() {
     return from.getId() + "(" + symbol.canonical() + ")->" + to.getId();

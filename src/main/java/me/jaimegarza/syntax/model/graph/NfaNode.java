@@ -55,5 +55,26 @@ public class NfaNode extends Node {
     eclosure(closure);
     return closure;
   }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    
+    try {
+      NfaNode n = (NfaNode) o;
+      return n.id == id;
+    } catch (ClassCastException unused) {
+      return false;
+    } catch (NullPointerException unused) {
+      return false;
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Integer.hashCode(id);
+  }
 
 }

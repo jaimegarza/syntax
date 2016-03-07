@@ -59,4 +59,16 @@ public class AnyCharacter extends RegexSymbol {
     }
   }
 
+  @Override
+  public int hashCode() {
+    final int prime = 17;
+    int hash = prime + HASH_ANY;
+    return hash;
+  }
+  
+  @Override
+  public String toString() {
+    return canonical();
+  }
+  
 }

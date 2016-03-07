@@ -30,6 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package me.jaimegarza.syntax.model.graph.symbol;
 
 public abstract class RegexSymbol {
+  
+  protected final int HASH_EPSILON = 1;
+  protected final int HASH_ANY = 2;
 
 	public abstract boolean isEpsilon();
 

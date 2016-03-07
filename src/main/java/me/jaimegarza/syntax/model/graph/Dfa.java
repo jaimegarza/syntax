@@ -29,8 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
+import java.util.HashSet;
 import java.util.Set;
 
+import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 public class Dfa extends DirectedGraph<DfaNode> {
@@ -39,6 +41,55 @@ public class Dfa extends DirectedGraph<DfaNode> {
     DfaNode node = new DfaNode(this, closure);
     nodes.add(node);
     return node;
+  }
+  
+  public DfaNode findNodeByClosure(Set<NfaNode> closure) {
+    for (DfaNode node: nodes) {
+      if (node.eclosure().equals(closure)) {
+        return node;
+      }
+    }
+    return null;
+  }
+  
+  public void generateFromNfa(Nfa graph) {
+    // Create initial Dfa state
+    for (NfaNode node: graph.getNodes()) {
+      if (node.isStarting()) {
+        Set<NfaNode> closure = node.eclosure();
+        newNode(closure);
+        break;
+      }
+    }
+    
+    // Create additional states
+    for (int i = 0; i < nodes.size(); i++) {
+      DfaNode dfaFromNode = nodes.get(i);
+      Set<RegexSymbol> symbols = dfaFromNode.getTransitionSymbols();
+      for (RegexSymbol symbol : symbols) {
+        if (symbol.isEpsilon()) {
+          continue;
+        }
+        Set<NfaNode> toNodes = dfaFromNode.getNfaTransitions(symbol);
+        Set<NfaNode> toNodesWithClosure = new HashSet<>();
+        boolean isFinal = false;
+        for (NfaNode toNode : toNodes) {
+          toNodesWithClosure.addAll(toNode.eclosure());
+          for (NfaNode n : toNodesWithClosure) {
+            if (n.isAccept()) {
+              isFinal = true;
+              break;
+            }
+          }
+        }
+        DfaNode dfaToNode = findNodeByClosure(toNodesWithClosure);
+        if (dfaToNode == null) {
+          dfaToNode = newNode(toNodesWithClosure);
+          dfaToNode.setAccept(isFinal);
+        }
+        new Transition(dfaFromNode, dfaToNode, symbol);
+      }
+    }    
   }
   
   public void print(FormattingPrintStream out) {
@@ -53,5 +104,6 @@ public class Dfa extends DirectedGraph<DfaNode> {
       out.println();
     }
   }
+
 
 }

@@ -28,17 +28,15 @@
  */
 package me.jaimegarza.syntax.regex;
 
-import java.util.Set;
-
 import me.jaimegarza.syntax.model.graph.Construct;
+import me.jaimegarza.syntax.model.graph.Dfa;
 import me.jaimegarza.syntax.model.graph.Nfa;
-import me.jaimegarza.syntax.model.graph.NfaNode;
 import me.jaimegarza.syntax.model.graph.Node;
 import me.jaimegarza.syntax.model.graph.Transition;
-import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
-import me.jaimegarza.syntax.model.graph.symbol.Epsilon;
 import me.jaimegarza.syntax.model.graph.symbol.AnyCharacter;
 import me.jaimegarza.syntax.model.graph.symbol.Character;
+import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
+import me.jaimegarza.syntax.model.graph.symbol.Epsilon;
 
 public class NfaUtil {
 
@@ -103,14 +101,12 @@ public class NfaUtil {
   }
   
   public static void finalize(Nfa graph, Construct c) {
+    Dfa dfa = new Dfa();
     c.getStart().setStarting(true);
     c.getEnd().setAccept(true);
-    for (Node n: graph.getNodes()) {
-      NfaNode node = (NfaNode) n;
-      Set<NfaNode> closure = node.eclosure();
-      System.out.println(closure);
-    }
     
+    dfa.generateFromNfa(graph);
+    System.out.println(dfa);
   }
   
 }

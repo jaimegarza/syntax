@@ -86,6 +86,16 @@ public class CharacterClass extends RegexSymbol {
   }
   
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int hash = prime + (negate ? 1 : 0);
+    for (CharacterRange r : ranges) {
+      hash = hash * prime + r.hashCode();
+    }
+    return hash;
+  }
+  
+  @Override
   public boolean isEpsilon() {
 	  return false;
   }

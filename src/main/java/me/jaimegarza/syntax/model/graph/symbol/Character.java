@@ -68,6 +68,13 @@ public class Character extends RegexSymbol {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int hash = prime + Integer.hashCode(character);
+    return hash;
+  }
+  
+  @Override
   public String toString() {
     return canonical();
   }

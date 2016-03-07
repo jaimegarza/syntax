@@ -134,6 +134,7 @@
           <verbose>true</verbose>
           <debug>false</debug>
           <packed>false</packed>
+          <algorithm>slr</algorithm>
         </configuration>
       </plugin>
       <plugin>

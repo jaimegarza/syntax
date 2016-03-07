@@ -45,6 +45,10 @@ public abstract class DirectedGraph<T extends Node> {
     return nodes;
   }
 
+  public T getNode(int index) {
+    return nodes.get(index);
+  }
+
   @Override
   public String toString() {
     return "DirectedGraph [nodes=" + nodes + "]";
