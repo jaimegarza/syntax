@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
-import me.jaimegarza.syntax.model.graph.symbol.Character;
 import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 
 public class Transition {
