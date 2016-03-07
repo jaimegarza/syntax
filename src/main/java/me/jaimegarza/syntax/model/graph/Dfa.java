@@ -43,7 +43,7 @@ public class Dfa extends DirectedGraph<DfaNode> {
     return node;
   }
   
-  public DfaNode findNodeByClosure(Set<NfaNode> closure) {
+  protected DfaNode findNodeByClosure(Set<NfaNode> closure) {
     for (DfaNode node: nodes) {
       if (node.eclosure().equals(closure)) {
         return node;
@@ -52,6 +52,15 @@ public class Dfa extends DirectedGraph<DfaNode> {
     return null;
   }
   
+  protected boolean isClosureFinal(Set<NfaNode> closure) {
+    for (NfaNode n : closure) {
+      if (n.isAccept()) {
+        return true;
+      }
+    }
+    return false;
+  }
+   
   public void generateFromNfa(Nfa graph) {
     // Create initial Dfa state
     for (NfaNode node: graph.getNodes()) {
@@ -72,20 +81,13 @@ public class Dfa extends DirectedGraph<DfaNode> {
         }
         Set<NfaNode> toNodes = dfaFromNode.getNfaTransitions(symbol);
         Set<NfaNode> toNodesWithClosure = new HashSet<>();
-        boolean isFinal = false;
         for (NfaNode toNode : toNodes) {
           toNodesWithClosure.addAll(toNode.eclosure());
-          for (NfaNode n : toNodesWithClosure) {
-            if (n.isAccept()) {
-              isFinal = true;
-              break;
-            }
-          }
         }
         DfaNode dfaToNode = findNodeByClosure(toNodesWithClosure);
         if (dfaToNode == null) {
           dfaToNode = newNode(toNodesWithClosure);
-          dfaToNode.setAccept(isFinal);
+          dfaToNode.setAccept(isClosureFinal(toNodesWithClosure));
         }
         new Transition(dfaFromNode, dfaToNode, symbol);
       }

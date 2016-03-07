@@ -1,5 +1,5 @@
 %token D /(a)/
-%token F /.?x+y*(a|b)*/
+ %token F /.?x+y*(a|b)*/
 %token A /_?[A-Za-z][A-Za-z0-9-]*/
 %token B /[]]/
 %token C /[-]/
