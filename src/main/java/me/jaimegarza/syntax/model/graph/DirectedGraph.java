@@ -1,5 +1,5 @@
 /*
-Syntax is distibuted under the Revised, or 3-clause BSD license
+Syntax is distributed under the Revised, or 3-clause BSD license
 ===============================================================================
 Copyright (c) 1985, 2012, 2016, Jaime Garza
 All rights reserved.
