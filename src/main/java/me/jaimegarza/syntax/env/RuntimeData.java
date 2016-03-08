@@ -161,6 +161,7 @@ public class RuntimeData {
    * Generic routine to find symbols
    * @param table the table to look into
    * @param name the name of the symbol
+   * @param <T> is the type of the symbol
    * @return the symbol, or null if not found.
    */
   public <T extends Symbol> T findSymbolByName(List<T> table, String name) {
@@ -177,6 +178,7 @@ public class RuntimeData {
    * Generic routine to find symbols
    * @param table the table to look into
    * @param tokenId the token of the symbol
+   * @param <T> is the type of the symbol
    * @return the symbol, or null if not found.
    */
   public <T extends Symbol> T findSymbolByToken(List<T> table, int tokenId) {
@@ -192,6 +194,7 @@ public class RuntimeData {
    * Generic routine to find symbols
    * @param table the table to look into
    * @param id the id of the symbol
+   * @param <T> is the type of the symbol
    * @return the symbol, or null if not found.
    */
   public <T extends Symbol> T findSymbolById(List<T> table, int id) {

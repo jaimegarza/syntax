@@ -52,8 +52,8 @@ public interface EmbeddedCodeProcessor {
    * 
    * @param lexer the element that will give me the lexical logic
    * @param elementCount the number of elements in the rule
-   * @param nonTerminalId the non terminal id for the rule
    * @param type the type of the element
+   * @param sign is one for possitive, or -1 for negative
    * @return true if everything is OK
    */
   boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign);

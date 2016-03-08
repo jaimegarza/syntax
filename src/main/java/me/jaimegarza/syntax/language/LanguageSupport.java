@@ -29,8 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.language;
 
-import java.io.IOException;
-
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.model.parser.Action;
@@ -51,42 +49,50 @@ public interface LanguageSupport {
   /**
    * get the string that identifies the language.  Used for 
    * bundling and perhaps other stuff (i.e. titles, etc.)
+   * @return the language code as a string
    */
   String getLanguageCode();
   
   /**
    * get the short, one-letter, or two-letter identifier for this language.  Used in cmd line
    * options.
+   * @return the id of the language
    */
   String getId();
   
   /**
    * get the source extension
+   * @return the extension suffix for the language
    */
   String getExtensionSuffix();
   
   /**
-   * Get include file extension
+   * @return include file extension
    */
   String getIncludeExtensionSuffix();
   
   /**
    * tells me the default value for include file generation
+   * @return the default setting
    */
   boolean getDefaultIncludeFlag();
   
   /**
    * emit #line in C
+   * @param line is the line number
    */
   void emitLine(int line);
   
   /**
    * emit #line in C
+   * @param line is the line number
+   * @param filename is the filename
    */
   void emitLine(int line, String filename);
   
   /**
    * number of spaces per indent
+   * @return the number of spaces per indent
    */
   int getNumberOfSpacesPerIndent();
   
@@ -111,9 +117,11 @@ public interface LanguageSupport {
    * emit a case start
    * @param lineNumber the line number on the source
    * @param label the label of the case statement
+   * @param comment is the comment of the case
    * @return for indentation purposes the column where the case ended
    */
-  int generateCaseStart(int lineNumber, String label, String comment); 
+  int generateCaseStart(int lineNumber, String label, String comment);
+  
   /**
    * emit a case end statement
    */
@@ -125,8 +133,11 @@ public interface LanguageSupport {
    * The format for ending rules is language dependent
    * 
    * @param lexer the element that will give me the lexical logic
+   * @param processor is the processor for rules
    * @param elementCount the number of elements in the rule
    * @param nonTerminalId the non terminal id for the rule
+   * @param sourceColumn is the column number
+   * @return true if OK
    */
   boolean generateRuleCode(Lexer lexer, EmbeddedCodeProcessor processor, int elementCount, String nonTerminalId, int sourceColumn);
 
@@ -137,11 +148,13 @@ public interface LanguageSupport {
   
   /**
    * Emit a lexer function header by mode
+   * @param mode for the lexer mode
    */
   void generateLexerModeHeader(String mode);
 
   /**
    * Emit a lexer function footer by mode
+   * @param mode for the lexer mode
    */
   void generateLexerModeFooter(String mode);
 
@@ -169,12 +182,15 @@ public interface LanguageSupport {
   /**
    * The recovery table deals with tokens that can be used to recognize
    * syntax context and can recover from errors.
+   * @param numberOfErrorTokens is the number of errors
    */
   void generateRecoveryTableHeader(int numberOfErrorTokens);
   
   /**
    * For yacc compatibility this is called the union, but it is
    * really a structure
+   * @param lexer is the lexical analyzer
+   * @return true if OK
    */
   boolean generateStructure(Lexer lexer);
 
@@ -188,7 +204,7 @@ public interface LanguageSupport {
 
   /**
    * Generates the top part of the token definition
-   * @param terminals
+   * @param terminals is the number of terminal symbols
    */
   void generateTokensHeader(int terminals);
 
@@ -206,8 +222,9 @@ public interface LanguageSupport {
 
   /**
    * Emit the code for the lexical part of the grammar
+   * @param output is the stream to write to
    * @param lexer is the lexer to obtain more characters
-   * @throws IOException 
+   * @return true if OK
    */
   boolean generateLexerCode(FormattingPrintStream output, Lexer lexer);
 
@@ -218,9 +235,9 @@ public interface LanguageSupport {
 
   /**
    * print one row of the parsing table
-   * @param symbolCounter
-   * @param parserLine 
-   * @param stateNumber 
+   * @param symbolCounter is the number of symbols
+   * @param parserLine is the array of lines
+   * @param stateNumber is the state number
    */
   void printTableRow(int symbolCounter, int[] parserLine, int stateNumber);
 
@@ -231,7 +248,7 @@ public interface LanguageSupport {
 
   /**
    * print a state in packed fashion
-   * @param stateNumber
+   * @param stateNumber is the id of the state
    */
   void printPackedState(int stateNumber);
 
@@ -286,17 +303,22 @@ public interface LanguageSupport {
    */
   void printGrammarTable();
 
+  /**
+   * Display the errors of the parser
+   */
   void printParserErrors();
 
   /**
    * Generate the constant or 'define" for a given lexer mode
-   * @param mode
+   * @param mode is the mode of the lexer
+   * @param i is the index of the definition
    */
   void generateLexerModeDefinition(String mode, int i);
 
   /**
    * Generate the constant or 'define" for a given lexer mode
-   * @param mode
+   * @param mode is the mode of the lexer
+   * @param i is the index of the definition
    */
   void generateLexerModeCase(String mode, int i);
 

@@ -45,12 +45,12 @@ import me.jaimegarza.syntax.model.parser.Terminal;
  * Phases:
  * 
  * <ol>
- *   <li>Code Parser
- *   <li><b>Structural Analysis</b> (This Phase)
- *   <li>Table Generation
- *   <li>Writing Code
+ *   <li>Code Parser</li>
+ *   <li><b>Structural Analysis</b> (This Phase)</li>
+ *   <li>Table Generation</li>
+ *   <li>Writing Code</li>
  * </ol>
- * This phase computes the first & follow sets for symbols
+ * This phase computes the first &amp; follow sets for symbols
  * @author jaimegarza@gmail.com
  *
  */

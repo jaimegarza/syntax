@@ -45,7 +45,7 @@ public interface AlgorithmicSupport {
    * @param I is the array of states
    * @param state is the state number
    * @param dots is the list of marker {@link Dot}s
-   * @return
+   * @return true if lookadeas added
    */
   boolean addLookaheadsToState(State I[], int state, List<Dot> dots);
 
@@ -101,7 +101,7 @@ public interface AlgorithmicSupport {
 
   /**
    * Does this algorithm support follow sets?
-   * @return
+   * @return true if it has follow elements
    */
   boolean hasFollows();
 

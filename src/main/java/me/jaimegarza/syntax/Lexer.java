@@ -42,28 +42,24 @@ public interface Lexer {
   /**
    * Get one character.  Place it in RuntimeData.currentCharacter
    * @return the character
-   * @throws IOException on input error
    */
   char getCharacter();
 
   /**
    * Reverse one character.  Place it in RuntimeData.currentCharacter
-   * @return the character
-   * @throws IOException on input error
+   * @param c is the character to unget
    */
   void ungetCharacter(char c);
   
   /**
    * Standard tokens.  This routine deals with the parser type of symbols
    * @return next token
-   * @throws IOException on input error
    */
   int getNormalSymbol();
   
   /**
    * Regex tokens.  They are surrounded by '/'
    * @return the next regex symbol
-   * @throws IOException on input error
    */
   int getRegexSymbol();
 }

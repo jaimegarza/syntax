@@ -125,7 +125,6 @@ public class Environment {
   /**
    * Construct an environment with the given arguments
    * @param args command line arguments
-   * @param runtimeData is the data used during generation
    */
   public Environment(final String args[]) {
     this("", args);
@@ -459,7 +458,7 @@ public class Environment {
   }
 
   /**
-   * getter for the title
+   * @return the title
    */
   public String getTitle() {
     return relatedTitle;

@@ -51,13 +51,12 @@ public class CommandLineOption {
 
   /**
    * Construct one option
-   * @param name is the display name of the option
-   * @param description is the descriptive text to be used in the usage
-   * @param longOption is the full text for double dashes
    * @param shortOption is the character for single dashes
+   * @param longOption is the full text for double dashes
    * @param hasArg does it require an argument, or is it a flag?
    * @param required is it required?
-   * @param defaultValue what would be the default value if not required and omitted
+   * @param description is the descriptive text to be used in the usage
+   * @param name is the display name of the option
    */
   public CommandLineOption(String shortOption, String longOption, boolean hasArg, boolean required, String description, String name) {
     super();

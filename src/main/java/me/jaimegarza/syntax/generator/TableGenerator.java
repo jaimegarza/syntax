@@ -78,7 +78,7 @@ public class TableGenerator extends AbstractPhase {
 
   /**
    * Construct a TableGenerator for an environment
-   * @param environment
+   * @param environment is the syntax environment
    */
   public TableGenerator(Environment environment) {
     super(environment);

@@ -86,7 +86,7 @@ public class Syntax {
   /**
    * Initialize syntax with the environment.
    * 
-   * @param environment
+   * @param environment is the syntax environment
    */
   public Syntax(Environment environment) {
     this.environment = environment;

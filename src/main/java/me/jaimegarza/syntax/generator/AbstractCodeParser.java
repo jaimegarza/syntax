@@ -102,9 +102,10 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @param isErrorToken specifies if this token was declared with %error
    * @param associativity defines if a token is defined with %left, %right, etc.
    * @param precedence is the numeric precedence of the token
+   * @param type is the type of the non-terminal
    * @param tokenNumber is the number of the token, or its value
    * @param fullName is the fullname, if given, of the token
-   * @return
+   * @return true if OK
    */
   protected boolean declareOneTerminal(String id, boolean isErrorToken, Associativity associativity, int precedence, Type type, int tokenNumber, String fullName) {
     Terminal terminal = runtimeData.findTerminalByName(id);
@@ -157,6 +158,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * Declare one non terminal in the symbol table
    * @param typeName the desired type
    * @param name the name of the symbol
+   * @return true if OK
    */
   protected boolean declareOneNonTerminal(String typeName, String name) {
     if (runtimeData.findTerminalByName(name) != null) {
@@ -184,6 +186,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * Declare one given type
    * @param typeName the desired type
+   * @return true if OK
    */
   protected boolean declareOneType(String typeName) {
     Type type = runtimeData.findType(typeName);
@@ -201,7 +204,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @param symbolName the name of the symbol being used
    * @param value the integer value of the symbol
    * @param mustClose whether this token must close
-   * @return
+   * @return true if OK
    */
   public boolean declareOneItem(String symbolName, int value, boolean mustClose) {
     if (isFirstToken) {
@@ -259,6 +262,13 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     return true;
   }
   
+  /**
+   * group a list of tokens
+   * @param tokens the list of tokens
+   * @param groupName the name of the group
+   * @param displayName the display name of the group
+   * @return true if OK
+   */
   public boolean groupTokens(List<String> tokens, String groupName, String displayName) {
     List<Terminal> terminals = new LinkedList<Terminal>();
     for (String tokenName : tokens) {
@@ -299,9 +309,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
 
   /**
    * Change the display name of a non terminal
-   * @param name
-   * @param fullName
-   * @return
+   * @param name is the short name of the non terminal
+   * @param fullName is its full name
+   * @return true if OK
    */
   protected boolean nameOneNonTerminal(String name, String fullName) {
     if (runtimeData.findTerminalByName(name) != null) {
@@ -322,7 +332,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * This routine places the non terminal left hand of a rule
    * @param name is the non terminal's name
-   * @return
+   * @return true if OK
    */
   protected boolean setLeftHandOfLastRule(String name) {
     if (runtimeData.findTerminalByName(name) != null) {
@@ -436,7 +446,6 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * Use the character stream to decode the next escaped character
    * (i.e. hex, octal, control)
    * @return the encoded character
-   * @throws IOException
    */
   protected char decodeEscape() {
     char c2;
@@ -487,6 +496,10 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     }
   }
 
+  /**
+   * Get the next character. It can go to the stack of chars as needed
+   * @return the next character
+   */
   public char getCharacter() {
     if (inputChars.size() > 0) {
       runtimeData.currentCharacter = inputChars.pop();
@@ -682,8 +695,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * 
    * @param lexer the element that will give me the lexical logic
    * @param elementCount the number of elements in the rule
-   * @param nonTerminalId the non terminal id for the rule
    * @param type the type of the element
+   * @param sign, 1 for possitive, -1 for negative
    * @return true if everything is OK
    */
   public boolean generateDollarNumber(Lexer lexer, int elementCount, Type type, int sign) {
@@ -831,6 +844,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * Output the case for a given rule
    * @param ruleNumber is the rule number to be emitted in the case statement
+   * @param comment is the comment
    * @return for indentation purposes the column where the case ended
    */
   protected int generateCaseStatement(int ruleNumber, String comment) {
@@ -848,6 +862,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
 
   /**
    * copy action until the next ';' or '}' that actually closes
+   * @param lexerMode is the mode of the lexer
+   * @return true if OK
    */
   protected boolean generateLexerCode(String lexerMode) {
     FormattingPrintStream output = environment.getLexerModePrintStream(lexerMode);
@@ -912,6 +928,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
 
   /**
    * During a declaration, emit the accompanying code
+   * @return true if OK
    */
   protected boolean generateDeclaration() {
     while (Character.isWhitespace(runtimeData.currentCharacter)) {
@@ -975,6 +992,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * For yacc compatibility this is called the union, but it is
    * really a structure
+   * @return true if OK
    */
   protected boolean generateStructure() {
     environment.language.emitLine(runtimeData.lineNumber);
@@ -1262,7 +1280,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * Locate a rule whose left hand if is the given id
    * @param id is the id of the non terminal on the left hand side
-   * @return
+   * @return the rule, or null if not found
    */
   protected Rule locateRuleWithId(int id) {
     Rule rule = null;
@@ -1288,6 +1306,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @param ruleNumber the rule index
    * @param elementCount the elements in the rule
    * @param nonTerminalName the left hand symbol of the rule
+   * @return true if OK
    */
   protected boolean ruleAction(int ruleNumber, int elementCount, String nonTerminalName) {
     generateCodeGeneratorHeader();
