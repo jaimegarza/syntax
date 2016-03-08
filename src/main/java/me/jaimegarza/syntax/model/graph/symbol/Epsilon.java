@@ -29,6 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph.symbol;
 
+/**
+ * An epsilon symbol
+ * @author jgarza
+ *
+ */
 public class Epsilon extends RegexSymbol {
 
   @Override
@@ -70,6 +75,5 @@ public class Epsilon extends RegexSymbol {
   public String toString() {
     return canonical();
   }
-  
 
 }

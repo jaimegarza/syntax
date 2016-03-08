@@ -32,9 +32,15 @@ package me.jaimegarza.syntax.model.graph.symbol;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A character class symbol. A character class is composed of multiple ranges
+ * @author jgarza
+ *
+ */
 public class CharacterClass extends RegexSymbol {
-  
+  /** if this is a negate character class */
   private boolean negate;
+  /** the ranges in the character class */
   private Set<CharacterRange> ranges = new HashSet<>();
   
   @Override
@@ -49,26 +55,43 @@ public class CharacterClass extends RegexSymbol {
     return negate? !matches: matches;
   }
   
+  /**
+   * Make this character class a negate class
+   */
   public void negate() {
     this.negate = true;
   }
   
+  /**
+   * Add a range to the character class
+   * @param r the range
+   */
   public void range(CharacterRange r) {
     if (!ranges.contains(r)) {
       ranges.add(r);
     }
   }
   
+  /**
+   * Add a range to the character class
+   * @param from the starting character
+   * @param to the ending character
+   */
   public void range(char from, char to) {
     CharacterRange r = new CharacterRange(from, to);
     range(r);
   }
   
+  /**
+   * Add a range to the character class
+   * @param c, the from and to character
+   */
   public void character(char c) {
     CharacterRange r = new CharacterRange(c);
     range(r);
   }
-  
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

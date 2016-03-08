@@ -29,15 +29,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph.symbol;
 
+/**
+ * A regular expression symbol. Abstract.
+ * @author jgarza
+ *
+ */
 public abstract class RegexSymbol {
   
-  protected final int HASH_EPSILON = 1;
-  protected final int HASH_ANY = 2;
+  protected final static int HASH_EPSILON = 1;
+  protected final static int HASH_ANY = 2;
 
+  /**
+   * Is the symbol an epsilon symbol?
+   * @return
+   */
 	public abstract boolean isEpsilon();
 
+	/**
+	 * A string representation of this symbol
+	 * @return
+	 */
 	public abstract String canonical();
 	
+	/**
+	 * Does a character matches a symbol?
+	 * @param c the character
+	 * @return true if it matches
+	 */
 	public abstract boolean matches(char c);
 
 }

@@ -29,15 +29,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph.symbol;
 
+/**
+ * A range of characters
+ * @author jgarza
+ *
+ */
 public class CharacterRange {
   private char from;
   private char to;
   
+  /**
+   * Default constructor
+   * @param from the starting character
+   * @param to the ending character
+   */
   public CharacterRange(char from, char to) {
     this.from = from;
     this.to = to;
   }
   
+  /**
+   * Constructor for a single char
+   * @param c a character
+   */
   public CharacterRange(char c) {
     this.from = this.to = c;
   }
@@ -66,6 +80,11 @@ public class CharacterRange {
     }
   }
   
+  /**
+   * Does a character match this range?
+   * @param c the character
+   * @return true if it matches
+   */
   public boolean matches(char c) {
     return c >= from && c <= to;
   }

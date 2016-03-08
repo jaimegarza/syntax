@@ -39,7 +39,14 @@ import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
 import me.jaimegarza.syntax.model.graph.symbol.Epsilon;
 
 public class NfaUtil {
-
+  
+  /**
+   * constructs a nfa for a character
+   * <pre><code>
+   *      [n] -- c --> [n+1]
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct character(Nfa graph, char c) {
     Node start = graph.newNode();
     Node end = graph.newNode();
@@ -47,6 +54,13 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
+  /**
+   * constructs a nfa for a character class
+   * <pre><code>
+   *      [n] -- char-class --> [n+1]
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct characterClass(Nfa graph, CharacterClass cc) {
     Node start = graph.newNode();
     Node end = graph.newNode();
@@ -54,6 +68,13 @@ public class NfaUtil {
     return new Construct(start, end);
   }
   
+  /**
+   * constructs a nfa for any character
+   * <pre><code>
+   *      [n] -- <any> --> [n+1]
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct any(Nfa graph) {
     Node start = graph.newNode();
     Node end = graph.newNode();
@@ -61,11 +82,31 @@ public class NfaUtil {
     return new Construct(start, end);
   }
   
+  /**
+   * constructs a nfa for a concatenation (A B)
+   * <pre><code>
+   *      [construct-from] -- epsilon --> [construct-to]
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct concatenate(Nfa graph, Construct from, Construct to) {
     new Transition(from.getEnd(), to.getStart(), new Epsilon());
     return new Construct(from.getStart(), to.getEnd());
   }
   
+  /**
+   * constructs a nfa for an alternation (A | B)
+   * <pre><code>
+   *      +--> [construct] --+
+   *      |                  |
+   *      |                  V
+   *  -->[n]               [n+1] -->
+   *      |                  ^
+   *      |                  |
+   *      +--> [construct] --+
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct alternate(Nfa graph, Construct a, Construct b) {
     Node start = graph.newNode();
     Node end = graph.newNode();
@@ -76,6 +117,19 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
+  /**
+   * constructs a nfa for a zero to many (A*)
+   * <pre><code>
+   *      +--------e----------------+
+   *      |                         |
+   *      |                         V
+   *  -->[n]-e-> [construct] -e-> [n+1]-->
+   *             ^         |
+   *             |         |         
+   *             +----e----+
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct zeroOrMany(Nfa graph, Construct a) {
     Node start = graph.newNode();
     Node end = graph.newNode();
@@ -86,6 +140,17 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
+  /**
+   * constructs a nfa for an one to many (A+)
+   * <pre><code>
+
+   *  -->[n]-e-> [construct] -e-> [n+1]-->
+   *             ^         |
+   *             |         |         
+   *             +----e----+
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct oneOrMany(Nfa graph, Construct a) {
     Node start = graph.newNode();
     Node end = graph.newNode();
@@ -95,18 +160,34 @@ public class NfaUtil {
     return new Construct(start, end);
   }
 
+  /**
+   * constructs a nfa for an option (A?)
+   * <pre><code>
+   *   [construct] 
+   *   |         ^
+   *   |         |         
+   *   +----e----+
+   * </code></pre>
+   * @return the construct
+   */
   public static Construct optional(Nfa graph, Construct a) {
     new Transition(a.getStart(), a.getEnd(), new Epsilon());
     return a;
   }
   
-  public static void finalize(Nfa graph, Construct c) {
+  /**
+   * Create a new dfa out of a nfa
+   * @param graph is the graph
+   * @param c the starting and ending nodes of the nfa
+   * @return a new DFA
+   */
+  public static Dfa finalize(Nfa graph, Construct c) {
     Dfa dfa = new Dfa();
     c.getStart().setStarting(true);
     c.getEnd().setAccept(true);
     
     dfa.generateFromNfa(graph);
-    System.out.println(dfa);
+    return dfa;
   }
   
 }

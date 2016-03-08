@@ -29,9 +29,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph.symbol;
 
+/**
+ * Symbol that matches one specific character
+ * @author jgarza
+ *
+ */
 public class Character extends RegexSymbol {
+  /** the character */
   private char character;
   
+  /**
+   * Default constructor
+   * @param c the character
+   */
   public Character(char c) {
     this.character = c;
   }

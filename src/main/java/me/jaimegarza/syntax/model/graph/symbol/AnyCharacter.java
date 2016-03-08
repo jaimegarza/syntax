@@ -29,6 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph.symbol;
 
+/**
+ * Symbol that matches any character
+ * @author jgarza
+ *
+ */
 public class AnyCharacter extends RegexSymbol {
 
   @Override
