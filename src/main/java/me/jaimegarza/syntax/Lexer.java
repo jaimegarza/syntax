@@ -29,8 +29,6 @@
 */
 package me.jaimegarza.syntax;
 
-import java.io.IOException;
-
 /**
  * Routines implemented by the lexer.  The lexer is the unit that breaks
  * the input stream as a series of tokens.
