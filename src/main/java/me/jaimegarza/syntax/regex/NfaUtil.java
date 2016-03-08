@@ -85,7 +85,7 @@ public class NfaUtil {
   /**
    * constructs a nfa for a concatenation (A B)
    * <pre><code>
-   *      [construct-from] -- epsilon --> [construct-to]
+   *      [construct-from] -- e --> [construct-to]
    * </code></pre>
    * @return the construct
    */
@@ -98,11 +98,13 @@ public class NfaUtil {
    * constructs a nfa for an alternation (A | B)
    * <pre><code>
    *      +--> [construct] --+
+   *      e                  e
    *      |                  |
    *      |                  V
    *  -->[n]               [n+1] -->
    *      |                  ^
-   *      |                  |
+   *      e                  |
+   *      |                  e
    *      +--> [construct] --+
    * </code></pre>
    * @return the construct
@@ -120,7 +122,7 @@ public class NfaUtil {
   /**
    * constructs a nfa for a zero to many (A*)
    * <pre><code>
-   *      +--------e----------------+
+   *      +------------e------------+
    *      |                         |
    *      |                         V
    *  -->[n]-e-> [construct] -e-> [n+1]-->
