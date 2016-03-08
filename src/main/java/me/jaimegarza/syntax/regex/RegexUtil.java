@@ -135,6 +135,7 @@ public class RegexUtil {
   /**
    * Generate a repeat node
    * @param exp is the expression to repeat
+   * @param min the minimum number of repetitions
    * @return the new node
    */
   public static RegexNode repeat(RegexNode exp, int min) {
@@ -144,6 +145,8 @@ public class RegexUtil {
   /**
    * Generate a repeat node
    * @param exp is the expression to repeat
+   * @param min the minimum number of repetitions
+   * @param max the maximum number of repetitions
    * @return the new node
    */
   public static RegexNode repeat(RegexNode exp, int min, int max) {

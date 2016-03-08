@@ -36,14 +36,14 @@ import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 
 /**
  * Deterministic finite automaton. A directed graph without
- * epsilon transitions, with cycles, and multiple final states
+ * &epsilon;-transitions, with cycles, and multiple final states
  * @author jgarza
  */
 public class Dfa extends DirectedGraph<DfaNode> {
 
   /**
-   * Create a dfa node with the given closure. The closure is usually
-   * obtained from a Nfa node's {@link Node#eclosure()} method.
+   * Create a dfa node with the given &epsilon;-closure. The 
+   * &epsilon;-closure is usually obtained from a Nfa node's {@link Node#eclosure()} method.
    * @param closure is the closure coming from a NFA
    * @return the new node
    */
@@ -54,8 +54,8 @@ public class Dfa extends DirectedGraph<DfaNode> {
   }
   
   /**
-   * Locate a node in the dfa by examining each node's eclosure
-   * @param closure is the closure to be checked against all nodes
+   * Locate a node in the dfa by examining each node's &epsilon;-closure
+   * @param closure is the &epsilon;-closure to be checked against all nodes
    * @return the node, or null if not existent.
    */
   protected DfaNode findNodeByClosure(Set<NfaNode> closure) {
@@ -68,9 +68,9 @@ public class Dfa extends DirectedGraph<DfaNode> {
   }
   
   /**
-   * Is a given closure final? We know that a closure is final if any
+   * Is a given &epsilon;-closure final? We know that a &epsilon;-closure is final if any
    * of the nfa nodes is an accept node
-   * @param closure is a closure of nodes to check
+   * @param closure is a &epsilon;-closure of nodes to check
    * @return true if any node in the closure is an accepting node
    */
   protected boolean isClosureFinal(Set<NfaNode> closure) {
@@ -86,13 +86,13 @@ public class Dfa extends DirectedGraph<DfaNode> {
    * Generate a DFA out of a NFA. The steps are as follows:
    * 
    * <ol>
-   * <li>Create a new DfaNode from the initial NFA starting state. Compute the closure
+   * <li>Create a new DfaNode from the initial NFA starting state. Compute the &epsilon;-closure
    * from the initial state.</li>
-   * <li>Iterate all the nodes and all their symbol transitions to create new closures.
-   * If the closures already exist in the DFA, use the found state with such closure,
-   * otherwise create a new DFA state with the given closure.</li>
+   * <li>Iterate all the nodes and all their symbol transitions to create new &epsilon;-closures.
+   * If the closures already exist in the DFA, use the found state with such &epsilon;-closure,
+   * otherwise create a new DFA state with the given &epsilon;-closure.</li>
    * </ol> 
-   * @param graph
+   * @param graph is the nfa
    */
   public void generateFromNfa(Nfa graph) {
     // Create initial Dfa state

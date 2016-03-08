@@ -32,7 +32,7 @@ package me.jaimegarza.syntax.model.graph;
 import me.jaimegarza.syntax.regex.NfaUtil;
 
 /**
- * Non-finite automaton. A directed graph with epsilon transitions. 
+ * Non-finite automaton. A directed graph with &epsilon; transitions. 
  * This is constructed in {@link NfaUtil}
  * @author jgarza
  *
@@ -41,7 +41,7 @@ public class Nfa extends DirectedGraph<NfaNode> {
 
   /**
    * Create a new empty Nfa node
-   * @return
+   * @return the new node
    */
   public NfaNode newNode() {
     NfaNode node = new NfaNode(this);

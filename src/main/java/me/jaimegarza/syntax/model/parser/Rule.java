@@ -116,7 +116,7 @@ public class Rule {
 
   /**
    * Convenience method to get the id of the left hand non-terminal
-   * @return
+   * @return the id of the left hand
    */
   public int getLeftHandId() {
     return leftHand.getId();

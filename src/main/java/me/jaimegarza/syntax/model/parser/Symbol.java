@@ -115,7 +115,6 @@ public abstract class Symbol {
 
   /**
    * Compute a language usable variable name
-   * @return
    */
   public void computeVariable() {
     if (name == null || name.length() == 0) {
@@ -176,7 +175,7 @@ public abstract class Symbol {
 
   /**
    * is the name of this non-terminal already a good variable name
-   * @return
+   * @return true if it is an identifier
    */
   public boolean isIdentifier() {
     if (name.length() == 0 || !Character.isJavaIdentifierStart(name.charAt(0))) {

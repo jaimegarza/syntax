@@ -56,8 +56,8 @@ public class PathUtils {
   private static final char DOT = '.';
 
   /**
-   * Locate where the path ends<p>
-   * So to say:<p>
+   * Locate where the path ends<br>
+   * So to say:<br>
    * <ul>
    *   <li><em>c:\path.name\filename</em>: index of \ before filename
    *   <li><em>/path.name/filename</em>: index of / before filename
@@ -87,9 +87,9 @@ public class PathUtils {
    * Locate the index of the file's extension.
    * 
    * I locate the last dot and compare to see if it is in the filename
-   * portion, or the path portion.<P>
+   * portion, or the path portion.<br>
    * 
-   * So to say:<p>
+   * So to say:<br>
    * <ul>
    *   <li><em>c:\path.name\filename</em>: -1
    *   <li><em>/path.name/filename</em>: -1

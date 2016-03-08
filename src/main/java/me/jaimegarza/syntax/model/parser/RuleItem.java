@@ -54,7 +54,7 @@ package me.jaimegarza.syntax.model.parser;
 
   /**
    * Construct a rule item with the given symbol
-   * @param symbol
+   * @param symbol is the symbol for the rule item
    */
   public RuleItem(Symbol symbol) {
     super();
@@ -113,9 +113,6 @@ package me.jaimegarza.syntax.model.parser;
     this.rule = rule;
   }
 
-  /**
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {

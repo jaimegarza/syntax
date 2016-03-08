@@ -176,7 +176,7 @@ public class NonTerminal extends Symbol {
 
   /**
    * Add a goto to the goto set
-   * @param goThere
+   * @param goThere the go to descriptor
    */
   public void addGoTo(GoTo goThere) {
     gotos.add(goThere);

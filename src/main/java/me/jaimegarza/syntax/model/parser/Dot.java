@@ -44,17 +44,17 @@ import java.util.Set;
  * <ol>
  * <li> Locate the initial symbol, and place a dot at the first element
  *    of the rules where the initial symbol is on the left hand. For example:
- *    <pre>  S -> . E</pre>
+ *    <pre>  S -&gt; . E</pre>
  * 
  * <li> Compute the closure of a state on every non terminal symbol.  
  *    The closure is the set of rules that have the non terminal in the
  *    left hand side, for each non terminal with a dot at its left.
  *    A dot is assigned at the first position on the closure rules.
  *    For example:
- *    <pre>  S -> .E
+ *    <pre>  S -&gt; .E
  *  <i>closure:</i>
- *  E -> .E + T
- *  E -> .E - T</pre>
+ *  E -&gt; .E + T
+ *  E -&gt; .E - T</pre>
  *   Closure rules are identical when the two rules are the same, and the 
  *   dot positions are also the same.<br><br>
  *   
@@ -65,32 +65,32 @@ import java.util.Set;
  *    terminals and terminals, and finding the destination state.  
  *    For instance:
  *    <pre>  <i>state 0</i>
- *  S -> .E
+ *  S -&gt; .E
  *  <i>closure:</i>
- *  E -> .E + T   closure on E
- *  E -> .E - T   closure on E
- *  E -> .T       closure on E
- *  T -> .T * F   closure on T
- *  T -> .T / F   closure on T
- *  T -> .F       closure on T
- *  F -> .number  closure on F
- *  F -> .- F     closure on F
- *  F -> .( F )   closure on F
+ *  E -&gt; .E + T   closure on E
+ *  E -&gt; .E - T   closure on E
+ *  E -&gt; .T       closure on E
+ *  T -&gt; .T * F   closure on T
+ *  T -&gt; .T / F   closure on T
+ *  T -&gt; .F       closure on T
+ *  F -&gt; .number  closure on F
+ *  F -&gt; .- F     closure on F
+ *  F -&gt; .( F )   closure on F
  * 
  *  <i>state 1 (with its closure, transition of state 0 with E)</i>
- *  S -> E .
- *  E -> E .+ T
- *  E -> E .- T
+ *  S -&gt; E .
+ *  E -&gt; E .+ T
+ *  E -&gt; E .- T
  *  
  *  <i>state 2 (with its closure, transition of state 1 with +)</i>
- *  E -> E + .T
+ *  E -&gt; E + .T
  *  <i>closure:</i>
- *  T -> .T * F   closure on T
- *  T -> .T / F   closure on T
- *  T -> .F       closure on T
- *  F -> .number  closure on F
- *  F -> .- F     closure on F
- *  F -> .( F )   closure on F
+ *  T -&gt; .T * F   closure on T
+ *  T -&gt; .T / F   closure on T
+ *  T -&gt; .F       closure on T
+ *  F -&gt; .number  closure on F
+ *  F -&gt; .- F     closure on F
+ *  F -&gt; .( F )   closure on F
  *  
  *  <i>etc...</i></pre>
  * </ol>
@@ -123,7 +123,7 @@ public class Dot {
   /**
    * When computing LALR (as opposed to SLR) the lookahead is the set of all non
    * terminals that can be reached from this symbol.  in the case of the dot: 
-   * <pre>  F -> .number
+   * <pre>  F -&gt; .number
    * the lookaheads for the dot are {number} 
    */
   private Set<Integer> lookahead = new HashSet<Integer>();
@@ -164,7 +164,7 @@ public class Dot {
    * State dots are linked.  Get the next dot in the state.
    * @return the next dot, or null.
    * 
-   * @see {@link State#dots} for a "state view" of its dots.
+   * @see State#getAllDots() for a "state view" of its dots.
    */
   public Dot next() {
     int index = 0;
@@ -187,7 +187,7 @@ public class Dot {
 
   /**
    * merge lookaheads into this dot
-   * @param symbolIds
+   * @param symbolIds is the set of symbols that make up the lookahead
    */
   public void addAllLookaheads(Set<Integer> symbolIds) {
     lookahead.addAll(symbolIds);

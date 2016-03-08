@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package me.jaimegarza.syntax.model.graph.symbol;
 
 /**
- * An epsilon symbol
+ * An &epsilon; symbol
  * @author jgarza
  *
  */
@@ -43,7 +43,7 @@ public class Epsilon extends RegexSymbol {
 
   @Override
   public String canonical() {
-    return "e";
+    return "ε";
   }
 
   @Override

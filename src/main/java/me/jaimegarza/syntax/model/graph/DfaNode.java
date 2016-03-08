@@ -43,12 +43,12 @@ public class DfaNode extends Node {
   private static int sequence = 0;
   
   /**
-   * closure coming from nfa nodes
+   * &epsilon;-closure coming from nfa nodes
    */
   private Set<NfaNode> closure;
   
   /**
-   * Constructor including precomputed closure
+   * Constructor including precomputed &epsilon;-closure
    * @param graph the source graph
    * @param closure the Nfa closure
    */
@@ -63,7 +63,7 @@ public class DfaNode extends Node {
   }
   
   /**
-   * Get all symbols transitioning out given the closure
+   * Get all symbols transitioning out given the &epsilon;-closure
    * @return the set of symbols
    */
 

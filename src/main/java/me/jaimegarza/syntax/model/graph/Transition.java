@@ -78,14 +78,14 @@ public class Transition {
   }
   
   /**
-   * return the symbol
+   * @return the symbol
    */
   public RegexSymbol getSymbol() {
     return symbol;
   }
 
   /**
-   * @return the epsilon
+   * @return true if it is an &epsilon; transition
    */
   public boolean isEpsilon() {
     return symbol.isEpsilon();
@@ -94,7 +94,7 @@ public class Transition {
   /**
    * Return a canonical representation of the transition. The
    * current implementation displays a symbols canonical representation
-   * @return
+   * @return the canonical representation of the transition
    */
   public String canonical() {
     return symbol.canonical();

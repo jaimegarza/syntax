@@ -44,8 +44,11 @@ public class NfaUtil {
   /**
    * constructs a nfa for a character
    * <pre><code>
-   *      [n] -- c --> [n+1]
+   *      [n] -- c --&gt; [n+1]
    * </code></pre>
+   * 
+   * @param graph the graph to which the construct would be added
+   * @param c is the character
    * @return the construct
    */
   public static Construct character(Nfa graph, char c) {
@@ -58,8 +61,11 @@ public class NfaUtil {
   /**
    * constructs a nfa for a character class
    * <pre><code>
-   *      [n] -- char-class --> [n+1]
+   *      [n] -- char-class --&gt; [n+1]
    * </code></pre>
+   * 
+   * @param graph the graph to which the construct would be added
+   * @param cc is the character class
    * @return the construct
    */
   public static Construct characterClass(Nfa graph, CharacterClass cc) {
@@ -72,8 +78,10 @@ public class NfaUtil {
   /**
    * constructs a nfa for any character
    * <pre><code>
-   *      [n] -- <any> --> [n+1]
+   *      [n] -- &lt;any&gt;--&gt; [n+1]
    * </code></pre>
+   * 
+   * @param graph the graph to which the construct would be added
    * @return the construct
    */
   public static Construct any(Nfa graph) {
@@ -86,8 +94,12 @@ public class NfaUtil {
   /**
    * constructs a nfa for a concatenation (A B)
    * <pre><code>
-   *      [construct-from] -- e --> [construct-to]
+   *      [construct-from] -- &epsilon; --&gt; [construct-to]
    * </code></pre>
+
+   * @param graph the graph to which the construct would be added
+   * @param from is the starting construct
+   * @param to is the ending construct
    * @return the construct
    */
   public static Construct concatenate(Nfa graph, Construct from, Construct to) {
@@ -98,16 +110,20 @@ public class NfaUtil {
   /**
    * constructs a nfa for an alternation (A | B)
    * <pre><code>
-   *      +--> [construct] --+
-   *      e                  e
+   *      +--&gt; [construct] --+
+   *      &epsilon;                  &epsilon;
    *      |                  |
    *      |                  V
-   *  -->[n]               [n+1] -->
+   *  --&gt;[n]               [n+1] --&gt;
    *      |                  ^
-   *      e                  |
-   *      |                  e
-   *      +--> [construct] --+
+   *      &epsilon;                  |
+   *      |                  &epsilon;
+   *      +--&gt; [construct] --+
    * </code></pre>
+   *
+   * @param graph the graph to which the construct would be added
+   * @param a is the first alternating construct
+   * @param b is the second alternating construct
    * @return the construct
    */
   public static Construct alternate(Nfa graph, Construct a, Construct b) {
@@ -123,14 +139,17 @@ public class NfaUtil {
   /**
    * constructs a nfa for a zero to many (A*)
    * <pre><code>
-   *      +------------e------------+
+   *      +------------&epsilon;------------+
    *      |                         |
    *      |                         V
-   *  -->[n]-e-> [construct] -e-> [n+1]-->
+   *  --&gt;[n]-&epsilon;-&gt; [construct] -&epsilon;-&gt; [n+1]--&gt;
    *             ^         |
    *             |         |         
-   *             +----e----+
+   *             +----&epsilon;----+
    * </code></pre>
+   * 
+   * @param graph the graph to which the construct would be added
+   * @param a is the repeating construct
    * @return the construct
    */
   public static Construct zeroOrMany(Nfa graph, Construct a) {
@@ -147,11 +166,14 @@ public class NfaUtil {
    * constructs a nfa for an one to many (A+)
    * <pre><code>
 
-   *  -->[n]-e-> [construct] -e-> [n+1]-->
+   *  --&gt;[n]-&epsilon;-&gt; [construct] -&epsilon;-&gt; [n+1]--&gt;
    *             ^         |
    *             |         |         
-   *             +----e----+
+   *             +----&epsilon;----+
    * </code></pre>
+   * 
+   * @param graph the graph to which the construct would be added
+   * @param a is the repeating construct
    * @return the construct
    */
   public static Construct oneOrMany(Nfa graph, Construct a) {
@@ -169,8 +191,11 @@ public class NfaUtil {
    *   [construct] 
    *   |         ^
    *   |         |         
-   *   +----e----+
+   *   +----&epsilon;----+
    * </code></pre>
+   * 
+   * @param graph the graph to which the construct would be added
+   * @param a is the optional construct
    * @return the construct
    */
   public static Construct optional(Nfa graph, Construct a) {
@@ -190,6 +215,8 @@ public class NfaUtil {
     c.getEnd().setAccept(true);
     
     dfa.generateFromNfa(graph);
+    System.out.println(graph);
+    System.out.println(dfa);
     return dfa;
   }
   

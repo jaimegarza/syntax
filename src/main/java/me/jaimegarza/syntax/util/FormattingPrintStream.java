@@ -80,6 +80,7 @@ public class FormattingPrintStream extends PrintWriter {
 
   /**
    * Construct a formatting print stream from an output stream
+   * @param environment the environment in which it is running
    * @param out the output stream
    */
   public FormattingPrintStream(Environment environment, Writer out) {

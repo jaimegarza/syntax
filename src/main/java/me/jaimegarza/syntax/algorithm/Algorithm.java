@@ -29,8 +29,10 @@
 */
 package me.jaimegarza.syntax.algorithm;
 
+import me.jaimegarza.syntax.generator.StructuralAnalyzer;
+
 /**
- * Describes the algorithm supported by the compiler-compiler.<p>
+ * Describes the algorithm supported by the compiler-compiler.
  * <ul>
  *   <li>SLR stands for Simple LR parser.  It is based on the computation of the
  *   sets of first and follow sets associated to non terminal symbols. It 
@@ -65,7 +67,7 @@ package me.jaimegarza.syntax.algorithm;
  * TODO: P4-Add LR mode
  * TODO: P5-Add Honalee algorithm
  * 
- * @see {@link me.jaimegarza.syntax.generator.StructuralAnalyzer} for the creation
+ * @see StructuralAnalyzer for the creation
  *   of follow ups
  *
  * @author jaimegarza@gmail.com

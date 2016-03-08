@@ -50,8 +50,8 @@ public class NfaNode extends Node {
   }
   
   /**
-   * Compute the e-closure of the node by traversing all epsilon transitions
-   * @param closure a set where the closures are placed.
+   * Compute the &epsilon;-closure of the node by traversing all &epsilon; transitions
+   * @param closure a set where the &epsilon;-closures are placed.
    */
   protected void eclosure(Set<NfaNode> closure) {
     closure.add(this);

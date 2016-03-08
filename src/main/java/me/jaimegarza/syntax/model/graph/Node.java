@@ -58,8 +58,8 @@ public abstract class Node {
   }
   
   /**
-   * e-closure is defined as the node, plus all other nodes that are
-   * reachable from this node with an epsilon transition, recursivelly.
+   * &epsilon;-closure is defined as the node, plus all other nodes that are
+   * reachable from this node with an &epsilon; transition, recursively.
    * @return the e-closure
    */
   public abstract Set<NfaNode> eclosure();

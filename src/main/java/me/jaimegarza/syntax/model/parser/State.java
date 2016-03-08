@@ -38,57 +38,57 @@ import java.util.List;
  *
  * A grammar G is defined as a set {<b>N</b>, <b>T</b>, <b>&Sigma;</b> &isin; <b>N</b>, <b>R</b>}
  * <ul>
- *   <li>n&#7522; &isin; <b>N</b> is the set of {@link NonTerminal} symbols
- *   <li>t&#7522; &isin; <b>T</b> is the set of {@link Terminal} symbols
+ *   <li>n<sub>i</sub> &isin; <b>N</b> is the set of {@link NonTerminal} symbols
+ *   <li>t<sub>i</sub> &isin; <b>T</b> is the set of {@link Terminal} symbols
  *   <li><b>&Sigma;</b> &isin; <b>N</b>, is the "distinguished symbol", or
  *    the root of the grammar
  *   <li><b>R</b> is the set of {@link Rule}s of the form<pre>
  *    &alpha; &rarr; &beta;</pre>
  *    where:<br>
  *    &alpha; &isin; <b>N</b><br>
- *    &beta; is a repetition of zero or many symbols s&#7522;; &isin; <b>N</b> &cup; <b>T</b>
+ *    &beta; is a repetition of zero or many symbols s<sub>i</sub>; &isin; <b>N</b> &cup; <b>T</b>
  * </ul>
  * 
  * A parser P is defined as a set {<b>I</b>, <b>A</b>, <b>&Gamma;</b>, <b>E</b>}<pre>
  *   <b>P</b> = (<b>N</b> &cup; <b>T</b>) &times; <b>I</b></pre>
  * <ul>
- *   <li>i&#7522; &isin; <b>I</b> is the mapping set of states that identify 
+ *   <li>i<sub>i</sub> &isin; <b>I</b> is the mapping set of states that identify 
  *   the FSA of the parser.<br><br>
- *   A state i&#7522; contains a set <b>A<super>'</super>
- *   </b> &sube; <b>A</b> and a set <b>&Gamma;<super>'</super></b> &sube; <b>&Gamma;</b>
- *   for its particular set of actions and gotos.  It also contains <b>e</b>&#7522; or 
+ *   A state i<sub>i</sub> contains a set <b>A<sup>'</sup>
+ *   </b> &sube; <b>A</b> and a set <b>&Gamma;<sup>'</sup></b> &sube; <b>&Gamma;</b>
+ *   for its particular set of actions and gotos.  It also contains <b>e</b><sub>i</sub> or 
  *   <i>&empty;</i> as the error that this state reports on an error.<br><br>
- *   <li>a&#7522; &isin; <b>A</b> is the subset &sube; <b>T</b> &times; <b>I</b> of 
+ *   <li>a<sub>i</sub> &isin; <b>A</b> is the subset &sube; <b>T</b> &times; <b>I</b> of 
  *   all a {@link Action}s or
- *   state transitions.<br>  An action a&#7522; is a pair (<b>t</b> &isin; <b>T</b>, 
+ *   state transitions.<br>  An action a<sub>i</sub> is a pair (<b>t</b> &isin; <b>T</b>, 
  *   <b>i</b> &isin; <b>I</b>) that maps a state to another via terminal <b>t</b> on a 
- *   <b>Shift</b> action.<pre>
- *   s<sub>j</sub> = A(<b>t</b>, s<sub>i</sub>)</pre>
- *   <li>&gamma;&#7522; &isin; <b>&Gamma;</b> is the subset &sube; <b>N</b> &times; 
+ *   <b>Shift</b> action.<br><br>
+ *   s<sub>j</sub> = A(<b>t</b>, s<sub>i</sub>)<br><br>
+ *   <li>&gamma;<sub>i</sub> &isin; <b>&Gamma;</b> is the subset &sube; <b>N</b> &times; 
  *   <b>I</b> of {@link GoTo}s.<br>
- *   A GoTo &gamma;&#7522; is a pair (<b>n</b> &isin; <b>N</b>, <b>i</b> &isin; <b>I</b>) that
+ *   A GoTo &gamma;<sub>i</sub> is a pair (<b>n</b> &isin; <b>N</b>, <b>i</b> &isin; <b>I</b>) that
  *   maps a state to another state via non-terminal <b>n</b> on the final state of a 
- *   <b>Reduce</b> action.<pre>
- *   s<sub>j</sub> = &Gamma;(n, s<sub>i</sub>)</pre>
- *   <li>e&#7522; &isin; <b>E</b> is the set of errors that can be emitted by the grammar
+ *   <b>Reduce</b> action.<br><br>
+ *   s<sub>j</sub> = &Gamma;(n, s<sub>i</sub>)<br><br>
+ *   <li>e<sub>i</sub> &isin; <b>E</b> is the set of errors that can be emitted by the grammar
  * </ul>
  * 
  * Additionally, the closure of a dot -- where &chi; &isin; <b>N</b> &cup; <b>T</b> and &beta; 
  * &isin; (<b>N</b> &cup;
- * <b>T</b>)* -- is defined as <pre>
- * <i>closure</i>(<b>n</b>&#7522; &rarr; &alpha; . &chi;&beta;) =
- * 
- *   1. &empty; if &chi; &isin; T or &not;&exist;&chi;&beta;; or
- *   2. {&chi; &rarr; . &delta;; &forall; &chi; &isin; N} | &chi; &rarr; <b>&delta;</b> &isin; <b>R</b>
- * </pre>
+ * <b>T</b>)* -- is defined as<br><br>
+ * <i>closure</i>(<b>n</b><sub>i</sub> &rarr; &alpha; . &chi;&beta;) =<br><br>
+ * <ol>
+ *   <li>&empty; if &chi; &isin; T or &not;&exist;&chi;&beta;; or</li>
+ *   <li>{&chi; &rarr; . &delta;; &forall; &chi; &isin; N} | &chi; &rarr; <b>&delta;</b> &isin; <b>R</b></li>
+ * </ol>
  * <p>
- * For generation purposes <b>i</b>&#7522; is augmented with<br>
+ * For generation purposes <b>i</b><sub>i</sub> is augmented with<br>
  * <b>from</b> &isin; <b>I</b><br>
  * <b>symbol</b> &isin; <b>N</b> &cup; <b>T</b><br>
  * <b>default</b> &isin; <b>A</b><br>
  * <b>review</b> &isin; {<i>true</i>, <i>false</i>}<br>
- * <b>dot</b>&#7522; is a pair (<b>r</b>&#7522; &isin; <b>R</b>, <b>pos</b> &isin; 
- * <b>Int</b> &le; |<b>r</b>&#7522;|), where |<b>r</b>&#7522;| is the number of items in a rule <b>r</b>&#7522;
+ * <b>dot</b><sub>i</sub> is a pair (<b>r</b><sub>i</sub> &isin; <b>R</b>, <b>pos</b> &isin; 
+ * <b>Int</b> &le; |<b>r</b><sub>i</sub>|), where |<b>r</b><sub>i</sub>| is the number of items in a rule <b>r</b><sub>i</sub>
  * <p>
  * @author jaimegarza@gmail.com
  *
@@ -99,17 +99,17 @@ public class State {
    */
   int id;
   /**
-   * The from is the state i&#7522; &isin; <b>I</b> from which this state originates.<p>
-   * A state transition is identified as a map i<sub>j</sub> = A(symbol, i&#7522;) U 
-   * &Gamma;(symbol, i&#7522;).
-   * In this context, i<sub>j</sub> is this state and from is i&#7522;
+   * The from is the state i<sub>i</sub> &isin; <b>I</b> from which this state originates.<p>
+   * A state transition is identified as a map i<sub>j</sub> = A(symbol, i<sub>i</sub>) U 
+   * &Gamma;(symbol, i<sub>i</sub>).
+   * In this context, i<sub>j</sub> is this state and from is i<sub>i</sub>
    */
   int from;
   /**
    * The symbol &isin; <b>T</b>is the grammar symbol that caused the transition
    * to this state.<p>
-   * A state transition is identified as a map i<sub>j</sub> = A(symbol, i&#7522;) U 
-   * &Gamma;(symbol, i&#7522;).
+   * A state transition is identified as a map i<sub>j</sub> = A(symbol, i<sub>i</sub>) U 
+   * &Gamma;(symbol, i<sub>i</sub>).
    * In this context, i<sub>j</sub> is this state
    */
   Symbol symbol;
@@ -196,7 +196,7 @@ public class State {
 
   /**
    * Convenience method to get the id of the originating symbol
-   * @return
+   * @return the id of the symbol
    */
   public int getSymbolId() {
     return symbol == null ? -1 : symbol.getId();

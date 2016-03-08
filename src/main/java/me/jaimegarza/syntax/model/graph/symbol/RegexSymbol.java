@@ -40,14 +40,14 @@ public abstract class RegexSymbol {
   protected final static int HASH_ANY = 2;
 
   /**
-   * Is the symbol an epsilon symbol?
-   * @return
+   * Is the symbol an &epsilon; symbol?
+   * @return true if it is so
    */
 	public abstract boolean isEpsilon();
 
 	/**
 	 * A string representation of this symbol
-	 * @return
+	 * @return a simple representation of the symbol
 	 */
 	public abstract String canonical();
 	

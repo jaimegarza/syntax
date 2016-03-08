@@ -33,11 +33,11 @@ package me.jaimegarza.syntax.model.parser;
  * A parser can be driven by a traditional parsing technique of reading the input stream
  * until the end of string is reached.  This is the parser mode<p>
  * Alternatively, a parser can be called token by token when the need to stop
- * parsing after a token has been managed<p>
+ * parsing after a token has been managed
  * <ul>
- * <li>In the first case we can say that the parser is the master and the scanner is the slave<p>
+ * <li>In the first case we can say that the parser is the master and the scanner is the slave</li>
  * <li>In the second case we can say that the scanner, or the token, is the master and the parsing
- * algorithm is the slave.
+ * algorithm is the slave.</li>
  * </ul>
  * @author jgarza
  *
