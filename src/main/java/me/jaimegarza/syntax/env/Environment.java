@@ -506,6 +506,7 @@ public class Environment {
         } catch (IOException e) {
           throw new CommandLineParseException(e.getMessage());
         }
+        System.out.println(fileName + "-->" + file.getAbsolutePath());
     } else {
       file = new File(fileName);
     }
