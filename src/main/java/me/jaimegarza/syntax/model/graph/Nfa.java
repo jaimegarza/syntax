@@ -29,27 +29,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
-import me.jaimegarza.syntax.util.FormattingPrintStream;
+import me.jaimegarza.syntax.regex.NfaUtil;
 
+/**
+ * Non-finite automaton. A directed graph with epsilon transitions. 
+ * This is constructed in {@link NfaUtil}
+ * @author jgarza
+ *
+ */
 public class Nfa extends DirectedGraph<NfaNode> {
 
+  /**
+   * Create a new empty Nfa node
+   * @return
+   */
   public NfaNode newNode() {
     NfaNode node = new NfaNode(this);
     nodes.add(node);
     return node;
   }
   
-  public void print(FormattingPrintStream out) {
-    out.println("NFA");
-    out.println("==================================================================");
-    
-    for (Node n: nodes) {
-      out.printf("%8d - ", n.getId());
-      for (Transition t: n.getTransitions()) {
-        out.printf("%s ", t.toString());
-      }
-      out.println();
-    }
-  }
-
 }

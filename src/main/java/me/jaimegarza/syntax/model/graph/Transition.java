@@ -31,11 +31,26 @@ package me.jaimegarza.syntax.model.graph;
 
 import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 
+/**
+ * A transition (edge) maps a node to another node. These are
+ * directed transitions
+ * @author jgarza
+ *
+ */
 public class Transition {
+  /** The origin node */
   private Node from;
+  /** The destination node */
   private Node to;
+  /** The transition's symbol */
   private RegexSymbol symbol;
 
+  /**
+   * The default constructor. Transitions also get added to the origin node
+   * @param from the node from which the transition happens
+   * @param to the destination node
+   * @param symbol the symbol causing the transition
+   */
   public Transition(Node from, Node to, RegexSymbol symbol) {
     if (from == null || to == null) {
       throw new IllegalArgumentException("transition's from and to have to be non null");
@@ -76,10 +91,20 @@ public class Transition {
     return symbol.isEpsilon();
   }
 
+  /**
+   * Return a canonical representation of the transition. The
+   * current implementation displays a symbols canonical representation
+   * @return
+   */
   public String canonical() {
     return symbol.canonical();
   }
 
+  /**
+   * Does a character match an input symbol?
+   * @param c the character to check
+   * @return true if it matches
+   */
   public boolean matches(char c) {
     return symbol.matches(c);
   }

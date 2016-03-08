@@ -34,11 +34,24 @@ import java.util.Set;
 
 import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 
+/**
+ * A node for a dfa
+ * @author jgarza
+ *
+ */
 public class DfaNode extends Node {
   private static int sequence = 0;
   
+  /**
+   * closure coming from nfa nodes
+   */
   private Set<NfaNode> closure;
   
+  /**
+   * Constructor including precomputed closure
+   * @param graph the source graph
+   * @param closure the Nfa closure
+   */
   public DfaNode(Dfa graph, Set<NfaNode> closure) {
     super(graph, sequence++);
     this.closure = closure;
@@ -48,6 +61,11 @@ public class DfaNode extends Node {
   public Set<NfaNode> eclosure() {
     return closure;
   }
+  
+  /**
+   * Get all symbols transitioning out given the closure
+   * @return the set of symbols
+   */
 
   public Set<RegexSymbol> getTransitionSymbols() {
     Set<RegexSymbol> set = new HashSet<>();
@@ -62,6 +80,11 @@ public class DfaNode extends Node {
     return set;
   }
 
+  /**
+   * Given a symbol, what nfa nodes are being transitioned to
+   * @param symbol is the symbol being checked
+   * @return the set of nfa nodes
+   */
   public Set<NfaNode> getNfaTransitions(RegexSymbol symbol) {
     Set<NfaNode> set = new HashSet<>();
     for (NfaNode nfaNode : closure) {

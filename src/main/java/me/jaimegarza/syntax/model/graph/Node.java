@@ -32,6 +32,14 @@ package me.jaimegarza.syntax.model.graph;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Abstract class denoting a node in a graph. A graph node is also known in
+ * state diagram theory as a vertex. It contains an id and a set of
+ * transition (or edges.)
+ * 
+ * @author jgarza
+ *
+ */
 public abstract class Node {
   protected int id;
   protected DirectedGraph<? extends Node> graph;
@@ -39,11 +47,21 @@ public abstract class Node {
   protected boolean accept = false;
   protected boolean starting = false;
   
+  /**
+   * Default constructor
+   * @param graph the graph to which this node belongs
+   * @param id the identifier for the node
+   */
   public Node(DirectedGraph<? extends Node> graph, int id) {
     this.id = id;
     this.graph = graph;
   }
   
+  /**
+   * e-closure is defined as the node, plus all other nodes that are
+   * reachable from this node with an epsilon transition, recursivelly.
+   * @return the e-closure
+   */
   public abstract Set<NfaNode> eclosure();
   
   /**
@@ -74,10 +92,18 @@ public abstract class Node {
     this.starting = starting;
   }
 
+  /**
+   * Add one transition (edge) to this node
+   * @param transition is the node transition
+   */
   public void addTransition(Transition transition) {
     transitions.add(transition);
   }
   
+  /**
+   * Remove a transition from this node
+   * @param transition is the node transition
+   */
   public void removeTransition(Transition transition) {
     transitions.remove(transition);
   }

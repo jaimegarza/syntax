@@ -32,9 +32,18 @@ package me.jaimegarza.syntax.model.graph;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Abstract class defining a graph with directed transitions
+ * @author jgarza
+ *
+ * @param <T> is the type of node
+ */
 public abstract class DirectedGraph<T extends Node> {
   protected final List<T> nodes = new LinkedList<>();
   
+  /**
+   * Default empty constructor
+   */
   public DirectedGraph() {
   }
   
@@ -45,6 +54,11 @@ public abstract class DirectedGraph<T extends Node> {
     return nodes;
   }
 
+  /**
+   * Retrieve a node given its index
+   * @param index is the index of the node
+   * @return the node at the given index
+   */
   public T getNode(int index) {
     return nodes.get(index);
   }

@@ -29,8 +29,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
+import me.jaimegarza.syntax.regex.NfaUtil;
+
+/**
+ * A construct is all the graph nodes between a start and an end. Please refer
+ * to {@link NfaUtil} to see how these constructs get created. After a set of generation, 
+ * the construct is a whole Nfa, and the start node can be assumed to be a starting node,
+ * and the end node can be considered the accept state.
+ * 
+ * @author jgarza
+ *
+ */
 public class Construct {
+  /** the beginning of the construct */
   private Node start;
+  /** the last node in the construct */
   private Node end;
 
   public Construct(Node start, Node end) {

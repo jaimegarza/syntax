@@ -32,14 +32,27 @@ package me.jaimegarza.syntax.model.graph;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A node for a dfa
+ * @author jgarza
+ *
+ */
 public class NfaNode extends Node {
 
   private static int sequence = 0;
 
+  /**
+   * Default constructor
+   * @param graph the NFA to which this node belongs to
+   */
   public NfaNode(Nfa graph) {
     super(graph, sequence++);
   }
   
+  /**
+   * Compute the e-closure of the node by traversing all epsilon transitions
+   * @param closure a set where the closures are placed.
+   */
   protected void eclosure(Set<NfaNode> closure) {
     closure.add(this);
     for (Transition t: transitions) {

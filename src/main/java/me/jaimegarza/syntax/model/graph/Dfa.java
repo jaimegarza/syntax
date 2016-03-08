@@ -33,16 +33,31 @@ import java.util.HashSet;
 import java.util.Set;
 
 import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
-import me.jaimegarza.syntax.util.FormattingPrintStream;
 
+/**
+ * Deterministic finite automaton. A directed graph without
+ * epsilon transitions, with cycles, and multiple final states
+ * @author jgarza
+ */
 public class Dfa extends DirectedGraph<DfaNode> {
 
+  /**
+   * Create a dfa node with the given closure. The closure is usually
+   * obtained from a Nfa node's {@link Node#eclosure()} method.
+   * @param closure is the closure coming from a NFA
+   * @return the new node
+   */
   public DfaNode newNode(Set<NfaNode> closure) {
     DfaNode node = new DfaNode(this, closure);
     nodes.add(node);
     return node;
   }
   
+  /**
+   * Locate a node in the dfa by examining each node's eclosure
+   * @param closure is the closure to be checked against all nodes
+   * @return the node, or null if not existent.
+   */
   protected DfaNode findNodeByClosure(Set<NfaNode> closure) {
     for (DfaNode node: nodes) {
       if (node.eclosure().equals(closure)) {
@@ -52,6 +67,12 @@ public class Dfa extends DirectedGraph<DfaNode> {
     return null;
   }
   
+  /**
+   * Is a given closure final? We know that a closure is final if any
+   * of the nfa nodes is an accept node
+   * @param closure is a closure of nodes to check
+   * @return true if any node in the closure is an accepting node
+   */
   protected boolean isClosureFinal(Set<NfaNode> closure) {
     for (NfaNode n : closure) {
       if (n.isAccept()) {
@@ -61,6 +82,18 @@ public class Dfa extends DirectedGraph<DfaNode> {
     return false;
   }
    
+  /**
+   * Generate a DFA out of a NFA. The steps are as follows:
+   * 
+   * <ol>
+   * <li>Create a new DfaNode from the initial NFA starting state. Compute the closure
+   * from the initial state.</li>
+   * <li>Iterate all the nodes and all their symbol transitions to create new closures.
+   * If the closures already exist in the DFA, use the found state with such closure,
+   * otherwise create a new DFA state with the given closure.</li>
+   * </ol> 
+   * @param graph
+   */
   public void generateFromNfa(Nfa graph) {
     // Create initial Dfa state
     for (NfaNode node: graph.getNodes()) {
@@ -94,18 +127,4 @@ public class Dfa extends DirectedGraph<DfaNode> {
     }    
   }
   
-  public void print(FormattingPrintStream out) {
-    out.println("DFA");
-    out.println("==================================================================");
-    
-    for (DfaNode n: nodes) {
-      out.printf("%8d - ", n.getId());
-      for (Transition t: n.getTransitions()) {
-        out.printf("%s ", t.toString());
-      }
-      out.println();
-    }
-  }
-
-
 }
