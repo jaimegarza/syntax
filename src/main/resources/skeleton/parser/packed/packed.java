@@ -34,6 +34,7 @@
 
   /**
    * Obtain the verbose flag
+   * @return true if verbose
    */
   public boolean isVerbose() {
     return this.verbose;
@@ -43,6 +44,7 @@
    * This routine maps a state and a token to a new state on the action table
    * @param state is the current state
    * @param sym is the given symbol to find (if not found, defa will be used
+   * @return the parsing action
    */
   private int parserAction(int state, int sym) {
     int position = parsingTable[state].position;
@@ -62,7 +64,8 @@
    * This routine maps a origin state to a destination state
    * using the symbol position
    * @param state is the current state
-   *@param position is the position in the goto table
+   * @param position is the position in the goto table
+   * @return the next state
    */
   private int parserGoto(int state, int position) {
     // Search in gotos if there is a state transition
@@ -103,6 +106,7 @@
    * Does a shift operation.  Puts a new state on the top of the stack
    * @param sym is the symbol causing the shift
    * @param state is the current state
+   * @return 1 if OK
    */
   private int parserShift(int sym, int state) {
     if(stackTop >= STACK_DEPTH-1) {
@@ -123,6 +127,7 @@
    * Recognizes a rule an removes all its elements from the stack
    * @param sym is the symbol causing the shift
    * @param rule is the number of rule being used
+   * @return 1 if OK
    */
   int parserReduce(int sym, int rule) {
     if (isVerbose()) {
@@ -143,6 +148,7 @@
 
   /**
    * Get the error message for a state
+   * @return the error message
    */
   private String getErrorMessage() {
     int msgIndex = parsingTable[state].msg;
@@ -157,6 +163,7 @@
    * Recover from a syntax error removing stack states/symbols, and removing
    * input tokens.  The array StxRecover contains the tokens that bound
    * the error
+   * @return 1 if OK
    */
   private int parserRecover() {
     int i, acc;
@@ -210,6 +217,7 @@
 
   /**
    * Main parser routine, uses Shift, Reduce and Recover
+   * @return 1 if parsed 
    */
   public int parse() {
     int action;
@@ -263,7 +271,7 @@
   }
 
   /**
-   * @returns the current lexical value
+   * @return the current lexical value
    */
   public StackElement getResult() {
     return stack[stackTop];
@@ -271,7 +279,7 @@
 
   /**
    * @param token is the number of the token
-   * @returns the name of a token, given the token number
+   * @return the name of a token, given the token number
    */
   public String getTokenName(int token) {
     for (int i = 0; i < tokenDefs.length; i++) {
@@ -288,7 +296,7 @@
 
   /**
    * @param token is the number of the token
-   * @returns the name of a token, given the token number
+   * @return the name of a token, given the token number
    */
   public int getTokenIndex(int token) {
     for (int i = 0; i < tokenDefs.length; i++) {
