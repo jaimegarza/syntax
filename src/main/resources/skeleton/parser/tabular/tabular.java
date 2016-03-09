@@ -297,7 +297,7 @@
    */
   public void dumpTokens() {
     lexicalToken = parserElement(true);
-    lexicalValue == null;
+    lexicalValue = null;
     while (lexicalToken != 0) {
       System.out.println("Token: " + getTokenName(lexicalToken) + "(" + lexicalToken + "):" + (lexicalValue == null? "null": lexicalValue.toString()));
       lexicalValue = null;

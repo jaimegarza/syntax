@@ -481,10 +481,11 @@ Symbol        :  TOKEN                       = {
   /**
    * report an error
    * 
-   * @param StxState state of the error
-   * @param StxSym causing token
-   * @param pStxStack the position in the stack when the error happened
-   * @return
+   * @param state the state of the error
+   * @param sym causing token
+   * @param stackTop the position in the stack when the error happened
+   * @param errorMessage is the suggested message
+   * @return always zero
    */
   protected int parserError(int state, int sym, int stackTop, String errorMessage) {
     if (errorMessage != null) {
@@ -502,6 +503,7 @@ Symbol        :  TOKEN                       = {
   
   /**
    * Get a symbol while in a character class
+   * @return the next token
    */
   public int getCharacterClassSymbol() {
 
@@ -545,6 +547,7 @@ Symbol        :  TOKEN                       = {
   /**
    * Get the next character
    * @param init indicates if this is the first call
+   * @return the next character in the stream
    */
   public char getNextChar(boolean init) {
     return getCharacter();
