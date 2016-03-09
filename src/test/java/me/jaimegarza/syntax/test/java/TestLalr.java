@@ -72,7 +72,7 @@ public class TestLalr extends AbstractGenerationBase {
     Object o = parse.invoke(parser);
     Assert.assertTrue(o instanceof Integer);
     int rc = (int) o;
-    Assert.assertEquals(rc, 1, "Parse did not suceed");
+    Assert.assertEquals(rc, 1, "Parse did not succeed");
     o = getExpr.invoke(parser);
     Assert.assertTrue(o instanceof String);
     String s = (String) o;
