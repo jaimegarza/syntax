@@ -55,9 +55,4 @@ public interface Lexer {
    */
   int getNormalSymbol();
   
-  /**
-   * Regex tokens.  They are surrounded by '/'
-   * @return the next regex symbol
-   */
-  int getRegexSymbol();
 }

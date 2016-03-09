@@ -554,7 +554,6 @@ Symbol        :  TOKEN                       = {
     return getCharacter();
   }
 
-  @Override
   public int getRegexSymbol() {
     char c2;
     
