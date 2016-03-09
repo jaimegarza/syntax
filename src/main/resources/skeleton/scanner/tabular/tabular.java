@@ -66,22 +66,28 @@
   private void parserPrintStack() {
     int i;
 
-    System.out.print("States: [");
+    System.out.println("States: [");
     for(i=stackTop; i>=0; i--) {
-      System.out.print("" + i + " " + stateStack[i]);
+      System.out.print("  " + stateStack[i]);
       if (i == stackTop) {
         System.out.println("<--Top Of Stack (" + stackTop + ")");
       }
-      System.out.println();
+      else {
+        System.out.println();
+      }
     }
-    System.out.print("Values: [");
+    System.out.println("]");
+    System.out.println("Values: [");
     for(i=stackTop;i >=0; i--) {
-      System.out.print("" + i + " " + (stack[i] != null ? stack[i].toString() : "(nothing)"));
+      System.out.print("  " + (stack[i] != null ? stack[i].toString() : "(null)"));
       if (i == stackTop) {
         System.out.println("<--Top Of Stack (" + stackTop + ")");
       }
-      System.out.println();
+      else {
+        System.out.println();
+      }
     }
+    System.out.println("]");
   }
 
   /**

@@ -1,27 +1,178 @@
 %{
 public class TestParser {
+
+  private boolean isSlash = false;
+
 %}
 
-%token TOKEN
-%token CHAR
+%class {
+  char c;
+  String s;
+    
+  public StackElement () {
+    this.c = 0;
+    this.s = "";
+  }
+    
+  public String toString() {
+    return "c='" + c + "'" + ",s=\"" + s + "\"";
+  }
+  
+  public void setChar(char c) {
+    this.c = c;
+  }
+
+}
+
+%lexer = {
+  while ($c <= ' ' && $c > '\0') {
+    $+;
+  }
+  
+  if ($c == '/') {
+    $+;
+    isSlash = true;
+    return '/';
+  }
+
+}
+
+%token <s> TOKEN = {
+  if (isSlash) {
+    isSlash = false;
+    return TOKEN;
+  }
+}
+
+%token <c> CHAR = {
+  if (Character.isLetterOrDigit($c)) {
+    $v.setChar($c);
+    $+;
+    return CHAR;
+  }
+}
+
+%token <c> ANY = {
+  if ($c == '.') {
+    $+;
+    return ANY;
+  }
+
+}
+
+%lexer = {
+
+  if ($c == '(') {
+    $+;
+    return '(';
+  }
+
+  if ($c == ')') {
+    $+;
+    return ')';
+  }
+
+  if ($c == '|') {
+    $+;
+    return '|';
+  }
+
+  if ($c == '*') {
+    $+;
+    return '*';
+  }
+
+  if ($c == '+') {
+    $+;
+    return '+';
+  }
+
+  if ($c == '?') {
+    $+;
+    return '?';
+  }
+
+}
+
+%type <s> Construct;
+%type <s> RegExp;
+%type <s> Concatenation;
+%type <s> UnaryRegex;
+%type <s> BasicElement;
 
 %start S;
 
 %name S : "anything";
 %%
 
-S    : Regex
-     ;
+S       : Construct
+        ;
      
-Regex: Slash Base Slash
-     ;
+Construct     : Slash RegExp Slash = $$ = $RegExp;
+              ;
      
-Slash: "/" TOKEN
-     ;
+RegExp        : RegExp '|'  Concatenation    = $$ += "|" + $Concatenation;
+              | Concatenation                = $$ = $Concatenation;
+              ;
+              
+Concatenation : Concatenation UnaryRegex     = $$ += $UnaryRegex;
+              | UnaryRegex                   = $$ = $UnaryRegex;
+              ;
+         
+UnaryRegex    : BasicElement '*'             = $$ = $BasicElement + "*";
+              | BasicElement '+'             = $$ = $BasicElement + "+";
+              | BasicElement '?'             = $$ = $BasicElement + "?";
+              | BasicElement                 = $$ = $BasicElement;
+              ;
+              
+BasicElement  : '(' RegExp ')'               = $$ = "(" + $RegExp + ")";
+              | CHAR                         = $$ = "" + $CHAR;
+              | ANY                          = $$ = ".";
+              ;
+              
+Slash         : "/" TOKEN
+              ;
      
-Base : CHAR
-     | '(' Regex ')'
-     ;
-
 %%
+// END OF GRAMMAR
+
+  int charNum = 0;
+  String expression = "/(abc)d/";
+  
+  private char getNextChar(boolean initialize) {
+    if (initialize) {
+      charNum = 0;
+    }
+    
+    if (charNum < expression.length()) {
+      return expression.charAt(charNum++);
+    }
+    return EOS;
+  }
+
+
+  private int parserError(int state, int token, int top, String message) {
+    System.out.println("An error occurred in state " + state + " with token " + token + " on the position " + top);
+    System.out.println(message);
+    parserPrintStack();
+    return ERROR_RE_ATTEMPT;
+  }
+  
+  private String toString(StackElement value) {
+    if(value == null) {
+      return "";
+    } else {
+      return value.toString();
+    }
+  }
+  
+  public String getExpr() {
+    StackElement result = getResult();
+    if (result != null) {
+      return result.s;
+    } else {
+      return "";
+    }
+  }
+  
 }
