@@ -441,6 +441,7 @@ Symbol        :  TOKEN                       = {
   /**
    * Get next token
    * 
+   * @param init is set to true in the first call
    * @return the next token, changing mode as needed
    */
   protected int parserElement(boolean init) {
