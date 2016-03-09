@@ -255,7 +255,7 @@ public class Dot {
 
     try {
       Dot rm = (Dot) obj;
-      return RuleItem.equals(item,  rm.item) && rule.equals(rm.rule);
+      return RuleItem.equals(item,  rm.item) && rule.equals(rm.rule) && lookahead.equals(rm.lookahead);
     } catch (NullPointerException unused) {
       return false;
     } catch (ClassCastException unused) {
