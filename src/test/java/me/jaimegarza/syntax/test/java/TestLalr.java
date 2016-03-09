@@ -76,7 +76,7 @@ public class TestLalr extends AbstractGenerationBase {
     o = getExpr.invoke(parser);
     Assert.assertTrue(o instanceof String);
     String s = (String) o;
-    Assert.assertEquals(s, "abcd", "string does not match");
+    Assert.assertEquals(s, "(abc)d", "string does not match");
   }
 
 
