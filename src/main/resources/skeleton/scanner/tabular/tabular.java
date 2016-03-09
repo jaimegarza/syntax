@@ -68,7 +68,7 @@
 
     System.out.print("States: [");
     for(i=stackTop; i>=0; i--) {
-      System.out.printf("%04d %s", i, stateStack[i]);
+      System.out.print("" + i + " " + stateStack[i]);
       if (i == stackTop) {
         System.out.println("<--Top Of Stack (" + stackTop + ")");
       }
@@ -76,7 +76,7 @@
     }
     System.out.print("Values: [");
     for(i=stackTop;i >=0; i--) {
-      System.out.printf("%04d %s", i, (stack[i] != null ? stack[i].toString() : "(nothing)"));
+      System.out.print("" + i + " " + (stack[i] != null ? stack[i].toString() : "(nothing)"));
       if (i == stackTop) {
         System.out.println("<--Top Of Stack (" + stackTop + ")");
       }
@@ -311,7 +311,7 @@
    */
   public void dumpTokens() {
     lexicalToken = parserElement(true);
-    lexicalValue == null;
+    lexicalValue = null;
     while (lexicalToken != 0) {
       System.out.println("Token: " + getTokenName(lexicalToken) + "(" + lexicalToken + "):" + (lexicalValue == null? "null": lexicalValue.toString()));
       lexicalValue = null;
