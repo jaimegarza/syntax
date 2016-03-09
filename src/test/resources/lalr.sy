@@ -1,0 +1,27 @@
+%{
+public class TestParser {
+%}
+
+%token TOKEN
+%token CHAR
+
+%start S;
+
+%name S : "anything";
+%%
+
+S    : Regex
+     ;
+     
+Regex: Slash Base Slash
+     ;
+     
+Slash: "/" TOKEN
+     ;
+     
+Base : CHAR
+     | '(' Regex ')'
+     ;
+
+%%
+}
