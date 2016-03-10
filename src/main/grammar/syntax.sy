@@ -46,6 +46,7 @@ import me.jaimegarza.syntax.model.parser.Terminal;
 import me.jaimegarza.syntax.model.parser.Type;
 import me.jaimegarza.syntax.model.graph.Construct;
 import me.jaimegarza.syntax.model.graph.Nfa;
+import me.jaimegarza.syntax.model.graph.Dfa;
 import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.regex.RegexUtil;
@@ -360,7 +361,10 @@ TokenName     : ':' TOKEN                    = $$ = $2;
               ;
 
 LexicAction   : Equals TOKEN                 = $$ = null;
-              | RStart RegExp REnd %prec '=' = NfaUtil.finalize(currentNfa, $RegExp);
+              | RStart RegExp REnd %prec '=' = {
+                                                 Dfa dfa = NfaUtil.finalize(currentNfa, $RegExp);
+                                                 runtimeData.addRegularExpression(dfa);
+                                               }
               | RStart RegExp REnd Equals    = NfaUtil.finalize(currentNfa, $RegExp);
               | %prec '='                    = $<>$ = new StackElement(0, -1, false, "", '\0');
               ;

@@ -32,6 +32,7 @@ package me.jaimegarza.syntax.env;
 import java.util.LinkedList;
 import java.util.List;
 
+import me.jaimegarza.syntax.model.graph.Dfa;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
 import me.jaimegarza.syntax.model.parser.Rule;
 import me.jaimegarza.syntax.model.parser.RuleItem;
@@ -80,6 +81,10 @@ public class RuntimeData {
    * List of error groups
    */
   private List<TokenGroup> errorGroups = new LinkedList<TokenGroup>();
+  /**
+   * The list of all DFAs for the regular expressions
+   */
+  private List<Dfa> regularExpressions = new LinkedList<>();
   /**
    * List of states
    */
@@ -493,6 +498,28 @@ public class RuntimeData {
    */
   public List<TokenGroup> getErrorGroups() {
     return errorGroups;
+  }
+
+  /**
+   * @return the regularExpressions
+   */
+  public List<Dfa> getRegularExpressions() {
+    return regularExpressions;
+  }
+
+  /**
+   * @param regularExpressions the regularExpressions to set
+   */
+  public void setRegularExpressions(List<Dfa> regularExpressions) {
+    this.regularExpressions = regularExpressions;
+  }
+
+  /**
+   * Add a regular expression DFA
+   * @param dfa is the DFA to add
+   */
+  public void addRegularExpression(Dfa dfa) {
+    regularExpressions.add(dfa);
   }
 
 }
