@@ -60,7 +60,25 @@ public class Character extends RegexSymbol {
   public boolean matches(char c) {
     return character == c;
   }
+  
+  @Override
+  public int code() {
+    return CHAR_CODE;
+  }
+  
+  @Override
+  public int sizeof() {
+    return 3; // the code + the character twice
+  }
 
+  @Override
+  public int[] getCodeArray() {
+    int[] rc = new int[2];
+    rc[0] = character;
+    rc[1] = character;
+    return rc;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) {

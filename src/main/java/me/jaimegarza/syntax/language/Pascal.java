@@ -763,4 +763,32 @@ public class Pascal extends BaseLanguageSupport {
     }
     environment.output.println();
   }
+  @Override
+  public void generateEdgeHeader(int size) {
+    environment.output.printf("\nConst\n  EDGES = %d;\n", size);
+    environment.output.printf("\n  StxEdge : array [0..EDGES-1] of INTEGER = (\n", runtime.getNonTerminals().size());
+  }
+
+  @Override
+  public void generateVertexHeader(int size) {
+    environment.include.printf("\nConst\n  VERTICES = %d\n", size);
+    environment.output.printf("\n  StxVertices : array [0..VERTICES-1] of INTEGER = (\n", runtime.getNonTerminals().size());
+  }
+  
+  @Override
+  public void generateIntArrayRow(int i, String comment, int index, int maxSize) {
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("%5d%s%s\n", i, index != maxSize ? "," : ");", comment == null ? "": " (* " + comment + " *)");
+  }
+
+  @Override
+  public void generateIntArrayComment(String comment) {
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("%s\n",  comment == null ? "": "(* " + comment + " *)");
+  }
+
+  @Override
+  public void generateIntArrayFooter() {
+  }
+
 }

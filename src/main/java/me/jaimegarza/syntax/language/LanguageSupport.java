@@ -322,4 +322,36 @@ public interface LanguageSupport {
    */
   void generateLexerModeCase(String mode, int i);
 
+  /**
+   * Generate the code for the edge table beginning
+   * @param tableSize is the size of the table
+   */
+  void generateEdgeHeader(int tableSize);
+
+  /**
+   * Generate the vertex header
+   * @param size is the number of nodes
+   */
+
+  void generateVertexHeader(int size);
+  /**
+   * Output a row in an integer array
+   * @param i is the integer to output
+   * @param comment, a comment to add, if any
+   * @param index is the row of this item
+   * @param maxRows is the size of the array. Used to determine commas, etc.
+   */
+  void generateIntArrayRow(int i, String comment, int index, int maxRows);
+  
+  /**
+   * Output a comment in an array
+   * @param comment is the comment to output
+   */
+  void generateIntArrayComment(String comment);
+
+  /** 
+   * Output the end of an int array
+   */
+  public void generateIntArrayFooter();
+
 }

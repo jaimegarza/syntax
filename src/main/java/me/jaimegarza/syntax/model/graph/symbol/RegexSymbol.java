@@ -38,6 +38,11 @@ public abstract class RegexSymbol {
   
   protected final static int HASH_EPSILON = 1;
   protected final static int HASH_ANY = 2;
+  
+  protected final static int ANY_CODE = 0;
+  protected final static int CHAR_CODE = 1;
+  protected final static int CHARACTER_CLASS_CODE = 2;
+  protected final static int EPSILON_CODE = 3;
 
   /**
    * Is the symbol an &epsilon; symbol?
@@ -57,5 +62,22 @@ public abstract class RegexSymbol {
 	 * @return true if it matches
 	 */
 	public abstract boolean matches(char c);
+	
+	/**
+	 * When written to the output stream, each symbol has a separate code
+	 * @return the code for this symbol
+	 */
+	public abstract int code();
+
+	/**
+	 * What is the size of this object in the edge table?
+	 * @return the number of integer objects
+	 */
+  public abstract int sizeof();
+
+  /**
+   * @return the array of strings to be written to the edge table
+   */
+  public abstract int[] getCodeArray();
 
 }

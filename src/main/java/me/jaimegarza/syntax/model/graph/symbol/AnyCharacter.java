@@ -52,6 +52,21 @@ public class AnyCharacter extends RegexSymbol {
   }
   
   @Override
+  public int code() {
+    return ANY_CODE;
+  }
+  
+  @Override 
+  public int sizeof() {
+    return 1;
+  }
+  
+  @Override
+  public int[] getCodeArray() {
+    return new int[0];
+  }
+  
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

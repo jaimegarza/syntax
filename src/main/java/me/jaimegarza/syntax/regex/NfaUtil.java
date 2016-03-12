@@ -29,8 +29,11 @@
  */
 package me.jaimegarza.syntax.regex;
 
+import java.util.List;
+
 import me.jaimegarza.syntax.model.graph.Construct;
 import me.jaimegarza.syntax.model.graph.Dfa;
+import me.jaimegarza.syntax.model.graph.DfaNode;
 import me.jaimegarza.syntax.model.graph.Nfa;
 import me.jaimegarza.syntax.model.graph.Node;
 import me.jaimegarza.syntax.model.graph.Transition;
@@ -217,6 +220,10 @@ public class NfaUtil {
     dfa.generateFromNfa(graph);
     System.out.println(graph);
     System.out.println(dfa);
+    for (DfaNode node : dfa.getNodes()) {
+      List<Transition> code = node.getCodeTransitions();
+      System.out.println(code);
+    }
     return dfa;
   }
   

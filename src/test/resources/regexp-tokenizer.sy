@@ -1,9 +1,10 @@
-%token D /(a)/
- %token F /.?x+y*(a|b)*/
-%token A /_?[A-Za-z][A-Za-z0-9-]*/
-%token B /[]]/
-%token C /[-]/
-%token E /[]-]/
+%token A /a(.|.|b)c/
+%token B /(a)/
+%token C /.?x+y*(a|b)*/
+%token D /_?[A-Za-z][A-Za-z0-9-]*/
+%token E /[]]/
+%token F /[-]/
+%token G /[]-]/
 
 %start S;
 

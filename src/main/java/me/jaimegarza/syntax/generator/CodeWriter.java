@@ -33,9 +33,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.exception.OutputException;
+import me.jaimegarza.syntax.model.graph.Dfa;
+import me.jaimegarza.syntax.model.graph.DfaNode;
+import me.jaimegarza.syntax.model.graph.Transition;
+import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
 import me.jaimegarza.syntax.model.parser.Action;
 import me.jaimegarza.syntax.model.parser.GoTo;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
@@ -223,12 +228,68 @@ public class CodeWriter extends AbstractPhase {
     environment.report.println();
   }
   
+  private void printEdges() {
+    if (runtimeData.getRegularExpressions().isEmpty()) {
+      return;
+    }
+
+    int tableSize = 0;
+    int numberOfNodes = 0;
+    for (Dfa dfa: runtimeData.getRegularExpressions()) {
+      for (DfaNode node: dfa.getNodes()) {
+        numberOfNodes++;
+        tableSize += node.sizeof();
+      }
+    }
+
+    environment.language.generateEdgeHeader(tableSize);
+    int edgeIndex = 0;
+    for (Dfa dfa: runtimeData.getRegularExpressions()) {
+      environment.language.generateIntArrayComment("start regexp : " +  dfa.toString());
+      for (DfaNode node: dfa.getNodes()) {
+        List<Transition> codeTransitions = node.getCodeTransitions();
+        node.setEdgeIndex(edgeIndex);
+        environment.language.generateIntArrayRow(codeTransitions.size(), "" + codeTransitions.size() + " transitions", edgeIndex++, tableSize);
+        for (Transition transition: codeTransitions) {
+          int sign = 1;
+          int size = transition.code();
+          if (transition.getSymbol() instanceof CharacterClass && 
+            ((CharacterClass) transition.getSymbol()).isNegate()) {
+            sign = -1;
+          }
+          environment.language.generateIntArrayRow(sign * size, transition.toString(), edgeIndex++, tableSize);
+          int [] code = transition.getCodeArray();
+          for (int i = 0; i < code.length; i++) {
+            environment.language.generateIntArrayRow(code[i], "" + (char)code[i], edgeIndex++, tableSize);
+          }
+        }
+      }
+    }
+    environment.language.generateIntArrayFooter();
+
+    environment.language.generateVertexHeader(numberOfNodes);
+    int vertexIndex = 0;
+    for (Dfa dfa: runtimeData.getRegularExpressions()) {
+      for (DfaNode node: dfa.getNodes()) {
+        int index = node.getEdgeIndex();
+        if (node.isAccept()) {
+          index = -index;
+        }
+        environment.language.generateIntArrayRow(index, node.toString(), vertexIndex++, numberOfNodes);
+      }
+    }
+    environment.language.generateIntArrayFooter();
+  }
+  
   /**
    * Execute all the elements of this phase
    * @throws OutputException on error
    */
   public void execute() throws OutputException {
     try {
+      // Regular Expressions
+      printEdges();
+      
       printHeader();
       if (environment.isPacked() == false) {
         for (int i = 0; i < runtimeData.getStates().length; i++) {

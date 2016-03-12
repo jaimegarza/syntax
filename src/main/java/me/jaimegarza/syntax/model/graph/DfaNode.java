@@ -46,6 +46,12 @@ public class DfaNode extends Node {
    * &epsilon;-closure coming from nfa nodes
    */
   private Set<NfaNode> closure;
+
+  /**
+   * When writing to the output code, where in the edge
+   * table does this node transitions start.
+   */
+  private int edgeIndex;
   
   /**
    * Constructor including precomputed &epsilon;-closure
@@ -98,6 +104,17 @@ public class DfaNode extends Node {
     return set;
   }
   
+  /**
+   * Return the size of this node in the table
+   */
+  public int sizeof() {
+    int tableSize = 0;
+    for (Transition t: getCodeTransitions()) {
+      tableSize += t.sizeof();
+    }
+    return tableSize + 1; // one count number
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -117,5 +134,20 @@ public class DfaNode extends Node {
   @Override
   public int hashCode() {
     return Integer.hashCode(id);
+  }
+
+  /**
+   * Setter for the edge index
+   * @param edgeIndex is the index of the edge
+   */
+  public void setEdgeIndex(int edgeIndex) {
+    this.edgeIndex = edgeIndex;
+  }
+
+  /**
+   * @return the edgeIndex
+   */
+  public int getEdgeIndex() {
+    return edgeIndex;
   }
 }

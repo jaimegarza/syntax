@@ -127,7 +127,27 @@ public class CharacterClass extends RegexSymbol {
   public String canonical() {
     return "[" + toString() + "]";
   }
+  
+  @Override
+  public int code() {
+    return ranges.size();
+  }
 
+  @Override
+  public int sizeof() {
+    return 1 + 2 * ranges.size(); // the code, plus 2 integers per range.
+  }
+
+  @Override
+  public int[] getCodeArray() {
+    int[] rc = new int[ranges.size()*2];
+    int i = 0;
+    for (CharacterRange range: ranges) {
+      rc[i++] = range.getFrom();
+      rc[i++] = range.getTo();
+    }
+    return rc;
+  }
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -138,6 +158,10 @@ public class CharacterClass extends RegexSymbol {
       sb.append(r);
     }
     return sb.toString();
+  }
+
+  public boolean isNegate() {
+    return negate;
   }
 
 }

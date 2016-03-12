@@ -40,6 +40,7 @@ import java.util.List;
  */
 public abstract class DirectedGraph<T extends Node> {
   protected final List<T> nodes = new LinkedList<>();
+  protected String regex = null;
   
   /**
    * Default empty constructor
@@ -65,7 +66,21 @@ public abstract class DirectedGraph<T extends Node> {
 
   @Override
   public String toString() {
-    return "DirectedGraph [nodes=" + nodes + "]";
+    return getClass().getSimpleName() + "[nodes=" + nodes + "]";
+  }
+
+  /**
+   * @return the regex
+   */
+  public String getRegex() {
+    return regex;
+  }
+
+  /**
+   * @param regex the regex to set
+   */
+  public void setRegex(String regex) {
+    this.regex = regex;
   }
 
 }

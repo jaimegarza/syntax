@@ -52,6 +52,21 @@ public class Epsilon extends RegexSymbol {
   }
 
   @Override
+  public int code() {
+    return EPSILON_CODE;
+  }
+
+  @Override
+  public int sizeof() {
+    return 0; // It should not be in the tables
+  }
+
+  @Override
+  public int[] getCodeArray() {
+    return new int[0];
+  }
+  
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
+import me.jaimegarza.syntax.model.graph.symbol.AnyCharacter;
 import me.jaimegarza.syntax.model.graph.symbol.RegexSymbol;
 
 /**
@@ -90,6 +91,13 @@ public class Transition {
   public boolean isEpsilon() {
     return symbol.isEpsilon();
   }
+  
+  /**
+   * @return true if the transition is of <ANY> type
+   */
+  public boolean isAny() {
+    return symbol instanceof AnyCharacter;
+  }
 
   /**
    * Return a canonical representation of the transition. The
@@ -107,6 +115,22 @@ public class Transition {
    */
   public boolean matches(char c) {
     return symbol.matches(c);
+  }
+  
+  /**
+   * Determine the code for a given transition.
+   * The code is determined by the symbol
+   */
+  public int code() {
+    return symbol.code();
+  }
+  
+  /**
+   * What is the size of this transition in the table. Uses
+   * the symbol + 1 for the node id
+   */
+  public  int sizeof() {
+    return symbol.sizeof();
   }
 
   @Override
@@ -135,9 +159,14 @@ public class Transition {
     hash = hash * 31 + (symbol == null ? 0: symbol.hashCode());
     return hash;
   }
+  
   @Override
   public String toString() {
     return from.getId() + "(" + symbol.canonical() + ")->" + to.getId();
+  }
+
+  public int[] getCodeArray() {
+    return symbol.getCodeArray();
   }
 
 }

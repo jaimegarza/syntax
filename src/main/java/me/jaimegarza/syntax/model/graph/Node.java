@@ -30,7 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package me.jaimegarza.syntax.model.graph;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Abstract class denoting a node in a graph. A graph node is also known in
@@ -106,6 +108,53 @@ public abstract class Node {
    */
   public void removeTransition(Transition transition) {
     transitions.remove(transition);
+  }
+  
+  /**
+   * Obtain a list of transitions for writing to the generated code
+   */
+  public List<Transition> getCodeTransitions() {
+    // decided using java 8. Java 7, 6 below
+    List<Transition> codeTransitions = transitions.stream().sorted((a,b) -> a.code() - b.code()).collect(Collectors.toList());
+    boolean any = transitions.stream().filter(t->t.isAny()).count() > 0;
+    if (any) {
+      codeTransitions = codeTransitions.stream().filter(t->t.isAny()).limit(1).collect(Collectors.toList());
+    }
+    /*
+    List<Transition> codeTransitions = CollectionUtils.asSortedList(transitions, new Comparator<Transition>() {
+
+      @Override
+      public int compare(Transition a, Transition b) {
+        return a.code() - b.code();
+      }
+      
+    });
+    
+    boolean hasAny = false;
+    for (Transition t: transitions) {
+      if (t.isAny()) {
+        hasAny = true;
+        break;
+      }
+    }
+    
+    if (hasAny) {
+      boolean firstAny = true;
+      for (int i = codeTransitions.size() - 1; i>=0; i--) {
+        Transition t = codeTransitions.get(i);
+        if (t.isAny()) {
+          if (firstAny) {
+            firstAny = false;
+          }
+          else {
+            codeTransitions.remove(i);
+          }
+        } else {
+          codeTransitions.remove(i);
+        }
+      }
+    }*/
+    return codeTransitions;
   }
 
   /**

@@ -548,4 +548,36 @@ public class C extends BaseLanguageSupport {
     }
     //}
   }
+
+  @Override
+  public void generateEdgeHeader(int size) {
+    environment.include.printf("#define EDGES %d\n", size);
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("int StxEdges[EDGES] = {\n", runtime.getNonTerminals().size());
+  }
+
+  @Override
+  public void generateVertexHeader(int size) {
+    environment.include.printf("#define VERTICES %d\n", size);
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("int StxVertices[VERTICES] = {\n", runtime.getNonTerminals().size());
+  }
+  
+  @Override
+  public void generateIntArrayRow(int i, String comment, int index, int maxSize) {
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("%5d%c%s\n", i, index != maxSize ? ',' : ' ', comment == null ? "": " // " + comment);
+  }
+
+  @Override
+  public void generateIntArrayComment(String comment) {
+    indent(environment.output, environment.getIndent());
+    environment.output.printf("%s\n",  comment == null ? "": "// " + comment);
+  }
+
+  @Override
+  public void generateIntArrayFooter() {
+    indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("};\n\n");
+  }
 }
