@@ -99,7 +99,8 @@ public class Dfa extends DirectedGraph<DfaNode> {
     for (NfaNode node: graph.getNodes()) {
       if (node.isStarting()) {
         Set<NfaNode> closure = node.eclosure();
-        newNode(closure);
+        DfaNode newNode = newNode(closure);
+        newNode.setStarting(true);
         break;
       }
     }
@@ -125,6 +126,19 @@ public class Dfa extends DirectedGraph<DfaNode> {
         new Transition(dfaFromNode, dfaToNode, symbol);
       }
     }    
+  }
+  
+  /**
+   * Get the starting node
+   * @return the starting dfa node
+   */
+  public DfaNode getStart() {
+    for (DfaNode n : nodes) {
+      if (n.isStarting()) {
+        return n;
+      }
+    }
+    return null;
   }
   
 }

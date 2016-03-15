@@ -224,9 +224,10 @@ public interface LanguageSupport {
    * Emit the code for the lexical part of the grammar
    * @param output is the stream to write to
    * @param lexer is the lexer to obtain more characters
+   * @param token is the current token for which generation is attempted
    * @return true if OK
    */
-  boolean generateLexerCode(FormattingPrintStream output, Lexer lexer);
+  boolean generateLexerCode(FormattingPrintStream output, Lexer lexer, Terminal token, int additionalIndent);
 
   /**
    * print the declarations for the rest of the code
@@ -353,5 +354,23 @@ public interface LanguageSupport {
    * Output the end of an int array
    */
   public void generateIntArrayFooter();
+
+  /**
+   * Generate if statement for a regular expression match
+   * @param dfaNode is the starting dfa node to begin the match
+   */
+  void generateRegexMatch(FormattingPrintStream output, int dfaNode);
+
+  /**
+   * Generate the default return token for a regexp
+   * @param token is the token that it returns
+   */
+  void generateRegexReturn(FormattingPrintStream output, Terminal token);
+
+  /**
+   * Generate the bottom of a regex match in the scanner
+   * @param output 
+   */
+  void generateRegexEnd(FormattingPrintStream output);
 
 }

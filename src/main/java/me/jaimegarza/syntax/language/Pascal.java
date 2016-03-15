@@ -410,7 +410,7 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer) {
+  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer, Terminal token) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
@@ -430,6 +430,9 @@ public class Pascal extends BaseLanguageSupport {
       return true;
     } else if (runtime.currentCharacter == 'r') {
       lexerReturnValue(output, lexer);
+      return true;
+    } else if (runtime.currentCharacter == 't') {
+      output.printFragment(Fragments.TOKEN, token.getName());
       return true;
     }
     output.print('$');
@@ -492,14 +495,14 @@ public class Pascal extends BaseLanguageSupport {
   }
   
   @Override
-  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer) {
+  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer, Terminal token, int additionalIndent) {
     boolean end = false;
     boolean bStart = true;
 
     while (!end) {
       switch (runtime.currentCharacter) {
         case '$':
-          if (lexerDollar(output, lexer)) {
+          if (lexerDollar(output, lexer, token)) {
             continue;
           }
           break;
@@ -533,7 +536,7 @@ public class Pascal extends BaseLanguageSupport {
         case '\n':
           output.printf("%c", runtime.currentCharacter);
           lexer.getCharacter();
-          indent(output, environment.getIndent());
+          indent(output, environment.getIndent() + additionalIndent);
           continue;
 
         case 0:
@@ -791,4 +794,21 @@ public class Pascal extends BaseLanguageSupport {
   public void generateIntArrayFooter() {
   }
 
+  @Override
+  public void generateRegexMatch(FormattingPrintStream output, int dfaNode) {
+    output.printf("  if   StxMatchesRegex(%d)\n", dfaNode);
+    output.printf("  then begin\n", dfaNode);
+  }
+
+  @Override
+  public void generateRegexReturn(FormattingPrintStream output, Terminal token) {
+    indent(output, environment.getIndent() - 1);
+    output.printf("    StxLexer := %s;\n", token.getName());
+  }
+
+  @Override
+  public void generateRegexEnd(FormattingPrintStream output) {
+    indent(output, environment.getIndent() - 1);
+    output.printf("  end;\n\n");
+  }
 }

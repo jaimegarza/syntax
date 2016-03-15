@@ -60,6 +60,7 @@ public class Fragments_java extends ListResourceBundle {
       {Fragments.GETC, "currentChar = getNextChar(false)"},
       {Fragments.RETURN_VALUE, "return {0}"},
       {Fragments.LEXER_MODE, "parserElementMode"},
+      {Fragments.TOKEN, "{0}"}
   };
 
 }

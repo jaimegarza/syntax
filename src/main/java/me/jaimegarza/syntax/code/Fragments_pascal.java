@@ -60,6 +60,7 @@ public class Fragments_pascal extends ListResourceBundle {
       {Fragments.GETC, "StxChar := StxNextChar"},
       {Fragments.RETURN_VALUE, "StxLexer := {0}; exit"},
       {Fragments.LEXER_MODE, "StxLexerMode"},
+      {Fragments.TOKEN, "{0}"}
   };
 
 }

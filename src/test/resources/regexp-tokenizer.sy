@@ -1,5 +1,34 @@
+%{
+public class TestParser {
+
+  private String currentString = null;
+  
+%}
+
+%class {
+  char c;
+  String s;
+    
+  public StackElement () {
+    this.c = 0;
+    this.s = "";
+  }
+    
+  public String toString() {
+    return "c='" + c + "'" + ",s=\"" + s + "\"";
+  }
+  
+  public void setChar(char c) {
+    this.c = c;
+  }
+
+}
 %token A /a(.|.|b)c/
-%token B /(a)/
+%token B /(a)/ {
+  currentString = "";
+  return $t;
+}
+
 %token C /.?x+y*(a|b)*/
 %token D /_?[A-Za-z][A-Za-z0-9-]*/
 %token E /[]]/
@@ -20,3 +49,46 @@ S    : A
      ;
 
 %%
+
+// END OF GRAMMAR
+
+  int charNum = 0;
+  String expression = "/(abc)d/";
+  
+  private char getNextChar(boolean initialize) {
+    if (initialize) {
+      charNum = 0;
+    }
+    
+    if (charNum < expression.length()) {
+      return expression.charAt(charNum++);
+    }
+    return EOS;
+  }
+
+
+  private int parserError(int state, int token, int top, String message) {
+    System.out.println("An error occurred in state " + state + " with token " + token + " on the position " + top);
+    System.out.println(message);
+    parserPrintStack();
+    return ERROR_RE_ATTEMPT;
+  }
+  
+  private String toString(StackElement value) {
+    if(value == null) {
+      return "";
+    } else {
+      return value.toString();
+    }
+  }
+  
+  public String getExpr() {
+    StackElement result = getResult();
+    if (result != null) {
+      return result.s;
+    } else {
+      return "";
+    }
+  }
+  
+}

@@ -39,6 +39,7 @@ import java.net.URLClassLoader;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.jci.compilers.CompilationResult;
+import org.apache.commons.jci.problems.CompilationProblem;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -50,7 +51,7 @@ import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
-public class TestLalr extends AbstractGenerationBase {
+public class TestRegexScanner extends AbstractGenerationBase {
 
   static final String expandedArgs[] = {
       // "-v",
@@ -62,7 +63,7 @@ public class TestLalr extends AbstractGenerationBase {
       "tabular",
       //"-v",
       //"-g",
-      "classpath:lalr.sy",
+      "classpath:regexp-tokenizer.sy",
       "${file.language}"
   };
 
@@ -86,6 +87,11 @@ public class TestLalr extends AbstractGenerationBase {
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
     CompilationResult result = compileJavaFile(source, sourceDir);
+    if (result.getErrors().length > 0) {
+      for (CompilationProblem cr : result.getErrors()) {
+        System.err.println(cr);
+      }
+    }
     Assert.assertEquals(result.getErrors().length, 0, "Syntax errors found trying to execute");
 
     URL urls[] = new URL[1];

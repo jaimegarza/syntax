@@ -73,6 +73,8 @@ public class SyntaxCodeParser extends AbstractCodeParser {
   private CharacterClass currentCharacterClass = null;
   private LexerMode lexerMode = LexerMode.NORMAL;
   private Nfa currentNfa = null;
+  private Terminal currentTerminal = null;
+  private Dfa currentDfa = null;
 
   private enum LexerMode {
     NORMAL, REGEX, CHARACTER_CLASS
@@ -98,6 +100,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
     public String id;
     public char c;
     public List<String> ids = new LinkedList<String>();
+    public Symbol symbol;
     public CharacterClass cc;
     public Construct construct;
 
@@ -140,6 +143,9 @@ public class SyntaxCodeParser extends AbstractCodeParser {
         sb.append(", c:\'").append(""+c).append("\'");;
       if (id != null) {
         sb.append(", id:").append(id);
+      }
+      if (symbol != null) {
+        sb.append(", symbol:").append(symbol);
       }
       if (cc != null) {
         sb.append(", cc:").append(cc);
@@ -195,6 +201,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %type   <value>     Number;
 %type   <value>     Token;
 %type   <id>        TokenName;
+%type   <symbol>    TokenDef;
 
 %type   <construct> BasicElement;
 %type   <construct> Concatenation;
@@ -223,6 +230,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
 %name TokenNames            : "token names"
 %name Precedence            : "precedence definition"
 %name Definition            : "a definition"
+%name REquals               : "an equals sign (starting of a token action)"
 %name Equals                : "an equals sign (starting of a token action)"
 %name Type                  : "type definition"
 %name Tokens                : "token declarations"
@@ -320,7 +328,7 @@ GroupTokens   : GroupTokens ',' GroupToken   = $GroupTokens.add($GroupToken);
               ;
              
 GroupToken    : TOKEN                        = {
-                                                 if (!declareOneTerminal($TOKEN, false, Associativity.NONE, rulePrecedence, null, -1, null)) return false;
+                                                 if (declareOneTerminal($TOKEN, false, Associativity.NONE, rulePrecedence, null, -1, null) == null) return false;
                                                  $GroupToken = $TOKEN;
                                                } 
               ;
@@ -343,12 +351,17 @@ Tokens        :  Tokens ',' Token
               |  Token
               ;
 
-Token         :  TOKEN Number TokenName
-                                LexicAction  = {
-                                                 if ($2 != -1) {
-                                                   $$ = $2;
+Token         :  TokenDef LexicAction
+              ;
+              
+TokenDef      : TOKEN Number TokenName       = {
+                                                 int number = -1;
+                                                 if ($Number != -1) {
+                                                   number = $Number;
                                                  }
-                                                 if (!declareOneTerminal($1, isErrorToken, ruleAssociativity, rulePrecedence, currentType, $$, $3)) return false;
+                                                 currentTerminal = declareOneTerminal($TOKEN, isErrorToken, ruleAssociativity, rulePrecedence, currentType, number, $TokenName);
+                                                 if (currentTerminal == null) return false;
+                                                 $TokenDef = currentTerminal;
                                                }
               ;
 
@@ -361,16 +374,17 @@ TokenName     : ':' TOKEN                    = $$ = $2;
               ;
 
 LexicAction   : Equals TOKEN                 = $$ = null;
-              | RStart RegExp REnd %prec '=' = {
-                                                 Dfa dfa = NfaUtil.finalize(currentNfa, $RegExp);
-                                                 runtimeData.addRegularExpression(dfa);
-                                               }
-              | RStart RegExp REnd Equals    = NfaUtil.finalize(currentNfa, $RegExp);
+              | RStart RExp REnd %prec '='   = generateDefaultRegexCode(currentDfa.getStart().getId(), currentTerminal);
+              | RStart RExp REnd REquals TOKEN
               | %prec '='                    = $<>$ = new StackElement(0, -1, false, "", '\0');
               ;
 
-Equals        : '='                          = generateLexerCode("default");
-              | '[' TOKEN ']' '='            = generateLexerCode($TOKEN);
+REquals       : '='                          = generateRegexCode("default", currentDfa.getStart().getId(), currentTerminal);
+              | '[' TOKEN ']' '='            = generateRegexCode($TOKEN, currentDfa.getStart().getId(), currentTerminal);
+              ;
+
+Equals        : '='                          = generateLexerCode("default", currentTerminal);
+              | '[' TOKEN ']' '='            = generateLexerCode($TOKEN, currentTerminal);
               ;
 
 RStart        : '/' TOKEN                    = currentNfa = new Nfa();
@@ -379,6 +393,12 @@ RStart        : '/' TOKEN                    = currentNfa = new Nfa();
 REnd          : '/' TOKEN
               ;
 
+RExp          : RegExp                       = {
+                                                 currentDfa = NfaUtil.finalize(currentNfa, $RegExp);
+                                                 runtimeData.addRegularExpression(currentDfa);
+                                               }
+              ;
+              
 RegExp        : RegExp PIPE Concatenation    = $$ = NfaUtil.alternate(currentNfa, $RegExp, $Concatenation);
               | Concatenation                = $$ = $Concatenation;
               ;

@@ -27,40 +27,40 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.code;
+package me.jaimegarza.syntax.util;
 
-import java.util.ListResourceBundle;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
- * Fragments of code to be used for code generation
- * when the language is C
- *
- * Please be advised that {1} is interpreted to be the
- * indentation string required.  Always.  This is a
- * contract.
- *
- * @author jaimegarza@gmail.com
+ * Set of helper utilities to work with collections
+ * @author jgarza
  *
  */
-public class Fragments_c extends ListResourceBundle {
+public class CollectionUtils {
 
-  @Override
-  protected Object[][] getContents() {
-    return contents;
-  }
-  
   /**
-   * The fragments
+   * Given a collection, return it as a list sorted with the default comparator
+   * @param c is the collection to sort
+   * @return the sorted list
    */
-  Object[] contents [] = {
-      {Fragments.HELLO, "Cello Corld"}, // keep, for unit testing
-      {Fragments.STXSTACK, "StxStack[pStxStack{0}]"},
-      {Fragments.CURRENT_CHAR, "StxChar"},
-      {Fragments.LEXICAL_VALUE, "StxValue"},
-      {Fragments.GETC, "StxChar = StxNextChar()"},
-      {Fragments.RETURN_VALUE, "return {0}"},
-      {Fragments.LEXER_MODE, "StxLexerMode"},
-      {Fragments.TOKEN, "{0}"}
-  };
+  public static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
+    List<T> list = new ArrayList<>(c);
+    Collections.sort(list);
+    return list;
+  }
 
+  /**
+   * Given a collection, return it as a list sorted with the given comparator
+   * @param c is the collection to sort
+   * @return the sorted list
+   */
+  public static <T> List<T> asSortedList(Collection<T> c, Comparator<T> comparator) {
+    List<T> list = new ArrayList<>(c);
+    Collections.sort(list, comparator);
+    return list;
+  }
 }

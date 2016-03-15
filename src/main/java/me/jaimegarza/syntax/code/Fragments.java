@@ -55,6 +55,7 @@ public class Fragments extends ListResourceBundle{
   public static final String CURRENT_CHAR = "currentChar";
   public static final String RETURN_VALUE = "returnValue";
   public static final String LEXER_MODE = "lexerMode";
+  public static final String TOKEN= "returnToken"; 
 
   @Override
   protected Object[][] getContents() {

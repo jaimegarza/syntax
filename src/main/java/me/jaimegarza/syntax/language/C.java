@@ -38,6 +38,7 @@ import me.jaimegarza.syntax.model.parser.NonTerminal;
 import me.jaimegarza.syntax.model.parser.Rule;
 import me.jaimegarza.syntax.model.parser.State;
 import me.jaimegarza.syntax.model.parser.Terminal;
+import me.jaimegarza.syntax.util.FormattingPrintStream;
 
 
 /**
@@ -579,5 +580,23 @@ public class C extends BaseLanguageSupport {
   public void generateIntArrayFooter() {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("};\n\n");
+  }
+
+  @Override
+  public void generateRegexMatch(FormattingPrintStream output, int dfaNode) {
+    indent(output, environment.getIndent() - 1);
+    output.printf("if (StxMatchesRegex(%d)) {\n", dfaNode);
+  }
+
+  @Override
+  public void generateRegexReturn(FormattingPrintStream output, Terminal token) {
+    indent(output, environment.getIndent() - 1);
+    output.printf("return %s;\n", token.getName());
+  }
+
+  @Override
+  public void generateRegexEnd(FormattingPrintStream output) {
+    indent(output, environment.getIndent() - 1);
+    output.printf("}\n\n");
   }
 }

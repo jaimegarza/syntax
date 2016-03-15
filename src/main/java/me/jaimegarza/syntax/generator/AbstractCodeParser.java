@@ -107,7 +107,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @param fullName is the fullname, if given, of the token
    * @return true if OK
    */
-  protected boolean declareOneTerminal(String id, boolean isErrorToken, Associativity associativity, int precedence, Type type, int tokenNumber, String fullName) {
+  protected Terminal declareOneTerminal(String id, boolean isErrorToken, Associativity associativity, int precedence, Type type, int tokenNumber, String fullName) {
     Terminal terminal = runtimeData.findTerminalByName(id);
     if (terminal == null) {
       terminal = isErrorToken ? new ErrorToken(id) : new Terminal(id);
@@ -118,7 +118,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     if (associativity != Associativity.NONE) {
       if (terminal.getAssociativity() != Associativity.NONE) {
         environment.error(-1, "Reassigning precedence/associativity for token \'%s\'.", terminal.getName());
-        return false;
+        return null;
       }
       terminal.setPrecedence(precedence);
       terminal.setAssociativity(associativity);
@@ -137,7 +137,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
         if (t != terminal && t.getToken() == tokenNumber) {
           environment.error(-1, "Warning: Token number %d already used on token \'%s\'.",
             tokenNumber, t.getName());
-          return false;
+          return null;
         }
       }
       terminal.setToken(tokenNumber);
@@ -151,7 +151,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     // SetEndToken($4, terminal.getName());
     //}
     
-    return true;
+    return terminal;
   }
   
   /**
@@ -865,9 +865,35 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @param lexerMode is the mode of the lexer
    * @return true if OK
    */
-  protected boolean generateLexerCode(String lexerMode) {
+  protected boolean generateLexerCode(String lexerMode, Terminal token) {
     FormattingPrintStream output = environment.getLexerModePrintStream(lexerMode);
-    environment.language.generateLexerCode(output, this);
+    environment.language.generateLexerCode(output, this, token, 0);
+    tokenActionCount++;
+    return true;
+  }
+  
+  /**
+   * Produce the if statement that will match the regex symbol and the default return code
+   * @return true if successful
+   */
+  protected boolean generateDefaultRegexCode(int dfaNode, Terminal token) {
+    FormattingPrintStream output = environment.getLexerModePrintStream("default");
+    environment.language.generateRegexMatch(output, dfaNode);
+    environment.language.generateRegexReturn(output, token);
+    environment.language.generateRegexEnd(output);    
+    tokenActionCount++;
+    return true;
+  }
+
+  /**
+   * Produce the if statement that will match the regex symbol and include additional code
+   * @return true if successful
+   */
+  protected boolean generateRegexCode(String lexerMode, int dfaNode, Terminal token) {
+    FormattingPrintStream output = environment.getLexerModePrintStream(lexerMode);
+    environment.language.generateRegexMatch(output, dfaNode);
+    environment.language.generateLexerCode(output, this, token, 1);
+    environment.language.generateRegexEnd(output);        
     tokenActionCount++;
     return true;
   }

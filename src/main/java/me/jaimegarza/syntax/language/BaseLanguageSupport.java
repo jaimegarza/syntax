@@ -36,6 +36,7 @@ import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.env.RuntimeData;
 import me.jaimegarza.syntax.model.parser.State;
 import me.jaimegarza.syntax.model.parser.Symbol;
+import me.jaimegarza.syntax.model.parser.Terminal;
 import me.jaimegarza.syntax.model.parser.Type;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 
@@ -229,7 +230,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     return -1; // command a break
   }
 
-  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer) {
+  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer, Terminal token) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
@@ -246,6 +247,10 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     } else if (runtime.currentCharacter == 'v') {
       lexer.getCharacter();
       output.printFragment(Fragments.LEXICAL_VALUE);
+      return true;
+    } else if (runtime.currentCharacter == 't') {
+      lexer.getCharacter();
+      output.printFragment(Fragments.TOKEN, token.getName());
       return true;
     }
     output.print('$');
@@ -327,7 +332,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   }
 
   @Override
-  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer) {
+  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer, Terminal token, int additionalIndent) {
     int nBracks = 0;
     boolean end = false;
     boolean startingString = true;
@@ -336,7 +341,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     while (!end) {
       switch (runtime.currentCharacter) {
         case '$':
-          if (lexerDollar(output, lexer)) {
+          if (lexerDollar(output, lexer, token)) {
             continue;
           }
           break;
@@ -377,7 +382,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
         case '\n':
           output.print(runtime.currentCharacter);
           lexer.getCharacter();
-          indent(output, environment.getIndent() - (this instanceof C?1:0));
+          indent(output, environment.getIndent() - (this instanceof C?1:0) + additionalIndent);
           continue;
   
         case 0:
