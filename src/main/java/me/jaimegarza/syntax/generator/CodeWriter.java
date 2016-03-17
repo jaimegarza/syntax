@@ -229,10 +229,6 @@ public class CodeWriter extends AbstractPhase {
   }
   
   private void printEdges() {
-    if (runtimeData.getRegularExpressions().isEmpty()) {
-      return;
-    }
-
     int tableSize = 0;
     int numberOfNodes = 0;
     for (Dfa dfa: runtimeData.getRegularExpressions()) {

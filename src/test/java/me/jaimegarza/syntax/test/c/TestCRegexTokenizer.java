@@ -49,21 +49,22 @@ public class TestCRegexTokenizer extends AbstractGenerationBase {
       "l",
       "--language",
       "c",
+      "--packing",
+      "tabular",
       "--noline",
       "classpath:c-regexp-tokenizer.sy",
       "${file.language}"
   };
 
-  private static final String includePackedParserChecks[] = {
-      "#define SCANNER_MODE",
-      "#define TOKENS 18",
-      "#define FINAL 34",
-      "#define SYMBS 19",
-      "#define ACTIONS 254",
-      "#define NON_TERMINALS 2",
+  private static final String includeTabularParserChecks[] = {
+      "#define PARSER_MODE",
+      "#define TOKENS 10",
+      "#define FINAL 13",
+      "#define SYMBS 12",
+      "#define NON_TERMINALS 3",
   };
   
-  private static final String languagePackedParserChecks[] = {
+  private static final String languageTabularParserChecks[] = {
     "Begin of Skeleton",
     "C Skeleton",
     "unsigned long int StxLexer()",
@@ -71,19 +72,19 @@ public class TestCRegexTokenizer extends AbstractGenerationBase {
     "End of parser"
   };
 
-  private static final String grammarPackedParserChecks[] = {
+  private static final String grammarTabularParserChecks[] = {
       "Algorithm:.*LALR",
       "Language:.*C",
-      "Packed\\?:.*.*true",
-      "Tokens:.*18",
-      "Non Terminals:.*2",
-      "Types:.*1",
-      "Rules:.*17",
-      "Errors:.*8",
-      "Actions:.*254",
-      "Gotos:.*16",
+      "Packed\\?:.*.*false",
+      "Tokens:.*10",
+      "Non Terminals:.*3",
+      "Types:.*0",
+      "Rules:.*12",
+      "Errors:.*3",
+      "Actions:.*0",
+      "Gotos:.*0",
       "Recoveries:.*0",
-      "States:.*34",
+      "States:.*13",
   };
 
   @BeforeTest
@@ -102,9 +103,9 @@ public class TestCRegexTokenizer extends AbstractGenerationBase {
   public void test01GeneratePackedParser() throws ParsingException, AnalysisException, OutputException {
     generateLanguageFile(packedParserArgs);
 
-    checkRegularExpressions(tmpIncludeFile, includePackedParserChecks);
-    checkRegularExpressions(tmpLanguageFile, languagePackedParserChecks);
-    checkRegularExpressions(tmpGrammarFile, grammarPackedParserChecks);
+    checkRegularExpressions(tmpIncludeFile, includeTabularParserChecks);
+    checkRegularExpressions(tmpLanguageFile, languageTabularParserChecks);
+    checkRegularExpressions(tmpGrammarFile, grammarTabularParserChecks);
   }
 
 }

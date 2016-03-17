@@ -42,6 +42,109 @@ int StxError(int StxState, int StxSym, int pStxStack, char * message);
 char * StxToString(TSTACK value);
 #endif
 
+  /*
+   * ==========================================================
+   *                  Regular Expressions
+   * ==========================================================
+   */
+  
+int StxEdgeIndex = 0;
+  
+/*
+ * checks one transition
+ */
+int StxMatchesWholeTransition() {
+    int transitionSize = StxEdges[StxEdgeIndex ++];
+    int matchesTransition = 0;
+    int negate = 0;
+    int j;
+    int rangeStart;
+    int rangeEnd;
+    
+    if (transitionSize < 0) {
+        negate = 1;
+        transitionSize = -transitionSize;
+    }
+
+    if (transitionSize == 0) { // ANY match
+        matchesTransition = StxChar != '\0';
+    } else {
+        // all elements of one transition
+        for (j = 0; j < transitionSize; j++) {
+            rangeStart = StxEdges[StxEdgeIndex ++];
+            rangeEnd = StxEdges[StxEdgeIndex ++];
+            if (StxChar >= rangeStart && StxChar <= rangeEnd) {
+                matchesTransition = 1;
+                // no break since the new vertex is at the end using StxEdgeIndex
+            }
+        }
+    }
+    if (negate) {
+        matchesTransition = !matchesTransition;
+    }
+    return StxChar == '\0' ? 0 : matchesTransition;
+  }
+
+
+/*
+ * tries to match a regular expression
+ */
+int StxMatchesRegex(int vertex) {
+    int accept;
+    int matches;
+    int goOn;
+    int numTransitions;
+    int matchedOneTransition;
+    int matchesTransition;
+    int i;
+    int newVertex;
+    char *p;
+    
+    StxRecognized[0] = '\0';
+    matches = 0;
+    goOn = 1;
+    
+    do {
+        accept = 0;
+        StxEdgeIndex = StxVertices[vertex];
+        if (StxEdgeIndex < 0) {
+            accept = 1;
+            StxEdgeIndex = -StxEdgeIndex;
+        }
+        numTransitions = StxEdges[StxEdgeIndex ++];
+        matchedOneTransition = 0;
+        for (i = 0; i < numTransitions; i++) {
+            // each transition
+            newVertex = StxEdges[StxEdgeIndex ++];
+            matchesTransition = StxMatchesWholeTransition();
+            if (matchesTransition) {
+                for (p = StxRecognized; *p; p++);
+                *p++ = StxChar;
+                *p = '\0';
+                StxChar = StxNextChar();
+                vertex = newVertex;
+                matchedOneTransition = 1;
+                break; // found a matching transition. new vertex
+            }
+      }
+      if (!matchedOneTransition) {
+          if (accept) {
+              return 1;
+          } else {
+              // backtrack characters
+              for (p = StxRecognized; *p; p++);
+              for (p--; p >= StxRecognized; p--) {
+                  StxUngetChar(StxChar);
+                  StxChar = *p;
+              }
+              goOn = 0;
+        }
+      }
+    } while (goOn);
+    
+    return 0;
+}
+
 /*
   This routine maps a state and a token to a new state on the action table  
 */

@@ -142,9 +142,13 @@ public class C extends BaseLanguageSupport {
                       .printf("\n")
                       .printf("extern char   StxChar;\n")
                       .printf("extern TSTACK StxValue;\n")
-                      .printf("char          StxNextChar();\n");
+                      .printf("void          StxUngetChar(char c);\n")
+                      .printf("char          StxNextChar();\n")
+                      .printf("int           StxMatchesRegex(int vertex);\n")
+                      .printf("int           StxGetTokenIndex(int token);\n");
     environment.output.printf("\n")
-                      .printf("int StxLexerMode = DEFAULT_LEXER_MODE;\n\n")
+                      .printf("int StxLexerMode = DEFAULT_LEXER_MODE;\n")
+                      .printf("char StxRecognized[4096];\n\n")
                       .printf("unsigned long int StxLexer()\n")
                       .printf("{\n");
     if (environment.lexerModes.size() > 1) {

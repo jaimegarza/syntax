@@ -44,6 +44,9 @@ char StxNextChar()
     return EOS;
 }
 
+void StxUngetChar(char c) {
+    charNum --;
+}
 
 int StxError(int state, int token, int top, char * message)
 {

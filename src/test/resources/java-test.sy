@@ -123,6 +123,12 @@ Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 
     return EOS;
   }
 
+  private void ungetChar(char c) {
+    charNum --;
+    if (charNum < 0 || expression.charAt(charNum) != c) {
+      throw new RuntimeException("Error putting a character back");
+    }
+  }
 
   private int parserError(int state, int token, int top, String message) {
     System.out.println("An error occurred in state " + state + " with token " + token + " on the position " + top);

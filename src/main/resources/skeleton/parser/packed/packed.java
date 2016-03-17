@@ -90,6 +90,7 @@
     recognized = "";
     
     do {
+      accept = false;
       edgeIndex = vertexTable[vertex];
       if (edgeIndex < 0) {
         accept = true;
