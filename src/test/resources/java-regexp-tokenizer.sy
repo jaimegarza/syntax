@@ -1,7 +1,7 @@
 %{
 public class TestParser {
 
-  private String currentString = null;
+  private String currentString = "";
   
 %}
 
@@ -25,46 +25,55 @@ public class TestParser {
 
 %token A /(a|b)c/ {
   System.out.println("A:" + $r);
+  currentString += "A";
   return $t;
 }
 
 %token B /d(.|.|e)f/ {
   System.out.println("B:" + $r);
+  currentString += "B";
   return $t;
 }
 
 %token C /(a)/ {
   System.out.println("C:" + $r);
+  currentString += "C";
   return $t;
 }
 
 %token D /.?x+y*(a|b)*/ {
   System.out.println("D:" + $r);
+  currentString += "D";
   return $t;
 }
 
 %token E /_?[A-Za-z][A-Za-z0-9-]*/ {
   System.out.println("E:" + $r);
+  currentString += "E";
   return $t;
 }
 
 %token F /[]]/ {
   System.out.println("F:" + $r);
+  currentString += "F";
   return $t;
 }
 
 %token G /[-]/ {
   System.out.println("G:" + $r);
+  currentString += "G";
   return $t;
 }
 
 %token H /[]-]/ {
   System.out.println("H:" + $r);
+  currentString += "H";
   return $t;
 }
 
 %token I /[^A-Za-z]*/ {
   System.out.println("I:" + $r);
+  currentString += "I";
   return $t;
 }
 
@@ -108,7 +117,7 @@ ListElem : A
   
   private void ungetChar(char c) {
     charNum --;
-    if (charNum < 0 || expression.charAt(0) != c) {
+    if (charNum < 0 || expression.charAt(charNum) != c) {
       throw new RuntimeException("Error putting a character back");
     }
   }
@@ -129,12 +138,7 @@ ListElem : A
   }
   
   public String getExpr() {
-    StackElement result = getResult();
-    if (result != null) {
-      return result.s;
-    } else {
-      return "";
-    }
+    return currentString;
   }
   
 }

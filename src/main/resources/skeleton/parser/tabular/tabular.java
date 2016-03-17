@@ -62,7 +62,7 @@
 
     boolean matchesTransition = false;
     if (transitionSize == 0) { // ANY match
-      matchesTransition = true;
+      matchesTransition = currentChar != '\0';
     } else {
       // all elements of one transition
       for (int j = 0; j < transitionSize; j++) {
@@ -77,7 +77,7 @@
     if (negate) {
       matchesTransition = !matchesTransition;
     }
-    return matchesTransition;
+    return currentChar == '\0' ? false : matchesTransition;
   }
   
   /**
@@ -114,13 +114,11 @@
         if (accept) {
           return true;
         } else {
-          for (int i = recognized.length() -1; i > 0; i--) {
-            ungetChar(recognized.charAt(i));
+          // backtrack characters
+          for (int i = recognized.length() -1; i >= 0; i--) {
+            ungetChar(currentChar);
+            currentChar = recognized.charAt(i);
           }
-          if (recognized.length() > 0) {
-            currentChar = recognized.charAt(0);
-          }
-          // backtrack every character
           goOn = false;
         }
       }
@@ -417,82 +415,7 @@
     return -1;
   }
 
-  private static final int REGEX_MATCHED = 0;
-  private static final int REGEX_NONE = 1;
-  private static final int REGEX_TOOMANY = 2;
-
-  private class RegexpMatch {
-    int index;
-    String matched;
-    int error;
-
-    public RegexpMatch(int index, String matched, int error) {
-      this.index = index;
-      this.matched = matched;
-      this.error = error;
-    }
-    
-    public String toString() {
-      return "{index:" + index + ",matched:\"" + matched + "\",error:" + error + "}";
-    }
-  }
-
-  /*private RegexpMatch matchRegExp() {
-    String s = "";
-
-    int candidates[] = new int[tokenDefs.length];
-
-    for (int i = 0; i < candidates.length; i++) {
-      candidates[i] = 1;
-    }
-
-    s += currentChar;
-
-    // search which regular expressions match the first char
-    int count = 0;
-    int index = -1;
-    int previousCount;
-    int previousIndex;
-
-    do {
-      previousCount = count;
-      previousIndex = index;
-      count = 0;
-      index = -1;
-      for (int i = 0; i < tokenDefs.length; i++) {
-        if (candidates[i] == 1 && tokenDefs[i].regex != null && tokenDefs[i].regex.length() > 0) {
-          if (s.toString().matches(tokenDefs[i].regex)) {
-            index = i;
-            count++;
-          } else {
-            candidates[i] = -1;
-          }
-        }
-      }
-
-      if (count > 0) {
-        s += currentChar;
-      }
-    } while (count > 0);
-
-    // restore last try
-    count = previousCount;
-    index = previousIndex;
-    s = s.substring(0, s.length()-2);
-    // currentChar is OK now as I went one back internally to this function
-
-    // see what happened
-    if (count == 0) {
-      // none matches
-      return new RegexpMatch(-1, "", REGEX_NONE);
-    } else if (count == 1) {
-      return new RegexpMatch(index, s, REGEX_MATCHED);
-    } else {
-      return new RegexpMatch(-1, s, REGEX_TOOMANY);
-    }
-  }*/
-
-/*
+  /*
    *
    * End of packed skeleton for java
    *

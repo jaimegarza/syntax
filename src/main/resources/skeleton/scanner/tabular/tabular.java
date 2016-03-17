@@ -39,6 +39,92 @@
     return this.verbose;
   }
 
+  /*
+   * ==========================================================
+   *                  Regular Expressions
+   * ==========================================================
+   */
+  
+  private int edgeIndex = 0;
+  
+  /**
+   * checks one transition
+   */
+  private boolean matchesWholeTransition() {
+    int transitionSize = edgeTable[edgeIndex ++];
+    boolean negate = false;
+    if (transitionSize < 0) {
+      negate = true;
+      transitionSize = -transitionSize;
+    }
+
+    boolean matchesTransition = false;
+    if (transitionSize == 0) { // ANY match
+      matchesTransition = currentChar != '\0';
+    } else {
+      // all elements of one transition
+      for (int j = 0; j < transitionSize; j++) {
+        int rangeStart = edgeTable[edgeIndex ++];
+        int rangeEnd = edgeTable[edgeIndex ++];
+        if (currentChar >= rangeStart && currentChar <= rangeEnd) {
+          matchesTransition = true;
+          // no break since the new vertex is at the end using edgeIndex
+        }
+      }
+    }
+    if (negate) {
+      matchesTransition = !matchesTransition;
+    }
+    return currentChar == '\0' ? false : matchesTransition;
+  }
+  
+  /**
+   * tries to match a regular expression
+   */
+  private boolean matchesRegex(int vertex) {
+    boolean accept = false;
+    boolean matches = false;
+    boolean goOn = true;
+    
+    recognized = "";
+    
+    do {
+      edgeIndex = vertexTable[vertex];
+      if (edgeIndex < 0) {
+        accept = true;
+        edgeIndex = -edgeIndex;
+      }
+      int numTransitions = edgeTable[edgeIndex ++];
+      boolean matchedOneTransition = false;
+      for (int i = 0; i < numTransitions; i++) {
+        // each transition
+        int newVertex = edgeTable[edgeIndex ++];
+        boolean matchesTransition = matchesWholeTransition();
+        if (matchesTransition) {
+          recognized += currentChar;
+          currentChar = getNextChar(false);
+          vertex = newVertex;
+          matchedOneTransition = true;
+          break; // found a matching transition. new vertex
+        }
+      }
+      if (!matchedOneTransition) {
+        if (accept) {
+          return true;
+        } else {
+          // backtrack characters
+          for (int i = recognized.length() -1; i >= 0; i--) {
+            ungetChar(currentChar);
+            currentChar = recognized.charAt(i);
+          }
+          goOn = false;
+        }
+      }
+    } while (goOn);
+    
+    return false;
+ }
+
   /**
    * This routine maps a state and a token to a new state on the action table
    * @param state is the current state
@@ -343,83 +429,7 @@
     return -1;
   }
 
-  private static final int REGEX_MATCHED = 0;
-  private static final int REGEX_NONE = 1;
-  private static final int REGEX_TOOMANY = 2;
-
-  private class RegexpMatch {
-    int index;
-    String matched;
-    int error;
-
-    public RegexpMatch(int index, String matched, int error) {
-      this.index = index;
-      this.matched = matched;
-      this.error = error;
-    }
-    
-    public String toString() {
-      return "{index:" + index + ",matched:\"" + matched + "\",error:" + error + "}";
-    }
-  }
-
-  /*private RegexpMatch matchRegExp() {
-    String s = "";
-
-    int candidates[] = new int[tokenDefs.length];
-
-    for (int i = 0; i < candidates.length; i++) {
-      candidates[i] = 1;
-    }
-
-    s += currentChar;
-
-    // search which regular expressions match the first char
-    int count = 0;
-    int index = -1;
-    int previousCount;
-    int previousIndex;
-
-    do {
-      previousCount = count;
-      previousIndex = index;
-      count = 0;
-      index = -1;
-      for (int i = 0; i < tokenDefs.length; i++) {
-        if (candidates[i] == 1 && tokenDefs[i].regex != null && tokenDefs[i].regex.length() > 0) {
-          if (s.toString().matches(tokenDefs[i].regex)) {
-            index = i;
-            count++;
-          } else {
-            candidates[i] = -1;
-          }
-        }
-      }
-
-      if (count > 0) {
-        s += currentChar;
-        getNextChar(false);
-      }
-    } while (count > 0);
-
-    // restore last try
-    count = previousCount;
-    index = previousIndex;
-    s = s.substring(0, s.length()-2);
-    // currentChar is OK now as I went one back internally to this function
-
-    // see what happened
-    if (count == 0) {
-      // none matches
-      return new RegexpMatch(-1, "", REGEX_NONE);
-    } else if (count == 1) {
-      return new RegexpMatch(index, s, REGEX_MATCHED);
-    } else {
-      return new RegexpMatch(-1, s, REGEX_TOOMANY);
-    }
-  }*/
-
-/*
+  /*
    *
    * End of packed skeleton for java
    *
