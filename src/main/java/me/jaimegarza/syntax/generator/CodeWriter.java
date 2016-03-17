@@ -245,11 +245,11 @@ public class CodeWriter extends AbstractPhase {
     environment.language.generateEdgeHeader(tableSize);
     int edgeIndex = 0;
     for (Dfa dfa: runtimeData.getRegularExpressions()) {
-      environment.language.generateIntArrayComment("start regexp : " +  dfa.toString());
+      environment.language.generateIntArrayComment("" + edgeIndex + " - start regexp : " +  dfa.toString());
       for (DfaNode node: dfa.getNodes()) {
         List<Transition> codeTransitions = node.getCodeTransitions();
         node.setEdgeIndex(edgeIndex);
-        environment.language.generateIntArrayRow(codeTransitions.size(), "" + codeTransitions.size() + " transitions", edgeIndex++, tableSize);
+        environment.language.generateIntArrayRow(codeTransitions.size(), "" + codeTransitions.size() + " transition" + (codeTransitions.size() == 1 ? "" : "s"), edgeIndex++, tableSize);
         for (Transition transition: codeTransitions) {
           int sign = 1;
           int size = transition.code();
@@ -257,6 +257,7 @@ public class CodeWriter extends AbstractPhase {
             ((CharacterClass) transition.getSymbol()).isNegate()) {
             sign = -1;
           }
+          environment.language.generateIntArrayRow(transition.getTo().getId(), " <-- transition to this new vertex if match", edgeIndex++, tableSize);
           environment.language.generateIntArrayRow(sign * size, transition.toString(), edgeIndex++, tableSize);
           int [] code = transition.getCodeArray();
           for (int i = 0; i < code.length; i++) {

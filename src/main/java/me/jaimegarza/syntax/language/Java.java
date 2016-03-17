@@ -94,6 +94,8 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("private char currentChar;\n\n");
     indent(environment.output, environment.getIndent() - 1);
+    environment.output.printf("private String recognized;\n\n");
+    indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("int parserElement(boolean initialize) {\n");
     indent(environment.output, environment.getIndent());
     environment.output.printf("if (initialize) {\n");

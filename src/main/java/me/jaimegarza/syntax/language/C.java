@@ -352,7 +352,7 @@ public class C extends BaseLanguageSupport {
                                     1);
     environment.include.printf("#define ACCEPT %d\n\n", Integer.MAX_VALUE);
     if (!environment.isPacked()) {
-      environment.output.printf("/* Parsing Table */\n" + "int StxParsingTable[FINAL][SYMBS] = {\n");
+      environment.output.printf("\n/* Parsing Table */\n" + "int StxParsingTable[FINAL][SYMBS] = {\n");
       environment.output.print("   //");
       for (Terminal t : runtime.getTerminals()) {
         String name = getShortSymbolName(t);
@@ -553,44 +553,45 @@ public class C extends BaseLanguageSupport {
   @Override
   public void generateEdgeHeader(int size) {
     environment.include.printf("#define EDGES %d\n", size);
-    indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("int StxEdges[EDGES] = {\n", runtime.getNonTerminals().size());
+    indent(environment.output, environment.getIndent() - 2);
+    environment.output.printf("\nint StxEdges[EDGES] = {\n", runtime.getNonTerminals().size());
   }
 
   @Override
   public void generateVertexHeader(int size) {
     environment.include.printf("#define VERTICES %d\n", size);
-    indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("int StxVertices[VERTICES] = {\n", runtime.getNonTerminals().size());
+    indent(environment.output, environment.getIndent() - 2);
+    environment.output.printf("\nint StxVertices[VERTICES] = {\n", runtime.getNonTerminals().size());
   }
   
   @Override
   public void generateIntArrayRow(int i, String comment, int index, int maxSize) {
-    indent(environment.output, environment.getIndent());
-    environment.output.printf("%5d%c%s\n", i, index != maxSize ? ',' : ' ', comment == null ? "": " // " + comment);
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("%d%c%s\n", i, index != maxSize ? ',' : ' ', comment == null ? "": " /* " + comment + " */");
   }
 
   @Override
   public void generateIntArrayComment(String comment) {
-    indent(environment.output, environment.getIndent());
-    environment.output.printf("%s\n",  comment == null ? "": "// " + comment);
+    indent(environment.output, environment.getIndent()-1);
+    environment.output.printf("%s\n",  comment == null ? "": "/* " + comment + " */");
   }
 
   @Override
   public void generateIntArrayFooter() {
-    indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("};\n\n");
+    indent(environment.output, environment.getIndent()-2);
+    environment.output.printf("};\n");
   }
 
   @Override
   public void generateRegexMatch(FormattingPrintStream output, int dfaNode) {
     indent(output, environment.getIndent() - 1);
-    output.printf("if (StxMatchesRegex(%d)) {\n", dfaNode);
+    output.printf("if (StxMatchesRegex(%d)) {", dfaNode);
   }
 
   @Override
   public void generateRegexReturn(FormattingPrintStream output, Terminal token) {
-    indent(output, environment.getIndent() - 1);
+    output.printf("\n");
+    indent(output, environment.getIndent());
     output.printf("return %s;\n", token.getName());
   }
 

@@ -51,7 +51,7 @@ import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
-public class TestRegexScanner extends AbstractGenerationBase {
+public class TestJavaRegexTokenizer extends AbstractGenerationBase {
 
   static final String expandedArgs[] = {
       // "-v",
@@ -63,7 +63,7 @@ public class TestRegexScanner extends AbstractGenerationBase {
       "tabular",
       //"-v",
       //"-g",
-      "classpath:regexp-tokenizer.sy",
+      "classpath:java-regexp-tokenizer.sy",
       "${file.language}"
   };
 
@@ -100,10 +100,10 @@ public class TestRegexScanner extends AbstractGenerationBase {
     String className = FilenameUtils.getBaseName(tmpLanguageFile);
     Class<?> clazz = classLoader.loadClass(className);
     Object parser = clazz.newInstance();
-    Method setVerbose = parser.getClass().getMethod("setVerbose", boolean.class);
+    //Method setVerbose = parser.getClass().getMethod("setVerbose", boolean.class);
     Method parse = parser.getClass().getMethod("parse");
     Method getExpr = parser.getClass().getMethod("getExpr");
-    setVerbose.invoke(parser, true);
+    //setVerbose.invoke(parser, true);
     Object o = parse.invoke(parser);
     Assert.assertTrue(o instanceof Integer);
     int rc = (int) o;

@@ -252,6 +252,10 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
       lexer.getCharacter();
       output.printFragment(Fragments.TOKEN, token.getName());
       return true;
+    } else if (runtime.currentCharacter == 'r') {
+      lexer.getCharacter();
+      output.printFragment(Fragments.RECOGNIZED);
+      return true;
     }
     output.print('$');
     return false;

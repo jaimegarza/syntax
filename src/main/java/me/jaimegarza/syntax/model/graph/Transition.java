@@ -130,7 +130,7 @@ public class Transition {
    * the symbol + 1 for the node id
    */
   public  int sizeof() {
-    return symbol.sizeof();
+    return symbol.sizeof() + 1; // 1 destination node;
   }
 
   @Override

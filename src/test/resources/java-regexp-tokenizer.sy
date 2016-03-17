@@ -1,0 +1,140 @@
+%{
+public class TestParser {
+
+  private String currentString = null;
+  
+%}
+
+%class {
+  String s;
+    
+  public StackElement () {
+    this.s = "";
+  }
+    
+  public String toString() {
+    return "s=\"" + s + "\"";
+  }
+}
+
+%lexer = {
+  while ($c <= ' ' && $c > '\0') {
+    $+;
+  }
+}
+
+%token A /(a|b)c/ {
+  System.out.println("A:" + $r);
+  return $t;
+}
+
+%token B /d(.|.|e)f/ {
+  System.out.println("B:" + $r);
+  return $t;
+}
+
+%token C /(a)/ {
+  System.out.println("C:" + $r);
+  return $t;
+}
+
+%token D /.?x+y*(a|b)*/ {
+  System.out.println("D:" + $r);
+  return $t;
+}
+
+%token E /_?[A-Za-z][A-Za-z0-9-]*/ {
+  System.out.println("E:" + $r);
+  return $t;
+}
+
+%token F /[]]/ {
+  System.out.println("F:" + $r);
+  return $t;
+}
+
+%token G /[-]/ {
+  System.out.println("G:" + $r);
+  return $t;
+}
+
+%token H /[]-]/ {
+  System.out.println("H:" + $r);
+  return $t;
+}
+
+%token I /[^A-Za-z]*/ {
+  System.out.println("I:" + $r);
+  return $t;
+}
+
+%start List;
+
+%name List : "anything";
+%%
+
+List     : List ListElem
+         | ListElem
+         ;
+         
+ListElem : A
+         | B
+         | C
+         | D
+         | E
+         | F
+         | G
+         | H
+         | I
+         ;
+
+%%
+
+// END OF GRAMMAR
+
+  int charNum = 0;
+  String expression = "_un-da bc daf a fxxxabaa ] - 0123 ac";
+  
+  private char getNextChar(boolean initialize) {
+    if (initialize) {
+      charNum = 0;
+    }
+    
+    if (charNum < expression.length()) {
+      return expression.charAt(charNum++);
+    }
+    return EOS;
+  }
+  
+  private void ungetChar(char c) {
+    charNum --;
+    if (charNum < 0 || expression.charAt(0) != c) {
+      throw new RuntimeException("Error putting a character back");
+    }
+  }
+
+  private int parserError(int state, int token, int top, String message) {
+    System.out.println("An error occurred in state " + state + " with token " + token + " on the position " + top);
+    System.out.println(message);
+    parserPrintStack();
+    return ERROR_RE_ATTEMPT;
+  }
+  
+  private String toString(StackElement value) {
+    if(value == null) {
+      return "";
+    } else {
+      return value.toString();
+    }
+  }
+  
+  public String getExpr() {
+    StackElement result = getResult();
+    if (result != null) {
+      return result.s;
+    } else {
+      return "";
+    }
+  }
+  
+}

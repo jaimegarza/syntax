@@ -1,33 +1,18 @@
 %{
-public class TestParser {
-
-  private String currentString = null;
-  
+VAR
+  CurrentString : STRING;  
 %}
 
-%class {
-  char c;
-  String s;
+%union
+  c : CHAR;
+  s : STRING;
+%
     
-  public StackElement () {
-    this.c = 0;
-    this.s = "";
-  }
-    
-  public String toString() {
-    return "c='" + c + "'" + ",s=\"" + s + "\"";
-  }
-  
-  public void setChar(char c) {
-    this.c = c;
-  }
-
-}
 %token A /a(.|.|b)c/
-%token B /(a)/ {
-  currentString = "";
-  return $t;
-}
+%token B /(a)/ =
+  currentString := "";
+  StxLexer := $t;
+%
 
 %token C /.?x+y*(a|b)*/
 %token D /_?[A-Za-z][A-Za-z0-9-]*/

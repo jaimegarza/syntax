@@ -40,6 +40,94 @@
   public boolean isVerbose() {
     return this.verbose;
   }
+  
+  /*
+   * ==========================================================
+   *                  Regular Expressions
+   * ==========================================================
+   */
+  
+  private int edgeIndex = 0;
+  
+  /**
+   * checks one transition
+   */
+  private boolean matchesWholeTransition() {
+    int transitionSize = edgeTable[edgeIndex ++];
+    boolean negate = false;
+    if (transitionSize < 0) {
+      negate = true;
+      transitionSize = -transitionSize;
+    }
+
+    boolean matchesTransition = false;
+    if (transitionSize == 0) { // ANY match
+      matchesTransition = true;
+    } else {
+      // all elements of one transition
+      for (int j = 0; j < transitionSize; j++) {
+        int rangeStart = edgeTable[edgeIndex ++];
+        int rangeEnd = edgeTable[edgeIndex ++];
+        if (currentChar >= rangeStart && currentChar <= rangeEnd) {
+          matchesTransition = true;
+          // no break since the new vertex is at the end using edgeIndex
+        }
+      }
+    }
+    if (negate) {
+      matchesTransition = !matchesTransition;
+    }
+    return matchesTransition;
+  }
+  
+  /**
+   * tries to match a regular expression
+   */
+  private boolean matchesRegex(int vertex) {
+    boolean accept = false;
+    boolean matches = false;
+    boolean goOn = true;
+    
+    recognized = "";
+    
+    do {
+      edgeIndex = vertexTable[vertex];
+      if (edgeIndex < 0) {
+        accept = true;
+        edgeIndex = -edgeIndex;
+      }
+      int numTransitions = edgeTable[edgeIndex ++];
+      boolean matchedOneTransition = false;
+      for (int i = 0; i < numTransitions; i++) {
+        // each transition
+        int newVertex = edgeTable[edgeIndex ++];
+        boolean matchesTransition = matchesWholeTransition();
+        if (matchesTransition) {
+          recognized += currentChar;
+          currentChar = getNextChar(false);
+          vertex = newVertex;
+          matchedOneTransition = true;
+          break; // found a matching transition. new vertex
+        }
+      }
+      if (!matchedOneTransition) {
+        if (accept) {
+          return true;
+        } else {
+          for (int i = recognized.length() -1; i > 0; i--) {
+            ungetChar(recognized.charAt(i));
+          }
+          if (recognized.length() > 0) {
+            currentChar = recognized.charAt(0);
+          }
+          // backtrack every character
+          goOn = false;
+        }
+      }
+    } while (goOn);
+    
+    return false;
+ }
 
   /**
    * This routine maps a state and a token to a new state on the action table
@@ -121,7 +209,7 @@
    * @param rule is the number of rule being used
    * @return 1 if OK
    */
-  int parserReduce(int sym, int rule) {
+  private int parserReduce(int sym, int rule) {
     if (isVerbose()) {
       System.out.println("Reduce on rule " + rule + " with symbol " + sym);
     }

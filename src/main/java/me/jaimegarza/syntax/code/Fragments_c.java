@@ -60,7 +60,8 @@ public class Fragments_c extends ListResourceBundle {
       {Fragments.GETC, "StxChar = StxNextChar()"},
       {Fragments.RETURN_VALUE, "return {0}"},
       {Fragments.LEXER_MODE, "StxLexerMode"},
-      {Fragments.TOKEN, "{0}"}
+      {Fragments.TOKEN, "{0}"},
+      {Fragments.RECOGNIZED, "StxRecognized"}
   };
 
 }
