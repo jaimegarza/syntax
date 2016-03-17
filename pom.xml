@@ -122,7 +122,7 @@
       <plugin>
         <groupId>me.jaimegarza</groupId>
         <artifactId>syntax-maven-plugin</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.3</version>
         <executions>
           <execution>
             <id>generate-parser</id>
@@ -137,7 +137,7 @@
           <outputFile>${project.build.directory}/gensrc/me/jaimegarza/syntax/generator/SyntaxCodeParser.java</outputFile>
           <verbose>true</verbose>
           <debug>false</debug>
-          <packed>true</packed>
+          <packed>false</packed>
           <algorithm>slr</algorithm>
         </configuration>
       </plugin>
