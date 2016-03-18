@@ -187,7 +187,7 @@ public class Pascal extends BaseLanguageSupport {
                       .printf("procedure StxUngetChar(c:char); forward;\n")
                       .printf("function StxMatchesRegex(vertex:integer):boolean; forward;\n");
     
-    if (environment.lexerModes.size() > 1) {
+    if (modes.size() > 1) {
       for (String mode: modes) {
         environment.output.printf("function StxLexer_" + computeModeName(mode) + ":longint; forward;\n");
       }

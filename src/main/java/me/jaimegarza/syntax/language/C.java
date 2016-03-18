@@ -142,12 +142,17 @@ public class C extends BaseLanguageSupport {
     environment.include
                       .printf("/* Lexical Recognizer */\n")
                       .printf("\n")
-                      .printf("extern char   StxChar;\n")
-                      .printf("extern TSTACK StxValue;\n")
-                      .printf("void          StxUngetChar(char c);\n")
-                      .printf("char          StxNextChar();\n")
-                      .printf("int           StxMatchesRegex(int vertex);\n")
-                      .printf("int           StxGetTokenIndex(int token);\n");
+                      .printf("extern char       StxChar;\n")
+                      .printf("extern TSTACK     StxValue;\n")
+                      .printf("void              StxUngetChar(char c);\n")
+                      .printf("char              StxNextChar(void);\n")
+                      .printf("int               StxMatchesRegex(int vertex);\n")
+                      .printf("int               StxGetTokenIndex(int token);\n");
+    if (modes.size() > 1) {
+      for (String mode: modes) {
+        environment.include.printf("unsigned long int StxLexer_" + computeModeName(mode) + "(void);\n");
+      }
+    }
     environment.output.printf("\n")
                       .printf("int StxLexerMode = DEFAULT_LEXER_MODE;\n")
                       .printf("char StxRecognized[4096];\n\n")
@@ -198,7 +203,7 @@ public class C extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent());
     environment.output.println("case " + computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE:");
     indent(environment.output, environment.getIndent() + 1);
-    environment.output.println("return ParserElement_" + computeModeName(lexerMode) + "();");
+    environment.output.println("return StxLexer_" + computeModeName(lexerMode) + "();");
     environment.output.println();
   }
 

@@ -1,44 +1,70 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "lexermode.h"
+%}
 
-%token a:" an a symbol" = if ($c == 'a') {$+; return a;};
-%token b:"a b symbol" [B] = if ($c == 'b') {$+; return b;};
-%token c:"a c symbol" [C] {
+%union {
+  char s[1024];
+}
+
+%token <s> aa:"an a symbol" = if ($c == 'a') {$v.s[0]=$c; $v.s[1]=0; $+; return aa;};
+%token <s> bb:"a b symbol" [B] = if ($c == 'b') {$v.s[0]=$c; $v.s[1]=0; $+; return bb;};
+%token <s> cc:"a c symbol" [C] {
   if ($c == 'c') {
+    $v.s[0]=$c; 
+	$v.s[1]=0; 
     $+; 
-    return c;
+    return cc;
   }
 }
 
-%lexer [B] = if ($c == 'a') {$+; $l = DEFAULT_LEXER_MODE; return a;};
-%lexer [C] = if ($c == 'a') {$+; $l = DEFAULT_LEXER_MODE; return a;};
+%lexer [B] = if ($c == 'a') {$v.s[0]=$c; $v.s[1]=0; $+; $l = DEFAULT_LEXER_MODE; return aa;};
+%lexer [C] = if ($c == 'a') {$v.s[0]=$c; $v.s[1]=0; $+; $l = DEFAULT_LEXER_MODE; return aa;};
 
 %lexer {
   if ($c == 'b') {
+    $v.s[0]=$c; 
+	$v.s[1]=0; 
     $l = B_LEXER_MODE;
     $+;
-    return b;
+    return bb;
   }
   
   if ($c == 'c') {
+    $v.s[0]=$c; 
+	$v.s[1]=0; 
     $l = C_LEXER_MODE;
     $+;
-    return c;
+    return cc;
   }
 }
 
+%type <s> A;
+%type <s> B;
+
+%start A
+
 %%
 
-A : b
-  | c
+A : A B  = strcat($A, $B);
+  | B    = strcpy($A, $B);
   ;
+
+B : aa
+  | bb
+  | cc
+  ;
+
 %%
 
 int charNum = 0;
-char * expression = "(1 + 3) *4 / 5 + -20";
+char * expression = "bacaab";
 
 char StxNextChar()
 {
     if (charNum < strlen(expression)) {
-      printf("Char %c\n", expression[charNum]);
       return expression[charNum++];
     }
     return EOS;
@@ -59,4 +85,10 @@ int StxError(int state, int token, int top, char * message)
 }
 
  
+int main(char *argv) 
+{
+    if (StxParse()) {
+        printf("%s\n", StxGetResult().s);
+    }
+    exit (0);
 }
