@@ -863,6 +863,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   /**
    * copy action until the next ';' or '}' that actually closes
    * @param lexerMode is the mode of the lexer
+   * @param token is the token related to the generation. Used in $t
    * @return true if OK
    */
   protected boolean generateLexerCode(String lexerMode, Terminal token) {
@@ -874,6 +875,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   
   /**
    * Produce the if statement that will match the regex symbol and the default return code
+   * @param dfaNode is the index of the dfa vertex
+   * @param token is the token related to the generation. Used in $t
    * @return true if successful
    */
   protected boolean generateDefaultRegexCode(int dfaNode, Terminal token) {
@@ -887,6 +890,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
 
   /**
    * Produce the if statement that will match the regex symbol and include additional code
+   * @param lexerMode is the mode of the scanner
+   * @param dfaNode is the index of the dfa vertex
+   * @param token is the token related to the generation. Used in $t
    * @return true if successful
    */
   protected boolean generateRegexCode(String lexerMode, int dfaNode, Terminal token) {

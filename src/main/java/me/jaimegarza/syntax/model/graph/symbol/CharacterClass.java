@@ -41,7 +41,7 @@ public class CharacterClass extends RegexSymbol {
   /** if this is a negate character class */
   private boolean negate;
   /** the ranges in the character class */
-  private Set<CharacterRange> ranges = new HashSet<>();
+  private Set<CharacterRange> ranges = new HashSet<CharacterRange>();
   
   @Override
   public boolean matches(char c) {

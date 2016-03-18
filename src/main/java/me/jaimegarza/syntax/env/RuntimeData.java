@@ -84,7 +84,7 @@ public class RuntimeData {
   /**
    * The list of all DFAs for the regular expressions
    */
-  private List<Dfa> regularExpressions = new LinkedList<>();
+  private List<Dfa> regularExpressions = new LinkedList<Dfa>();
   /**
    * List of states
    */

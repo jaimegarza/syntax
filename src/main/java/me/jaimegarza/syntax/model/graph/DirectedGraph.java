@@ -39,7 +39,7 @@ import java.util.List;
  * @param <T> is the type of node
  */
 public abstract class DirectedGraph<T extends Node> {
-  protected final List<T> nodes = new LinkedList<>();
+  protected final List<T> nodes = new LinkedList<T>();
   protected String regex = null;
   
   /**

@@ -74,7 +74,7 @@ public class DfaNode extends Node {
    */
 
   public Set<RegexSymbol> getTransitionSymbols() {
-    Set<RegexSymbol> set = new HashSet<>();
+    Set<RegexSymbol> set = new HashSet<RegexSymbol>();
     for (NfaNode nfaNode : closure) {
       for (Transition t : nfaNode.getTransitions()) {
         RegexSymbol symbol = t.getSymbol();
@@ -92,7 +92,7 @@ public class DfaNode extends Node {
    * @return the set of nfa nodes
    */
   public Set<NfaNode> getNfaTransitions(RegexSymbol symbol) {
-    Set<NfaNode> set = new HashSet<>();
+    Set<NfaNode> set = new HashSet<NfaNode>();
     for (NfaNode nfaNode : closure) {
       for (Transition t : nfaNode.getTransitions()) {
         RegexSymbol transitionSymbol = t.getSymbol();
@@ -133,7 +133,7 @@ public class DfaNode extends Node {
   
   @Override
   public int hashCode() {
-    return Integer.hashCode(id);
+    return id;
   }
 
   /**
@@ -149,5 +149,12 @@ public class DfaNode extends Node {
    */
   public int getEdgeIndex() {
     return edgeIndex;
+  }
+  
+  /**
+   * Needed for test cases
+   */
+  public static void reset() {
+    sequence = 0;
   }
 }

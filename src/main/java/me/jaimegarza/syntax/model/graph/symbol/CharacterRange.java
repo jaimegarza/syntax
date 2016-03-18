@@ -108,8 +108,8 @@ public class CharacterRange {
   @Override
   public int hashCode() {
     final int prime = 31;
-    int hash = prime + Integer.hashCode(from);
-    hash = prime * hash + Integer.hashCode(to);
+    int hash = prime + from;
+    hash = prime * hash + to;
     return hash;
   }
   

@@ -48,7 +48,7 @@ public class CollectionUtils {
    * @return the sorted list
    */
   public static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
-    List<T> list = new ArrayList<>(c);
+    List<T> list = new ArrayList<T>(c);
     Collections.sort(list);
     return list;
   }
@@ -59,7 +59,7 @@ public class CollectionUtils {
    * @return the sorted list
    */
   public static <T> List<T> asSortedList(Collection<T> c, Comparator<T> comparator) {
-    List<T> list = new ArrayList<>(c);
+    List<T> list = new ArrayList<T>(c);
     Collections.sort(list, comparator);
     return list;
   }

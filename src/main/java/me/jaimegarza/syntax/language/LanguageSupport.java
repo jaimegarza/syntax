@@ -225,6 +225,7 @@ public interface LanguageSupport {
    * @param output is the stream to write to
    * @param lexer is the lexer to obtain more characters
    * @param token is the current token for which generation is attempted
+   * @param additionalIndent is the wanted indentation delta
    * @return true if OK
    */
   boolean generateLexerCode(FormattingPrintStream output, Lexer lexer, Terminal token, int additionalIndent);

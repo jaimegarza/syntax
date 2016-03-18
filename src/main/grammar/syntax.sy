@@ -47,6 +47,8 @@ import me.jaimegarza.syntax.model.parser.Type;
 import me.jaimegarza.syntax.model.graph.Construct;
 import me.jaimegarza.syntax.model.graph.Nfa;
 import me.jaimegarza.syntax.model.graph.Dfa;
+import me.jaimegarza.syntax.model.graph.NfaNode;
+import me.jaimegarza.syntax.model.graph.DfaNode;
 import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.regex.RegexUtil;
@@ -75,7 +77,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
   private Nfa currentNfa = null;
   private Terminal currentTerminal = null;
   private Dfa currentDfa = null;
-
+  
   private enum LexerMode {
     NORMAL, REGEX, CHARACTER_CLASS
   }
@@ -943,6 +945,8 @@ Symbol        :  TOKEN                       = {
     }
     setVerbose(environment.isDebug());
     runtimeData.lineNumber = 1;
+    DfaNode.reset();
+    NfaNode.reset();
     markers = 0;
     Terminal terminal = new Terminal("$");
     runtimeData.getTerminals().add(terminal);

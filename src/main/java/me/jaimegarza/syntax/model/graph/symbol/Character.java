@@ -98,7 +98,7 @@ public class Character extends RegexSymbol {
   @Override
   public int hashCode() {
     final int prime = 31;
-    int hash = prime + Integer.hashCode(character);
+    int hash = prime + character;
     return hash;
   }
   

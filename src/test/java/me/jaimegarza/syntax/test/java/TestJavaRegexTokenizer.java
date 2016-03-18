@@ -106,7 +106,7 @@ public class TestJavaRegexTokenizer extends AbstractGenerationBase {
     //setVerbose.invoke(parser, true);
     Object o = parse.invoke(parser);
     Assert.assertTrue(o instanceof Integer);
-    int rc = (int) o;
+    int rc = (Integer) o;
     Assert.assertEquals(rc, 1, "Parse did not succeed");
     o = getExpr.invoke(parser);
     Assert.assertTrue(o instanceof String);

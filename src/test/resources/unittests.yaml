@@ -19,6 +19,7 @@ tests:
         - me.jaimegarza.syntax.test.java.TestJavaLexerModes
         - me.jaimegarza.syntax.test.java.TestJavaRegexTokenizer
         - me.jaimegarza.syntax.test.java.TestFeatures
+        - me.jaimegarza.syntax.test.java.TestLalr
         - me.jaimegarza.syntax.test.pascal.TestPascalExpandedParser
         - me.jaimegarza.syntax.test.pascal.TestPascalExpandedScanner
         - me.jaimegarza.syntax.test.pascal.TestPascalPackedParser

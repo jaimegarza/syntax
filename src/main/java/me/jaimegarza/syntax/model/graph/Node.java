@@ -29,10 +29,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import me.jaimegarza.syntax.util.CollectionUtils;
 
 /**
  * Abstract class denoting a node in a graph. A graph node is also known in
@@ -45,7 +47,7 @@ import java.util.stream.Collectors;
 public abstract class Node {
   protected int id;
   protected DirectedGraph<? extends Node> graph;
-  protected Set<Transition> transitions = new HashSet<>();
+  protected Set<Transition> transitions = new HashSet<Transition>();
   protected boolean accept = false;
   protected boolean starting = false;
   
@@ -114,13 +116,15 @@ public abstract class Node {
    * Obtain a list of transitions for writing to the generated code
    */
   public List<Transition> getCodeTransitions() {
-    // decided using java 8. Java 7, 6 below
+    // decided using java 7. Java 8 below
+    /*
     List<Transition> codeTransitions = transitions.stream().sorted((a,b) -> a.code() - b.code()).collect(Collectors.toList());
     boolean any = transitions.stream().filter(t->t.isAny()).count() > 0;
     if (any) {
       codeTransitions = codeTransitions.stream().filter(t->t.isAny()).limit(1).collect(Collectors.toList());
     }
-    /*
+    */
+    
     List<Transition> codeTransitions = CollectionUtils.asSortedList(transitions, new Comparator<Transition>() {
 
       @Override
@@ -153,7 +157,7 @@ public abstract class Node {
           codeTransitions.remove(i);
         }
       }
-    }*/
+    }
     return codeTransitions;
   }
 

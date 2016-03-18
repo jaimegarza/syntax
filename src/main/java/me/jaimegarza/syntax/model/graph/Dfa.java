@@ -114,7 +114,7 @@ public class Dfa extends DirectedGraph<DfaNode> {
           continue;
         }
         Set<NfaNode> toNodes = dfaFromNode.getNfaTransitions(symbol);
-        Set<NfaNode> toNodesWithClosure = new HashSet<>();
+        Set<NfaNode> toNodesWithClosure = new HashSet<NfaNode>();
         for (NfaNode toNode : toNodes) {
           toNodesWithClosure.addAll(toNode.eclosure());
         }

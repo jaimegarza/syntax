@@ -64,7 +64,7 @@ public class NfaNode extends Node {
   
   @Override
   public Set<NfaNode> eclosure() {
-    Set<NfaNode> closure = new HashSet<>();
+    Set<NfaNode> closure = new HashSet<NfaNode>();
     eclosure(closure);
     return closure;
   }
@@ -87,7 +87,13 @@ public class NfaNode extends Node {
 
   @Override
   public int hashCode() {
-    return Integer.hashCode(id);
+    return id;
   }
 
+  /**
+   * Needed for test cases
+   */
+  public static void reset() {
+    sequence = 0;
+  }
 }

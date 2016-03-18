@@ -39,6 +39,7 @@ import java.net.URLClassLoader;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.jci.compilers.CompilationResult;
+import org.apache.commons.jci.problems.CompilationProblem;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -86,6 +87,11 @@ public class TestLalr extends AbstractGenerationBase {
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
     CompilationResult result = compileJavaFile(source, sourceDir);
+    if (result.getErrors().length > 0) {
+      for (CompilationProblem cr : result.getErrors()) {
+        System.err.println(cr);
+      }
+    }
     Assert.assertEquals(result.getErrors().length, 0, "Syntax errors found trying to execute");
 
     URL urls[] = new URL[1];
@@ -100,7 +106,7 @@ public class TestLalr extends AbstractGenerationBase {
     setVerbose.invoke(parser, true);
     Object o = parse.invoke(parser);
     Assert.assertTrue(o instanceof Integer);
-    int rc = (int) o;
+    int rc = (Integer) o;
     Assert.assertEquals(rc, 1, "Parse did not succeed");
     o = getExpr.invoke(parser);
     Assert.assertTrue(o instanceof String);
