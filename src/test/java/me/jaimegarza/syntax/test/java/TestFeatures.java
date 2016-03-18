@@ -46,7 +46,7 @@ public class TestFeatures extends AbstractGenerationBase {
     setUp(Language.java, "Tokens");
     generateLanguageFile(new String[] {
         "--algorithm",
-        "l",
+        "slr",
         "--language",
         "java",
         "--driver",
@@ -117,7 +117,7 @@ public class TestFeatures extends AbstractGenerationBase {
     setUp(Language.java, "Errors");
     generateLanguageFile(new String[] {
         "--algorithm",
-        "l",
+        "slr",
         "--language",
         "java",
         "--packing",
@@ -149,7 +149,7 @@ public class TestFeatures extends AbstractGenerationBase {
     setUp(Language.java, "CodeLexer");
     generateLanguageFile(new String[] {
         "--algorithm",
-        "l",
+        "slr",
         "--language",
         "java",
         "--driver",

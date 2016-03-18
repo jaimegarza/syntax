@@ -95,7 +95,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     super(environment);
 
   }
-
+  
   /**
    * Declare a token
    * @param id is the short name of the token

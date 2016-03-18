@@ -69,7 +69,7 @@ public class TestJavaRegexTokenizer extends AbstractGenerationBase {
 
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp(Language.java, "TestParser");
+    super.setUp(Language.java, "TestRegex");
   }
 
   @Override

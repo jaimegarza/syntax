@@ -46,7 +46,7 @@ public class TestPascalExpandedScanner extends AbstractGenerationBase {
   static final String tabularParserArguments[] = {
       //"-v",
       "--algorithm",
-      "l",
+      "slr",
       "--language",
       "pascal",
       "--packing",
@@ -75,7 +75,7 @@ public class TestPascalExpandedScanner extends AbstractGenerationBase {
   };
 
   private static final String grammarTabularParserChecks[] = {
-      "Algorithm:.*LALR",
+      "Algorithm:.*SLR",
       "Language:.*pascal",
       "Packed\\?:.*.*false",
       "Tokens:.*18",

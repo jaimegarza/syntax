@@ -358,6 +358,8 @@ TokenDef      : TOKEN Number TokenName       = {
                                                  int number = -1;
                                                  if ($Number != -1) {
                                                    number = $Number;
+                                                 } else if ($<>1.value != -1) {
+                                                   number = $<>1.value;
                                                  }
                                                  currentTerminal = declareOneTerminal($TOKEN, isErrorToken, ruleAssociativity, rulePrecedence, currentType, number, $TokenName);
                                                  if (currentTerminal == null) return false;

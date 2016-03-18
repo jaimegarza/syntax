@@ -46,7 +46,7 @@ public class TestCExpandedScanner extends AbstractGenerationBase {
   static final String tabularParserArgs[] = {
       // "-v",
       "--algorithm",
-      "l",
+      "slr",
       "--language",
       "c",
       "--noline",
@@ -75,7 +75,7 @@ public class TestCExpandedScanner extends AbstractGenerationBase {
   };
 
   private static final String grammarPackedParserChecks[] = {
-      "Algorithm:.*LALR",
+      "Algorithm:.*SLR",
       "Language:.*C",
       "Packed\\?:.*.*false",
       "Tokens:.*18",

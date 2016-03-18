@@ -46,7 +46,7 @@ public class TestPascalPackedParser extends AbstractGenerationBase {
   static final String packedParserArguments[] = {
       //"-v",
       "--algorithm",
-      "l",
+      "slr",
       "--language",
       "pascal",
       "classpath:pascal-test.sy",
@@ -71,7 +71,7 @@ public class TestPascalPackedParser extends AbstractGenerationBase {
   };
 
   private static final String grammarPackedParserChecks[] = {
-      "Algorithm:.*LALR",
+      "Algorithm:.*SLR",
       "Language:.*pascal",
       "Packed\\?:.*.*true",
       "Tokens:.*18",

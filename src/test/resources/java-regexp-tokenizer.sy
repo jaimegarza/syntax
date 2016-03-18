@@ -1,5 +1,5 @@
 %{
-public class TestParser {
+public class TestRegex {
 
   private String currentString = "";
   

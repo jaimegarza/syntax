@@ -56,7 +56,7 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
   static final String packedArgs[] = {
       // "-v",
       "--algorithm",
-      "l",
+      "slr",
       "--language",
       "java",
       "--driver",
@@ -76,7 +76,7 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
   };
 
   private static final String grammarPackedChecks[] = {
-      "Algorithm:.*LALR",
+      "Algorithm:.*SLR",
       "Language:.*java",
       "Packed\\?:.*.*true",
       "Tokens:.*18",

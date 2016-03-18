@@ -46,7 +46,7 @@ public class TestPascalRegexTokenizer extends AbstractGenerationBase {
   static final String tabularParserArguments[] = {
       //"-v",
       "--algorithm",
-      "l",
+      "slr",
       "--language",
       "pascal",
       "--packing",
@@ -59,9 +59,9 @@ public class TestPascalRegexTokenizer extends AbstractGenerationBase {
 
   private static final String languageTabularIncludeChecks[] = {
     "\\$DEFINE PARSER_MODE",
-    "TOKENS = 18",
-    "FINAL = 34",
-    "SYMBS = 19",
+    "TOKENS = 8",
+    "FINAL = 8",
+    "SYMBS = 9",
   };
 
   private static final String languageTabularParserChecks[] = {
@@ -73,16 +73,16 @@ public class TestPascalRegexTokenizer extends AbstractGenerationBase {
   };
 
   private static final String grammarTabularParserChecks[] = {
-      "Algorithm:.*LALR",
+      "Algorithm:.*SLR",
       "Language:.*pascal",
       "Packed\\?:.*.*false",
-      "Tokens:.*18",
+      "Tokens:.*8",
       "Non Terminals:.*2",
-      "Types:.*1",
-      "Rules:.*17",
-      "Errors:.*8",
+      "Types:.*0",
+      "Rules:.*7",
+      "Errors:.*3",
       "Recoveries:.*0",
-      "States:.*34",
+      "States:.*8",
   };
 
   @BeforeTest

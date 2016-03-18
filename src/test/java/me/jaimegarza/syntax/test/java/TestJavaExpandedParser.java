@@ -56,7 +56,7 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
   static final String expandedArgs[] = {
       // "-v",
       "--algorithm",
-      "l",
+      "slr",
       "--language",
       "java",
       "--packing",
@@ -77,7 +77,7 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
   };
 
   private static final String grammarExpandedChecks[] = {
-      "Algorithm:.*LALR",
+      "Algorithm:.*SLR",
       "Language:.*java",
       "Packed\\?:.*.*false",
       "Tokens:.*18",

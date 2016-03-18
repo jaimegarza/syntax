@@ -46,7 +46,7 @@ public class TestCPackedParser extends AbstractGenerationBase {
   static final String packedParserArgs[] = {
       // "-v",
       "--algorithm",
-      "l",
+      "slr",
       "--language",
       "c",
       "--noline",
@@ -72,7 +72,7 @@ public class TestCPackedParser extends AbstractGenerationBase {
   };
 
   private static final String grammarPackedParserChecks[] = {
-      "Algorithm:.*LALR",
+      "Algorithm:.*SLR",
       "Language:.*C",
       "Packed\\?:.*.*true",
       "Tokens:.*18",
