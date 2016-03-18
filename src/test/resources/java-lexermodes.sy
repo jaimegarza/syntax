@@ -2,42 +2,59 @@
 public class LexerMode {
 %}
 
-%token a:" an a symbol" = if ($c == 'a') {$+; return a;};
-%token b:"a b symbol" [B] = if ($c == 'b') {$+; return b;};
-%token c:"a c symbol" [C] {
+%struct {
+  String s;
+}
+
+%token aa:"an a symbol" = if ($c == 'a') {$v.s = "" + $c; $+; return aa;};
+%token bb:"a b symbol" [B] = if ($c == 'b') {$v.s = "" + $c; $+; return bb;};
+%token cc:"a c symbol" [C] {
   if ($c == 'c') {
+    $v.s = "" + $c; 
     $+; 
-    return c;
+    return cc;
   };
 }
 
-%lexer [B] = if ($c == 'a') {$+; $l = DEFAULT_LEXER_MODE; return a;};
-%lexer [C] = if ($c == 'a') {$+; $l = DEFAULT_LEXER_MODE; return a;};
+%lexer [B] = if ($c == 'a') {$v.s = "" + $c; $+; $l = DEFAULT_LEXER_MODE; return aa;};
+%lexer [C] = if ($c == 'a') {$v.s = "" + $c; $+; $l = DEFAULT_LEXER_MODE; return aa;};
 
 %lexer {
   if ($c == 'b') {
+    $v.s = "" + $c; 
     $l = B_LEXER_MODE;
     $+;
-    return b;
+    return bb;
   }
   
   if ($c == 'c') {
+    $v.s = "" + $c; 
     $l = C_LEXER_MODE;
     $+;
-    return c;
+    return cc;
   }
 }
 
+%type <s> A;
+%type <s> B;
+
+%start A
+
 %%
 
-A : a
-  | b
-  | c
+A : A B  = $$ = $A + $B;
+  | B    = $$ = $B;
   ;
+
+B : aa
+  | bb
+  | cc
+  ;
+
 %%
 
   int charNum = 0;
-  String expression = "(1 + 3) *4 / 5 + -20";
+  String expression = "bacaab";
   private char getNextChar(boolean initialize) {
     if (initialize) {
       charNum = 0;
@@ -60,6 +77,10 @@ A : a
     System.out.println(message);
     parserPrintStack();
     return ERROR_RE_ATTEMPT;
+  }
+  
+  public String getOutput() {
+    return getResult().s;
   }
   
 }

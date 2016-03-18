@@ -31,7 +31,13 @@ package me.jaimegarza.syntax.test.java;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.problems.CompilationProblem;
 import org.testng.Assert;
@@ -73,7 +79,10 @@ public class TestJavaLexerModes extends AbstractGenerationBase {
   }
 
   @Test
-  public void testJavaLexerModes() throws ParsingException, AnalysisException, OutputException {
+  public void testJavaLexerModes() throws ParsingException, 
+       AnalysisException, OutputException, MalformedURLException, 
+       ClassNotFoundException, InstantiationException, IllegalAccessException, 
+       NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
     generateLanguageFile(args);
     File source = new File(tmpLanguageFile);
     File sourceDir = source.getParentFile();
@@ -87,5 +96,24 @@ public class TestJavaLexerModes extends AbstractGenerationBase {
       }
       Assert.fail("Errors during the compilation of the output java file");
     }
+
+    URL urls[] = new URL[1];
+    urls[0] = sourceDir.toURI().toURL();
+    URLClassLoader classLoader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
+    String className = FilenameUtils.getBaseName(tmpLanguageFile);
+    Class<?> clazz = classLoader.loadClass(className);
+    Object parser = clazz.newInstance();
+    //Method setVerbose = parser.getClass().getMethod("setVerbose", boolean.class);
+    Method parse = parser.getClass().getMethod("parse");
+    Method getOutput = parser.getClass().getMethod("getOutput");
+    //setVerbose.invoke(parser, true);
+    Object o = parse.invoke(parser);
+    Assert.assertTrue(o instanceof Integer);
+    int rc = (Integer) o;
+    Assert.assertEquals(rc, 1, "Parse did not succeed");
+    o = getOutput.invoke(parser);
+    Assert.assertTrue(o instanceof String);
+    String s = (String) o;
+    Assert.assertEquals(s, "bacaab", "string does not match");
   }
 }
