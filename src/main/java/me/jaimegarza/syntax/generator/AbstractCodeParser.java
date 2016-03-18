@@ -868,7 +868,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   protected boolean generateLexerCode(String lexerMode, Terminal token) {
     FormattingPrintStream output = environment.getLexerModePrintStream(lexerMode);
-    environment.language.generateLexerCode(output, this, token, 0);
+    environment.language.generateLexerCode(output, lexerMode, this, token, 0);
     tokenActionCount++;
     return true;
   }
@@ -898,7 +898,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   protected boolean generateRegexCode(String lexerMode, int dfaNode, Terminal token) {
     FormattingPrintStream output = environment.getLexerModePrintStream(lexerMode);
     environment.language.generateRegexMatch(output, dfaNode);
-    environment.language.generateLexerCode(output, this, token, 1);
+    environment.language.generateLexerCode(output, lexerMode, this, token, 1);
     environment.language.generateRegexEnd(output);        
     tokenActionCount++;
     return true;
@@ -934,7 +934,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
         }
       }
 
-      environment.language.generateLexerHeader();
+      environment.language.generateLexerHeader(modes);
       if (modes.size() > 1) {
         index = 0;
         for (String mode: modes) {

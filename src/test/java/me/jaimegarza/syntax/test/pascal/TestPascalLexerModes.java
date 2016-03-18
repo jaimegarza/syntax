@@ -46,9 +46,11 @@ public class TestPascalLexerModes extends AbstractGenerationBase {
   static final String args[] = {
     // "-v",
     "--algorithm",
-    "l",
+    "slr",
     "--language",
     "pascal",
+    "--packing",
+    "tabular",
     "--noline",
     "classpath:pascal-lexermodes.sy",
     "${file.language}",

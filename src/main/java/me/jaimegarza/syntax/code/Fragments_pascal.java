@@ -58,10 +58,12 @@ public class Fragments_pascal extends ListResourceBundle {
       {Fragments.CURRENT_CHAR, "StxChar"},
       {Fragments.LEXICAL_VALUE, "StxValue"},
       {Fragments.GETC, "StxChar := StxNextChar"},
-      {Fragments.RETURN_VALUE, "StxLexer := {0}; exit"},
+      {Fragments.RETURN_VALUE, "StxLexer{0} := {1}; exit"},
       {Fragments.LEXER_MODE, "StxLexerMode"},
       {Fragments.TOKEN, "{0}"},
-      {Fragments.RECOGNIZED, "StxRecognized"}
+      {Fragments.RECOGNIZED, "StxRecognized"},
+      {Fragments.LEXER_FUNCTION_NAME, "StxLexer{0}"},
+      {Fragments.RETURN, "exit({0})"}
   };
 
 }

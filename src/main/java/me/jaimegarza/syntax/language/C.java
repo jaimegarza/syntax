@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.language;
 
+import java.util.List;
+
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.model.parser.Action;
 import me.jaimegarza.syntax.model.parser.Driver;
@@ -114,7 +116,7 @@ public class C extends BaseLanguageSupport {
   }
 
   @Override
-  public void generateLexerHeader() {
+  public void generateLexerHeader(List<String> modes) {
     environment.include.println();
     if (environment.getDriver() == Driver.PARSER) {
       environment.include.println("#define PARSER_MODE");

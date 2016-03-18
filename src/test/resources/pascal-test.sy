@@ -17,9 +17,9 @@ VAR
   writeln('Char is "', $c, '"');
 %
 
-%left             TOK_AND      256:"AND" =  if $c = '&' THEN BEGIN $+; $r(TOK_AND); END;%
-%left             TOK_OR       257:"OR"  =  if $c = '|' THEN BEGIN $+; $r(TOK_OR); END;% 
-%right            TOK_NOT      258:"NOT" =  if $c = '!' THEN BEGIN $+; $r(TOK_NOT); END;%
+%left             TOK_AND      256:"AND" =  if $c = '&' THEN BEGIN $+; $x(TOK_AND); END;%
+%left             TOK_OR       257:"OR"  =  if $c = '|' THEN BEGIN $+; $x(TOK_OR); END;% 
+%right            TOK_NOT      258:"NOT" =  if $c = '!' THEN BEGIN $+; $x(TOK_NOT); END;%
 %left             TOK_LE       259:"'<='",
                   TOK_LT       260:"'<'",
                   TOK_GE       261:"'>='",
@@ -29,7 +29,7 @@ VAR
   IF   $c = '='
   THEN BEGIN 
        $+; 
-       $r (TOK_EQ);
+       $x (TOK_EQ);
        END
   ELSE 
   IF   $c = '<'
@@ -38,15 +38,15 @@ VAR
        IF   $c = '='
        THEN BEGIN 
             $+;
-            $r(TOK_LE);
+            $x(TOK_LE);
        END
        ELSE
        IF   $c = '>'
        THEN BEGIN 
             $+;
-            $r(TOK_NE);
+            $x(TOK_NE);
        END;
-       $r(TOK_LT);
+       $x(TOK_LT);
   END
   ELSE
   IF   $c = '>'
@@ -55,21 +55,21 @@ VAR
        IF   $c = '='
        THEN BEGIN 
             $+;
-            $r(TOK_GE);
+            $x(TOK_GE);
        END;
-       $r(TOK_GT);
+       $x(TOK_GT);
        END;
 %
 
-%left             '+' : "plus"   =  IF   $c = '+' THEN BEGIN $+; $r(ORD('+')); END;%
-                , '-' : '"minus"'=  IF   $c = '-' THEN BEGIN $+; $r(ORD('-')); END;%
-%left             '*' =  IF   $c = '*' THEN BEGIN $+; $r(ORD('*')); END;%
-                , '/' =  IF   $c = '/' THEN BEGIN $+; $r(ORD('/')); END;%
+%left             '+' : "plus"   =  IF   $c = '+' THEN BEGIN $+; $x(ORD('+')); END;%
+                , '-' : '"minus"'=  IF   $c = '-' THEN BEGIN $+; $x(ORD('-')); END;%
+%left             '*' =  IF   $c = '*' THEN BEGIN $+; $x(ORD('*')); END;%
+                , '/' =  IF   $c = '/' THEN BEGIN $+; $x(ORD('/')); END;%
 
 %right            TOK_UMINUS:"unary minus"  
 
-%token            '(' =  IF   $c = '(' THEN BEGIN $+; $r(ORD('(')); END;%
-                , ')' =  IF   $c = ')' THEN BEGIN $+; $r(ORD(')')); END;%
+%token            '(' =  IF   $c = '(' THEN BEGIN $+; $x(ORD('(')); END;%
+                , ')' =  IF   $c = ')' THEN BEGIN $+; $x(ORD(')')); END;%
 
 %token   <number> TOK_NUMBER:"number" = 
   IF   ($c >= '0') AND ($c <= '9')
@@ -81,7 +81,7 @@ VAR
              $+;
              END;
        $v.number := number;
-       $r(TOK_NUMBER);
+       $x(TOK_NUMBER);
        END;
 %
 
@@ -130,6 +130,11 @@ BEGIN
          charNum := charNum + 1;
          END
     ELSE StxNextChar := CHR(EOS);
+END;
+
+PROCEDURE StxUngetChar(c:char);
+BEGIN
+    charNum := charNum - 1;
 END;
 
 FUNCTION StxError(StxState:INTEGER; StxSym: INTEGER; pStxStack: INTEGER; aMessage:STRING):INTEGER;

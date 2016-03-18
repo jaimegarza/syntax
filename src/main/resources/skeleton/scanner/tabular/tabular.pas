@@ -32,6 +32,128 @@ FUNCTION StxToString(value:TSTACK):STRING; FORWARD;
 {$ENDIF}
 
 (*
+ * ==========================================================
+ *                  Regular Expressions
+ * ==========================================================
+*)
+  
+VAR
+    StxEdgeIndex:INTEGER = 0;
+  
+(*
+  checks one transition
+*)
+FUNCTION StxMatchesWholeTransition:BOOLEAN;
+VAR
+    transitionSize:INTEGER;
+    negate:BOOLEAN;
+    matchesTransition:BOOLEAN;
+    j:INTEGER;
+    rangeStart:CHAR;
+    rangeEnd:CHAR;
+BEGIN
+    transitionSize := StxEdges[StxEdgeIndex];
+    StxEdgeIndex := StxEdgeIndex + 1;
+    negate := false;
+    if   transitionSize < 0 
+    then begin
+         negate := true;
+        transitionSize := -transitionSize;
+    end;
+
+    matchesTransition := false;
+    if   transitionSize = 0
+    then begin (* ANY match *)
+         matchesTransition := StxChar <> CHR(0);
+    end
+    else begin
+         (* all elements of one transition *)
+         for j := 0 to transitionSize-1 do 
+         begin
+            rangeStart := CHR(StxEdges[StxEdgeIndex]);
+            rangeEnd := CHR(StxEdges[StxEdgeIndex + 1]);
+            StxEdgeIndex := StxEdgeIndex + 2;
+            if   (StxChar >= rangeStart) AND (StxChar <= rangeEnd)
+            then matchesTransition := true;
+         end; (*FOR*)
+    end;
+    
+    if   negate
+    then matchesTransition := NOT matchesTransition;
+    
+    if   StxChar = CHR(0)
+    then StxMatchesWholeTransition := false
+    else StxMatchesWholeTransition := matchesTransition
+END;
+  
+(*
+  tries to match a regular expression
+*)
+FUNCTION StxMatchesRegex(vertex:INTEGER):BOOLEAN;
+VAR
+    accept:BOOLEAN;
+    stop:BOOLEAN;
+    numTransitions:INTEGER;
+    matchedOneTransition:BOOLEAN;
+    i:INTEGER;
+    newVertex:INTEGER;
+    matchesTransition:BOOLEAN;
+BEGIN
+    accept := false;
+    stop := false;
+    
+    StxRecognized := '';
+    
+    repeat
+      accept := false;
+      StxEdgeIndex := StxVertices[vertex];
+      if   StxEdgeIndex < 0
+      then begin
+           accept := true;
+           StxEdgeIndex := -StxEdgeIndex;
+      end;
+      
+      numTransitions := StxEdges[StxEdgeIndex];
+      StxEdgeIndex := StxEdgeIndex + 1;
+      matchedOneTransition := false;
+      for i := 0 to numTransitions-1 do
+      begin
+        (* each transition *)
+        newVertex := StxEdges[StxEdgeIndex];
+        StxEdgeIndex := StxEdgeIndex + 1;
+        matchesTransition := StxMatchesWholeTransition;
+        if   matchesTransition
+        then begin
+             StxRecognized := StxRecognized + StxChar;
+             StxChar := StxNextChar;
+             vertex := newVertex;
+             matchedOneTransition := true;
+             break; (* found a matching transition. new vertex *)
+        end;
+      end;
+      
+      if   NOT matchedOneTransition
+      then begin
+        if   accept
+        then begin
+             exit(true);
+             end
+        else begin
+          (* backtrack characters *)
+          for i := LENGTH(StxRecognized) DOWNTO 1 do
+          begin
+            StxUngetChar(StxChar);
+            StxChar := StxRecognized[i];
+          end;
+          stop := true;
+        end;
+      end;
+    until stop;
+    
+    StxMatchesRegex := false;
+END;
+
+(*
     returns the name of a token, given the token number
 *)
 FUNCTION StxGetTokenName(token:INTEGER) : STRING;

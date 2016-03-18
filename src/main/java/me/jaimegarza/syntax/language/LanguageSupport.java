@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.language;
 
+import java.util.List;
+
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.model.parser.Action;
@@ -143,8 +145,9 @@ public interface LanguageSupport {
 
   /**
    * Emit the header of the lexer as needed.
+   * @param modes is the list of forward modes
    */
-  void generateLexerHeader();
+  void generateLexerHeader(List<String> modes);
   
   /**
    * Emit a lexer function header by mode
@@ -228,7 +231,7 @@ public interface LanguageSupport {
    * @param additionalIndent is the wanted indentation delta
    * @return true if OK
    */
-  boolean generateLexerCode(FormattingPrintStream output, Lexer lexer, Terminal token, int additionalIndent);
+  boolean generateLexerCode(FormattingPrintStream output, String lexerMode, Lexer lexer, Terminal token, int additionalIndent);
 
   /**
    * print the declarations for the rest of the code

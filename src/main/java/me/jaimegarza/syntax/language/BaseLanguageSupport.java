@@ -230,7 +230,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     return -1; // command a break
   }
 
-  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer, Terminal token) {
+  protected boolean lexerDollar(FormattingPrintStream output, String lexerMode, Lexer lexer, Terminal token) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
@@ -251,6 +251,10 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     } else if (runtime.currentCharacter == 't') {
       lexer.getCharacter();
       output.printFragment(Fragments.TOKEN, token.getName());
+      return true;
+    } else if (runtime.currentCharacter == 'm') {
+      lexer.getCharacter();
+      output.printFragment(Fragments.LEXER_FUNCTION_NAME, lexerMode);
       return true;
     } else if (runtime.currentCharacter == 'r') {
       lexer.getCharacter();
@@ -336,7 +340,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   }
 
   @Override
-  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer, Terminal token, int additionalIndent) {
+  public boolean generateLexerCode(FormattingPrintStream output, String lexerMode, Lexer lexer, Terminal token, int additionalIndent) {
     int nBracks = 0;
     boolean end = false;
     boolean startingString = true;
@@ -345,7 +349,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     while (!end) {
       switch (runtime.currentCharacter) {
         case '$':
-          if (lexerDollar(output, lexer, token)) {
+          if (lexerDollar(output, lexerMode, lexer, token)) {
             continue;
           }
           break;

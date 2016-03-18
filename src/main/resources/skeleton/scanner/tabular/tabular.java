@@ -83,7 +83,6 @@
    */
   private boolean matchesRegex(int vertex) {
     boolean accept = false;
-    boolean matches = false;
     boolean goOn = true;
     
     recognized = "";

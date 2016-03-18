@@ -3,72 +3,92 @@
 PROGRAM lexermode;
 USES sysutils;
 {$I $$b.inc}
-{$DEFINE DEBUG}
 VAR
-    number : LONGINT;
+    current : String;
+    
 %}
 
-%token a:" an a symbol" = 
+%union
+  s:STRING;
+%
+
+%token <s> a:" an a symbol" = 
 if   $c = 'a'
 then begin
+     $v.s := $c;
      $+; 
-     return a;
+     $x(a);
      end;
 %
 
-%token b:"a b symbol" [B] = 
+%token <s> b:"a b symbol" [B] = 
 if   $c = 'b'
 then begin
+     $v.s := $c;
      $+; 
-     return b;
+     $x(b);
      end;
 %
        
-%token c:"a c symbol" [C] =
+%token <s> c:"a c symbol" [C] =
 if   $c = 'c'
 then begin
+     $v.s := $c;
      $+; 
-     return c;
+     $x(c);
      end;
 %
 
 %lexer [B] = 
 if   $c = 'a'
 then begin
+     $v.s := $c;
      $+; 
      $l := DEFAULT_LEXER_MODE; 
-     return a;
+     $x(a);
      end;
 %
 
 %lexer [C] = 
 if   $c = 'a'
 then begin
+     $v.s := $c;
      $+; 
      $l := DEFAULT_LEXER_MODE; 
-     return a;
+     $x(a);
      end;
 %
 
 %lexer =
 if   $c = 'b'
 then begin
+     $v.s := $c;
      $l := B_LEXER_MODE;
      $+;
-     return b;
+     $x(b);
      end;
   
 if   $c = 'c'
 then begin
+     $v.s := $c;
      $l := C_LEXER_MODE;
      $+;
-     return c;
-     end
+     $x(c);
+     end;
 %
+
+%type <s> A;
+%type <s> B;
+
+%start A
 
 %%
 
-A : a
+A : A B   = $$ := $A + $B;%
+  | B     = $$ := $B;%
+  ;
+  
+B : a
   | b
   | c
   ;
@@ -79,17 +99,21 @@ VAR
     charNum : INTEGER = 1;
 
 CONST
-    expression = '(1 + 3) *4 / 5 + -20';
+    expression = 'bacaab';
 
 FUNCTION StxNextChar: CHAR;
 BEGIN
     IF   charNum <= LENGTH(expression) 
     THEN BEGIN
-         writeln('Char ', expression[charNum]);
          StxNextChar := expression[charNum];
          charNum := charNum + 1;
          END
     ELSE StxNextChar := CHR(EOS);
+END;
+
+PROCEDURE StxUngetChar(c:char);
+BEGIN
+    charNum := charNum - 1;
 END;
 
 FUNCTION StxError(StxState:INTEGER; StxSym: INTEGER; pStxStack: INTEGER; aMessage:STRING):INTEGER;
@@ -101,3 +125,15 @@ BEGIN
 {$ENDIF}
     StxError := ERROR_RE_ATTEMPT;
 END;
+
+FUNCTION StxToString(value:TSTACK):STRING;
+BEGIN
+  StxToString := value.s;
+END;
+
+BEGIN
+  if   StxParse
+  then begin
+       writeln (StxToString(StxGetResult));
+       end;
+END.

@@ -29,6 +29,8 @@
 */
 package me.jaimegarza.syntax.language;
 
+import java.util.List;
+
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.model.parser.Action;
 import me.jaimegarza.syntax.model.parser.ErrorToken;
@@ -85,7 +87,7 @@ public class Java extends BaseLanguageSupport {
   }
 
   @Override
-  public void generateLexerHeader() {
+  public void generateLexerHeader(List<String> modes) {
     environment.output.println();
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("// LexicalRecognizer\n");
@@ -125,7 +127,7 @@ public class Java extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() + 1);
     environment.output.println("case " + computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE:");
     indent(environment.output, environment.getIndent() + 2);
-    environment.output.println("return ParserElement_" + computeModeName(lexerMode) + "();");
+    environment.output.println("return parserElement_" + computeModeName(lexerMode) + "();");
     environment.output.println();
   }
 
@@ -133,7 +135,7 @@ public class Java extends BaseLanguageSupport {
   public void generateLexerModeHeader(String lexerMode) {
     environment.output.println();
     indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("int ParserElement_" + computeModeName(lexerMode) + "() {\n");
+    environment.output.printf("int parserElement_" + computeModeName(lexerMode) + "() {\n");
   }
 
   @Override

@@ -1,79 +1,133 @@
 %{
+{Program that gets compiled and executed by free pascal}
+PROGRAM regexptokenizer;
+{$I $$b.inc}
+
 VAR
   CurrentString : STRING;  
 %}
 
 %union
-  c : CHAR;
   s : STRING;
 %
     
-%token A /a(.|.|b)c/
-%token B /(a)/ =
-  currentString := "";
-  StxLexer := $t;
+%lexer = 
+
+  $v.s := '';
+  while ($c <= ' ') AND ($c > CHR(0)) DO 
+  begin
+    $+;
+  end;
 %
 
-%token C /.?x+y*(a|b)*/
-%token D /_?[A-Za-z][A-Za-z0-9-]*/
-%token E /[]]/
-%token F /[-]/
-%token G /[]-]/
+%token A /(a|b)c/ = 
+  writeln('A:', $r);
+  CurrentString := CurrentString + 'A';
+  exit($t);
+%
 
-%start S;
+%token B /d(.|.|e)f/ =
+  writeln('B:', $r);
+  CurrentString := CurrentString + 'B';
+  exit($t);
+%
 
-%name S : "anything";
+%token X /(a)/ =
+  writeln('C:', $r);
+  CurrentString := CurrentString + 'C';
+  exit($t);
+%
+
+%token D /.?x+y*(a|b)*/ =
+  writeln('D:', $r);
+  CurrentString := CurrentString + 'D';
+  exit($t);
+%
+
+%token E /_?[A-Za-z][A-Za-z0-9-]*/ =
+  writeln('E:', $r);
+  CurrentString := CurrentString + 'E';
+  exit($t);
+%
+
+%token F /[]]/ =
+  writeln('F:', $r);
+  CurrentString := CurrentString + 'F';
+  exit($t);
+%
+
+%token G /[-]/ =
+  writeln('G:', $r);
+  CurrentString := CurrentString + 'G';
+  exit($t);
+%
+
+%token H /[]-]/ =
+  writeln('H:', $r);
+  CurrentString := CurrentString + 'H';
+  exit($t);
+%
+
+%token I /[^A-Za-z]*/ =
+  writeln('I:', $r);
+  CurrentString := CurrentString + 'I';
+  exit($t);
+%
+
+%start List;
+
+%name List : "anything";
 %%
 
-S    : A
-     | B
-     | C
-     | D
-     | E
-     | F
-     ;
+List     : List ListElem
+         | ListElem
+         ;
+         
+ListElem : A
+         | B
+         | X
+         | D
+         | E
+         | F
+         | G
+         | H
+         | I
+         ;
 
 %%
 
-// END OF GRAMMAR
+VAR
+    charNum : INTEGER = 1;
 
-  int charNum = 0;
-  String expression = "/(abc)d/";
-  
-  private char getNextChar(boolean initialize) {
-    if (initialize) {
-      charNum = 0;
-    }
-    
-    if (charNum < expression.length()) {
-      return expression.charAt(charNum++);
-    }
-    return EOS;
-  }
+CONST
+    expression = '_un-da bc daf a fxxxabaa ] - 0123 ac';
 
+FUNCTION StxNextChar: CHAR;
+BEGIN
+    IF   charNum <= LENGTH(expression) 
+    THEN BEGIN
+         StxNextChar := expression[charNum];
+         charNum := charNum + 1;
+         END
+    ELSE StxNextChar := CHR(EOS);
+END;
 
-  private int parserError(int state, int token, int top, String message) {
-    System.out.println("An error occurred in state " + state + " with token " + token + " on the position " + top);
-    System.out.println(message);
-    parserPrintStack();
-    return ERROR_RE_ATTEMPT;
-  }
-  
-  private String toString(StackElement value) {
-    if(value == null) {
-      return "";
-    } else {
-      return value.toString();
-    }
-  }
-  
-  public String getExpr() {
-    StackElement result = getResult();
-    if (result != null) {
-      return result.s;
-    } else {
-      return "";
-    }
-  }
-  
-}
+PROCEDURE StxUngetChar(c:char);
+BEGIN
+    charNum := charNum - 1;
+END;
+
+FUNCTION StxError(StxState:INTEGER; StxSym: INTEGER; pStxStack: INTEGER; aMessage:STRING):INTEGER;
+BEGIN
+    writeln('An error occurred in state ', StxState, ' with token ', StxSym, ' on the position ', pStxStack);
+    writeln(aMessage);
+{$IFDEF DEBUG}
+    StxPrintStack();
+{$ENDIF}
+    StxError := ERROR_RE_ATTEMPT;
+END;
+
+BEGIN
+    IF   StxParse() 
+    THEN WRITELN(CurrentString);
+END.

@@ -185,7 +185,7 @@ public abstract class Node {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append('(');
+    sb.append('{');
     if (starting) {
       sb.append("*");
     }
@@ -199,7 +199,7 @@ public abstract class Node {
     for (Transition t: transitions) {
       sb.append(' ').append(t.canonical()).append("->").append(t.getTo().getId());
     }
-    sb.append(")");
+    sb.append("}");
     return sb.toString();
   }
 }

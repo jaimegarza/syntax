@@ -29,6 +29,8 @@
 */
 package me.jaimegarza.syntax.language;
 
+import java.util.List;
+
 import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.code.Fragments;
@@ -155,9 +157,8 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  public void generateLexerHeader() {
+  public void generateLexerHeader(List<String> modes) {
     environment.include.println();
-    environment.include.println("{$MACRO ON}");
     if (environment.getDriver() == Driver.PARSER) {
       environment.include.println("{$DEFINE PARSER_MODE}");
       environment.include.println("{$DEFINE ACCEPTED:=1}");
@@ -183,11 +184,21 @@ public class Pascal extends BaseLanguageSupport {
                       .printf("{ Lexical Analyzer }\n")
                       .printf("\n")
                       .printf("function StxNextChar:char; forward;\n")
-                      .printf("\n")
+                      .printf("procedure StxUngetChar(c:char); forward;\n")
+                      .printf("function StxMatchesRegex(vertex:integer):boolean; forward;\n");
+    
+    if (environment.lexerModes.size() > 1) {
+      for (String mode: modes) {
+        environment.output.printf("function StxLexer_" + computeModeName(mode) + ":longint; forward;\n");
+      }
+    }
+
+    environment.output.printf("\n")
                       .printf("VAR\n")
                       .printf("  StxChar:char;\n")
                       .printf("  StxValue:TSTACK;\n")
                       .printf("  StxLexerMode:integer = DEFAULT_LEXER_MODE;\n")
+                      .printf("  StxRecognized:String;\n")
                       .printf("\n")
                       .printf("function StxLexer:longint;\n")
                       .printf("begin\n");
@@ -228,15 +239,18 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   public void generateLexerModeDefinition(String lexerMode, int index) {
-    environment.include.println("{$DEFINE " + computeModeName(lexerMode).toUpperCase() + "_MODE:=" + index + "}");
+    if (index == 0) {
+      environment.include.println("{$MACRO ON}");
+    }
+    environment.include.println("{$DEFINE " + computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE:=" + index + "}");
   }
 
   @Override
   public void generateLexerModeCase(String lexerMode, int index) {
     indent(environment.output, environment.getIndent()+1);
-    environment.output.println(computeModeName(lexerMode).toUpperCase() + "_MODE: begin");
+    environment.output.println(computeModeName(lexerMode).toUpperCase() + "_LEXER_MODE: begin");
     indent(environment.output, environment.getIndent() + 2);
-    environment.output.println("StxLexer := StxLexer_" + computeModeName(lexerMode) + "();");
+    environment.output.println("exit(StxLexer_" + computeModeName(lexerMode) + "());");
     indent(environment.output, environment.getIndent() + 2);
     environment.output.println("end;");
     environment.output.println();
@@ -410,7 +424,7 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
-  protected boolean lexerDollar(FormattingPrintStream output, Lexer lexer, Terminal token) {
+  protected boolean lexerDollar(FormattingPrintStream output, String lexerMode, Lexer lexer, Terminal token) {
     lexer.getCharacter();
     if (runtime.currentCharacter == '+') {
       lexer.getCharacter();
@@ -428,18 +442,27 @@ public class Pascal extends BaseLanguageSupport {
       lexer.getCharacter();
       output.printFragment(Fragments.LEXICAL_VALUE);
       return true;
-    } else if (runtime.currentCharacter == 'r') {
-      lexerReturnValue(output, lexer);
-      return true;
     } else if (runtime.currentCharacter == 't') {
+      lexer.getCharacter();
       output.printFragment(Fragments.TOKEN, token.getName());
+      return true;
+    } else if (runtime.currentCharacter == 'm') {
+      lexer.getCharacter();
+      output.printFragment(Fragments.LEXER_FUNCTION_NAME, lexerMode);
+      return true;
+    } else if (runtime.currentCharacter == 'r') {
+      lexer.getCharacter();
+      output.printFragment(Fragments.RECOGNIZED);
+      return true;
+    } else if (runtime.currentCharacter == 'x') {
+      lexerReturnValue(output, lexerMode, lexer);
       return true;
     }
     output.print('$');
     return false; 
   }
 
-  private void lexerReturnValue(FormattingPrintStream output, Lexer lexer) {
+  protected void lexerReturnValue(FormattingPrintStream output, String lexerMode, Lexer lexer) {
     String follows = "";
     lexer.getCharacter();
     while (runtime.currentCharacter == ' ') {
@@ -471,9 +494,9 @@ public class Pascal extends BaseLanguageSupport {
       } else {
         environment.error(runtime.lineNumber, "Unfinished return value.  Recognized %s.", returnValue);
       }
-      output.printFragment(Fragments.RETURN_VALUE, returnValue);
+      output.printFragment(Fragments.RETURN, returnValue);
     } else {
-      output.printf("StxLexer :=%s", follows);
+      output.printf("exit(%s)", follows);
     }
   }
 
@@ -495,14 +518,14 @@ public class Pascal extends BaseLanguageSupport {
   }
   
   @Override
-  public boolean generateLexerCode(FormattingPrintStream output, Lexer lexer, Terminal token, int additionalIndent) {
+  public boolean generateLexerCode(FormattingPrintStream output, String lexerMode, Lexer lexer, Terminal token, int additionalIndent) {
     boolean end = false;
     boolean bStart = true;
 
     while (!end) {
       switch (runtime.currentCharacter) {
         case '$':
-          if (lexerDollar(output, lexer, token)) {
+          if (lexerDollar(output, lexerMode, lexer, token)) {
             continue;
           }
           break;
@@ -768,20 +791,28 @@ public class Pascal extends BaseLanguageSupport {
   }
   @Override
   public void generateEdgeHeader(int size) {
-    environment.output.printf("\nConst\n  EDGES = %d;\n", size);
-    environment.output.printf("\n  StxEdge : array [0..EDGES-1] of INTEGER = (\n", runtime.getNonTerminals().size());
+    environment.include.printf("\nConst\n  EDGES = %d;\n", size);
+    if (size > 0){
+      environment.output.printf("\n  StxEdges : array [0..EDGES-1] of INTEGER = (\n", runtime.getNonTerminals().size());
+    } else {
+      environment.output.printf("\n  StxEdges : array [0..0] of INTEGER = (0);\n", runtime.getNonTerminals().size());
+    }
   }
 
   @Override
   public void generateVertexHeader(int size) {
-    environment.include.printf("\nConst\n  VERTICES = %d\n", size);
-    environment.output.printf("\n  StxVertices : array [0..VERTICES-1] of INTEGER = (\n", runtime.getNonTerminals().size());
+    environment.include.printf("\nConst\n  VERTICES = %d;\n", size);
+    if (size > 0){
+      environment.output.printf("\n  StxVertices : array [0..VERTICES-1] of INTEGER = (\n", runtime.getNonTerminals().size());
+    } else {
+      environment.output.printf("\n  StxVertices : array [0..0] of INTEGER = (0);\n", runtime.getNonTerminals().size());
+    }
   }
   
   @Override
   public void generateIntArrayRow(int i, String comment, int index, int maxSize) {
     indent(environment.output, environment.getIndent());
-    environment.output.printf("%5d%s%s\n", i, index != maxSize ? "," : ");", comment == null ? "": " (* " + comment + " *)");
+    environment.output.printf("%5d%s%s\n", i, index < maxSize - 1 ? "," : ");", comment == null ? "": " (* " + comment + " *)", index, maxSize);
   }
 
   @Override
