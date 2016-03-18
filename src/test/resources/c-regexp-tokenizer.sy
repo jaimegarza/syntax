@@ -134,7 +134,7 @@ char * StxToString(TSTACK value)
 int main(char *argv) 
 {
     if (StxParse()) {
-        printf("Output=%s\n", currentString);
+        printf("%s\n", currentString);
     }
     exit (0);
 }
