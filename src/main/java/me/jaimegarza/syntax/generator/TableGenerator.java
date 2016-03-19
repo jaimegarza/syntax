@@ -387,7 +387,7 @@ public class TableGenerator extends AbstractPhase {
   private boolean groupContainsAll(TokenGroup group, int parserLine[]) {
     int count = 0;
     for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
-      if (parserLine[i] != ACCEPT) {
+      if (parserLine[i] != ACCEPT && parserLine[i] != 0) {
         Terminal t = runtimeData.findTerminalById(i);
         if (group.getTokens().contains(t)) {
           count++;
@@ -453,7 +453,7 @@ public class TableGenerator extends AbstractPhase {
         Terminal token = runtimeData.findTerminalById(i);
         if (token != null) { // a shift
           // check to see if it is already in a group of tokens
-          if (!tokenInGroups(token, errorGroups)) {
+          if (tokenInGroups(token, errorGroups) == false) {
             tokenCount++;
             if (tokenCount == 1) {
               theToken = token;
@@ -494,7 +494,7 @@ public class TableGenerator extends AbstractPhase {
       String message = theReducer.getFullName() + " expected";
       environment.report.println("    " + message);
       I[stateNumber].setMessage(addErrorMessage(message));
-    } else if (tokenCount != 0 && (tokenCount < nonTerminalCount || nonTerminalCount == 0)) {
+    } else if (tokenCount > 0 && (tokenCount < nonTerminalCount || nonTerminalCount == 0)) {
       // includes groups, so go for them first
       StringBuilder messageBuffer = new StringBuilder();
       int count = 0;
@@ -512,7 +512,7 @@ public class TableGenerator extends AbstractPhase {
       for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
         if (parserLine[i] > 0 && parserLine[i] != ACCEPT) {
           Terminal t = runtimeData.findTerminalById(i);
-          if (t != null && !tokenInGroups(t, errorGroups)) {
+          if (t != null && tokenInGroups(t, errorGroups) == false) {
             if (count > 0) {
               if (count == tokenCount - 1) {
                 messageBuffer.append(" or ");
@@ -528,7 +528,7 @@ public class TableGenerator extends AbstractPhase {
       messageBuffer.append(" expected");
       environment.report.println("    " + messageBuffer.toString());
       I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
-    } else if (nonTerminalCount != 0) {
+    } else if (nonTerminalCount > 0) {
       StringBuilder messageBuffer = new StringBuilder("Expecting ");
       int count = 0;
       int terminals = runtimeData.getTerminals().size();
@@ -555,7 +555,7 @@ public class TableGenerator extends AbstractPhase {
       }
       environment.report.println("    " + messageBuffer.toString());
       I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
-    } else if (reduceCount != 0) {
+    } else if (reduceCount > 0) {
       StringBuilder messageBuffer = new StringBuilder("");
       int count = 0;
       for (TokenGroup group : errorGroups) {
@@ -570,9 +570,9 @@ public class TableGenerator extends AbstractPhase {
         count ++;
       }
       for (int i = 0; i < runtimeData.getTerminals().size(); i++) {
-        if (parserLine[i] < 0) {
+        if (parserLine[i] < 0 && parserLine[i] != ACCEPT) {
           Terminal t = runtimeData.findTerminalById(i);
-          if (t != null) {
+          if (t != null && tokenInGroups(t, errorGroups) == false) {
             if (count > 0) {
               if (count == tokenCount - 1) {
                 messageBuffer.append(" or ");

@@ -83,11 +83,14 @@ public class TestParser {
 
 %type    <number> Expression
 
+%name Expression : "expression";
+
 %start Expression
 
 %lexer = {
 }
 
+%group OPS : "operator" TOK_AND, TOK_OR, TOK_LT, TOK_LE, TOK_GT, TOK_GE, TOK_NE, TOK_EQ, '+', '-', '*', '/';
 
 %%
 Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 : 0;
