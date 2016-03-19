@@ -496,8 +496,8 @@ public class Java extends BaseLanguageSupport {
     if (environment.bundle == null) {
       environment.output.printf(" /* %d */ \"%s\"", error, escapeDoubleQuotes(errorMessage));
     } else {
-      environment.output.printf(" \"%s.message%07d\" /* %d - %s */", environment.getBundleName(), error, error, errorMessage);
-      environment.bundle.printf("%s.message%07d=%s\n", environment.getBundleName(), error, errorMessage);
+      environment.output.printf(" \"%s.error%07d\" /* %d - %s */", environment.getBundleName(), error, error, errorMessage);
+      environment.bundle.printf("%s.error%07d=%s\n", environment.getBundleName(), error, errorMessage);
     }
 
     if (error == runtime.getErrorMessages().size() - 1) {
