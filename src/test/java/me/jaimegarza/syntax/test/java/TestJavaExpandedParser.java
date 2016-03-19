@@ -61,6 +61,8 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
       "java",
       "--packing",
       "tabular",
+      "--bundle",
+      "temp:TestParser.properties",
       //"-v",
       //"-g",
       "classpath:java-test.sy",

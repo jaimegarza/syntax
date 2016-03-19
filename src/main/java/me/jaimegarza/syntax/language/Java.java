@@ -492,7 +492,14 @@ public class Java extends BaseLanguageSupport {
   @Override
   public void printErrorEntry(int error) {
     indent(environment.output, environment.getIndent());
-    environment.output.printf(" /* %d */ \"%s\"", error, escapeDoubleQuotes(runtime.getErrorMessages().get(error)));
+    String errorMessage = runtime.getErrorMessages().get(error);
+    if (environment.bundle == null) {
+      environment.output.printf(" /* %d */ \"%s\"", error, escapeDoubleQuotes(errorMessage));
+    } else {
+      environment.output.printf(" \"%s.message%07d\" /* %d - %s */", environment.getBundleName(), error, error, errorMessage);
+      environment.bundle.printf("%s.message%07d=%s\n", environment.getBundleName(), error, errorMessage);
+    }
+
     if (error == runtime.getErrorMessages().size() - 1) {
       environment.output.printf("\n");
     } else {

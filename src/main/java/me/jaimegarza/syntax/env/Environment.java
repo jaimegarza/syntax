@@ -101,17 +101,20 @@ public class Environment {
   private int indent;
   private boolean packed;
   private boolean externalInclude;
+  private String bundleName;
   private List<String> fileNames;
   private File sourceFile;
   private File outputFile;
   private File includeFile;
   private File reportFile;
+  private File bundleFile;
   private RuntimeData runtimeData = new RuntimeData();
 
   public BufferedReader source = null;
   public FormattingPrintStream output = null;
   public FormattingPrintStream include = null;
   public FormattingPrintStream report = null;
+  public FormattingPrintStream bundle = null;
   public AlgorithmicSupport algorithm = null;
   public LanguageSupport language = null;
   
@@ -152,6 +155,7 @@ public class Environment {
     close("output", output);
     close("include", include);
     close("report", report);
+    close("bundle", bundle);
   }
   
   private void close (String name, Closeable c) {
@@ -195,11 +199,13 @@ public class Environment {
       setPacking();
       setExternalInclude();
       setDriver();
+      setBundle();
       this.fileNames = cmd.getParameters();
       setSourceFile();
       setOutputFile();
       setIncludeFile();
       setReportFile();
+      setBundleName();
     } catch (CommandLineParseException e) {
       System.out.println("Command line error: " + e.getMessage());
       printHelp();
@@ -250,6 +256,10 @@ public class Environment {
         "* sparsely populated table.", "packing");
     add("x", "external", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Generate include file (true,on,yes,1|false,off,no,0, default is language dependent)", "external");
+    add("d", "driver", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "What parser driver is to be used (parser|scanner, default is parser)", "parser");
+    add("b", "bundle", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "Produce a resource bundle for the error messages", "");
     add("d", "driver", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "What parser driver is to be used (parser|scanner, default is parser)", "parser");
   }
@@ -392,6 +402,44 @@ public class Environment {
     }
   }
 
+  /**
+   * Compute the bundle file if needed
+   * @throws CommandLineParseException if the option cannot be computed
+   */
+  private void setBundle() throws CommandLineParseException {
+    String fileName = get("b", "");
+    if (fileName.length() > 0) {
+      File file;
+      // I will use bundling
+      if (fileName.startsWith(TEMP_PREFIX)) {
+        fileName = fileName.substring(TEMP_PREFIX.length());
+        String root = PathUtils.getFileNameNoExtension(fileName);
+        String extension = "." + PathUtils.getFileExtension(fileName);
+        try {
+          file = File.createTempFile(root, extension);
+        } catch (IOException e) {
+          throw new CommandLineParseException(e.getMessage());
+        }
+        System.out.println(fileName + "-->" + file.getAbsolutePath());
+      } else {
+        file = new File(fileName);
+      }
+      this.bundleFile = file;
+      try {
+        this.bundle = new FormattingPrintStream(this, openFileForWrite(file));
+      } catch (IOException e) {
+        throw new CommandLineParseException("Cannot open file " + file);
+      }
+    } else {
+      this.bundleFile = null;
+      this.bundle = null;
+    }
+  }
+  
+  private void setBundleName() {
+    this.bundleName = PathUtils.getFileNameNoExtension(this.outputFile.getName());
+  }
+  
   /**
    * compute the verbosity from options
    * @throws CommandLineParseException if the option cannot be computed
@@ -600,7 +648,6 @@ public class Environment {
       } catch (IOException e) {
         throw new CommandLineParseException("Cannot open file " + outputFile);
       }
-
     }
   }
 
@@ -784,6 +831,20 @@ public class Environment {
    */
   public File getReportFile() {
     return reportFile;
+  }
+
+  /**
+   * @return the reportFile
+   */
+  public File getBundleFile() {
+    return bundleFile;
+  }
+
+  /**
+   * @return the bundle name
+   */
+  public String getBundleName() {
+    return bundleName;
   }
 
   /**
