@@ -108,6 +108,7 @@ public class Environment {
   private File includeFile;
   private File reportFile;
   private File bundleFile;
+  private File skeletonFile;
   private RuntimeData runtimeData = new RuntimeData();
 
   public BufferedReader source = null;
@@ -115,6 +116,7 @@ public class Environment {
   public FormattingPrintStream include = null;
   public FormattingPrintStream report = null;
   public FormattingPrintStream bundle = null;
+  public BufferedReader skeleton = null;
   public AlgorithmicSupport algorithm = null;
   public LanguageSupport language = null;
   
@@ -156,6 +158,7 @@ public class Environment {
     close("include", include);
     close("report", report);
     close("bundle", bundle);
+    close("skeleton", skeleton);
   }
   
   private void close (String name, Closeable c) {
@@ -206,6 +209,7 @@ public class Environment {
       setIncludeFile();
       setReportFile();
       setBundleName();
+      setSkeletonFile();
     } catch (CommandLineParseException e) {
       System.out.println("Command line error: " + e.getMessage());
       printHelp();
@@ -260,6 +264,8 @@ public class Environment {
         "What parser driver is to be used (parser|scanner, default is parser)", "parser");
     add("b", "bundle", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Produce a resource bundle for the error messages", "");
+    add("k", "skeleton", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
+        "Uses the external skeleton provided", "");
     add("d", "driver", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "What parser driver is to be used (parser|scanner, default is parser)", "parser");
   }
@@ -440,6 +446,32 @@ public class Environment {
     this.bundleName = PathUtils.getFileNameNoExtension(this.outputFile.getName());
   }
   
+  /**
+   * Compute the source file
+   * @throws CommandLineParseException if the source file cannot be computed
+   */
+  private void setSkeletonFile() throws CommandLineParseException {
+    String fileName = get("k", "");
+    if (fileName != null) {
+      if (fileName.startsWith(CLASSPATH_PREFIX)) {
+        // testing cases
+        fileName = fileName.substring(CLASSPATH_PREFIX.length());
+        URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
+        if (url == null) {
+          throw new CommandLineParseException("filename " + fileName + " not found in the class path");
+        }
+        skeletonFile = new File(URI.create(url.toString()));
+      } else {
+        skeletonFile = new File(fileName);
+      }
+      try {
+        skeleton = new BufferedReader(openFileForRead(skeletonFile));
+      } catch (IOException e) {
+        throw new CommandLineParseException("Cannot open skeleton file " + skeletonFile);
+      }
+    }
+  }
+
   /**
    * compute the verbosity from options
    * @throws CommandLineParseException if the option cannot be computed
@@ -838,6 +870,13 @@ public class Environment {
    */
   public File getBundleFile() {
     return bundleFile;
+  }
+
+  /**
+   * @return the reportFile
+   */
+  public File getSkeletonFile() {
+    return skeletonFile;
   }
 
   /**

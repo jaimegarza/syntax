@@ -165,32 +165,46 @@ public class CodeWriter extends AbstractPhase {
    * @throws IOException
    */
   private void finishOutput() throws IOException {
-    String filename = getSkeletonResourceName();
-
-    ClassLoader loader = this.getClass().getClassLoader();
-    InputStream is = loader.getResourceAsStream(filename);
-    if (is != null) {
-      try {
+    String filename;
+    BufferedReader reader = null;
+    boolean close = false;
+    
+    try {
+      if (environment.skeleton != null) {
+        reader = environment.skeleton;
+        filename = environment.getSkeletonFile().getAbsolutePath();
+        close = false;
+      } else {
+        filename = getSkeletonResourceName();
+        ClassLoader loader = this.getClass().getClassLoader();
+        InputStream is = loader.getResourceAsStream(filename);
+        if (is != null) {
+          reader = new BufferedReader(new InputStreamReader(is));
+          close = true;
+        } else {
+          System.err.println("\n\nWarning: internal skeleton \"" + filename + "\" not found.  Table was generated.\n");
+          environment.language.printMissingSkeleton(filename);
+        }
+      }
+  
+      if (reader != null) {
         if (environment.isVerbose()) {
           System.out.println("using skeleton " + filename);
         }
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        environment.language.emitLine(1, filename);
+  
         environment.language.emitLine(1, filename);
         String line = reader.readLine();
         while (line != null) {
           environment.output.println(line);
           line = reader.readLine();
         }
-      } finally {
-        is.close();
       }
-    } else {
-      System.err.println("\n\nWarning: internal skeleton \"" + filename + "\" not found.  Table was generated.\n");
-      environment.language.printMissingSkeleton(filename);
+    } finally {
+      if (close) {
+        reader.close();
+      }
     }
-
+    
     if (runtimeData.hasFinalActions() == false) {
       return;
     }
