@@ -81,7 +81,7 @@ public class TestJavaPackedParser extends AbstractGenerationBase {
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
-      "Errors:.*8",
+      "Errors:.*3",
       "Actions:.*57",
       "Gotos:.*16",
       "Recoveries:.*0",
