@@ -226,6 +226,7 @@ public interface LanguageSupport {
   /**
    * Emit the code for the lexical part of the grammar
    * @param output is the stream to write to
+   * @param lexerMode is the string representing the desired mode
    * @param lexer is the lexer to obtain more characters
    * @param token is the current token for which generation is attempted
    * @param additionalIndent is the wanted indentation delta
@@ -361,19 +362,21 @@ public interface LanguageSupport {
 
   /**
    * Generate if statement for a regular expression match
+   * @param output is the code stream
    * @param dfaNode is the starting dfa node to begin the match
    */
   void generateRegexMatch(FormattingPrintStream output, int dfaNode);
 
   /**
    * Generate the default return token for a regexp
+   * @param output is the code stream
    * @param token is the token that it returns
    */
   void generateRegexReturn(FormattingPrintStream output, Terminal token);
 
   /**
    * Generate the bottom of a regex match in the scanner
-   * @param output 
+   * @param output is the code stream
    */
   void generateRegexEnd(FormattingPrintStream output);
 
