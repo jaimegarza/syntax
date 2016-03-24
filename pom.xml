@@ -74,6 +74,9 @@
         <!-- <configuration>
           <sourcepath>src/main/java</sourcepath>
         </configuration> -->
+        <configuration>
+          <sourcepath>src/main/java</sourcepath>
+        </configuration>
         <executions>
           <execution>
             <id>attach-javadocs</id>

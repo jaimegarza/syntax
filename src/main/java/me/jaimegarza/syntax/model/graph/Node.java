@@ -113,7 +113,7 @@ public abstract class Node {
   }
   
   /**
-   * Obtain a list of transitions for writing to the generated code
+   * @return a list of transitions for writing to the generated code
    */
   public List<Transition> getCodeTransitions() {
     // decided using java 7. Java 8 below

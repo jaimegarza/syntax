@@ -45,6 +45,7 @@ public class CollectionUtils {
   /**
    * Given a collection, return it as a list sorted with the default comparator
    * @param c is the collection to sort
+   * @param <T> is the type of the list
    * @return the sorted list
    */
   public static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
@@ -56,6 +57,8 @@ public class CollectionUtils {
   /**
    * Given a collection, return it as a list sorted with the given comparator
    * @param c is the collection to sort
+   * @param  comparator
+   * @param <T> is the type of the list
    * @return the sorted list
    */
   public static <T> List<T> asSortedList(Collection<T> c, Comparator<T> comparator) {

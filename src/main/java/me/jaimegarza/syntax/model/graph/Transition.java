@@ -93,7 +93,7 @@ public class Transition {
   }
   
   /**
-   * @return true if the transition is of <ANY> type
+   * @return true if the transition is of ANY type
    */
   public boolean isAny() {
     return symbol instanceof AnyCharacter;
@@ -120,6 +120,7 @@ public class Transition {
   /**
    * Determine the code for a given transition.
    * The code is determined by the symbol
+   * @return the code of the symbol
    */
   public int code() {
     return symbol.code();
@@ -128,6 +129,7 @@ public class Transition {
   /**
    * What is the size of this transition in the table. Uses
    * the symbol + 1 for the node id
+   * @return the size occupied by this transition
    */
   public  int sizeof() {
     return symbol.sizeof() + 1; // 1 destination node;

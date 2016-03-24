@@ -83,7 +83,7 @@ public class TestJavaPackedScanner extends AbstractGenerationBase {
       "Non Terminals:.*2",
       "Types:.*1",
       "Rules:.*17",
-      "Errors:.*8",
+      "Errors:.*3",
       "Actions:.*254",
       "Gotos:.*16",
       "Recoveries:.*0",

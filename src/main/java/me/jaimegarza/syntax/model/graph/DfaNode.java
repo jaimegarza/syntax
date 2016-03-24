@@ -105,7 +105,7 @@ public class DfaNode extends Node {
   }
   
   /**
-   * Return the size of this node in the table
+   * @return the size of this node in the table
    */
   public int sizeof() {
     int tableSize = 0;

@@ -452,7 +452,7 @@ public class Environment {
    */
   private void setSkeletonFile() throws CommandLineParseException {
     String fileName = get("k", "");
-    if (fileName != null) {
+    if (fileName != null && !fileName.equals("")) {
       if (fileName.startsWith(CLASSPATH_PREFIX)) {
         // testing cases
         fileName = fileName.substring(CLASSPATH_PREFIX.length());
