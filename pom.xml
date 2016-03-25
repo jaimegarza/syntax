@@ -6,13 +6,6 @@
   <version>4.1.0</version>
   <packaging>jar</packaging>
 
-  <!-- needed for Sonatype OSS repository https://oss.sonatype.org -->
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
-
   <name>Syntax Compiler-Compiler</name>
   <description>
     Syntax is a compiler compiler that handles LALR and SLR grammars.  It can generate C, Java and Delphi Pascal artifacts
@@ -41,6 +34,17 @@
     </developer>
   </developers>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+  
   <build>
     <plugins>
       <plugin>
@@ -107,22 +111,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>1.7.1</version>
-        <configuration>
-          <finalName>${project.artifactId}-${project.version}-bin</finalName>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>me.jaimegarza</groupId>
         <artifactId>syntax-maven-plugin</artifactId>
         <version>1.0.3</version>
@@ -143,41 +131,6 @@
           <packed>false</packed>
           <algorithm>slr</algorithm>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <execution>
-            <id>attach-artifacts</id>
-            <phase>package</phase>
-            <goals>
-              <goal>attach-artifact</goal>
-            </goals>
-            <configuration>
-              <artifacts>
-                <artifact>
-                  <file>${project.build.directory}/${project.artifactId}-${project.version}-bin.jar</file>
-                  <type>jar</type>
-                  <classifier>bin</classifier>
-                </artifact>
-              </artifacts>
-            </configuration>
-          </execution>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>target/gensrc</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
     <pluginManagement>
@@ -243,7 +196,7 @@
       <id>release-sign-artifacts</id>
       <activation>
         <property>
-          <name>performRelease</name>
+          <name>release</name>
           <value>true</value>
         </property>
       </activation>
@@ -252,7 +205,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.4</version>
+            <version>1.5</version>
             <configuration>
               <keyname>E03F5040</keyname>
             </configuration>
