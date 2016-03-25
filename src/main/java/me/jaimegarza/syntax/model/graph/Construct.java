@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
-import me.jaimegarza.syntax.regex.NfaUtil;
+import me.jaimegarza.syntax.util.NfaUtil;
 
 /**
  * A construct is all the graph nodes between a start and an end. Please refer

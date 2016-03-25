@@ -27,7 +27,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
  */
-package me.jaimegarza.syntax.regex;
+package me.jaimegarza.syntax.util;
 
 import me.jaimegarza.syntax.model.graph.Construct;
 import me.jaimegarza.syntax.model.graph.Dfa;

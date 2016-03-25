@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package me.jaimegarza.syntax.model.graph;
 
-import me.jaimegarza.syntax.regex.NfaUtil;
+import me.jaimegarza.syntax.util.NfaUtil;
 
 /**
  * Non-finite automaton. A directed graph with &epsilon; transitions. 

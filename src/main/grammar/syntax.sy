@@ -51,8 +51,7 @@ import me.jaimegarza.syntax.model.graph.NfaNode;
 import me.jaimegarza.syntax.model.graph.DfaNode;
 import me.jaimegarza.syntax.model.graph.symbol.CharacterClass;
 import me.jaimegarza.syntax.env.Environment;
-import me.jaimegarza.syntax.regex.RegexUtil;
-import me.jaimegarza.syntax.regex.NfaUtil;
+import me.jaimegarza.syntax.util.NfaUtil;
 
 /**
  * Parser for a grammar.<p>
