@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>me.jaimegarza</groupId>
   <artifactId>syntax</artifactId>
-  <version>4.1.0</version>
+  <version>4.2.0</version>
   <packaging>jar</packaging>
 
   <name>Syntax Compiler-Compiler</name>
@@ -78,9 +78,6 @@
         <!-- <configuration>
           <sourcepath>src/main/java</sourcepath>
         </configuration> -->
-        <configuration>
-          <sourcepath>src/main/java</sourcepath>
-        </configuration>
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -113,7 +110,7 @@
       <plugin>
         <groupId>me.jaimegarza</groupId>
         <artifactId>syntax-maven-plugin</artifactId>
-        <version>1.0.3</version>
+        <version>1.1.0</version>
         <executions>
           <execution>
             <id>generate-parser</id>
@@ -126,7 +123,7 @@
         <configuration>
           <sourceFile>src/main/grammar/syntax.sy</sourceFile>
           <outputFile>${project.build.directory}/gensrc/me/jaimegarza/syntax/generator/SyntaxCodeParser.java</outputFile>
-          <verbose>true</verbose>
+          <verbose>false</verbose>
           <debug>false</debug>
           <packed>false</packed>
           <algorithm>slr</algorithm>
