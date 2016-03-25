@@ -57,7 +57,7 @@ public class CollectionUtils {
   /**
    * Given a collection, return it as a list sorted with the given comparator
    * @param c is the collection to sort
-   * @param  comparator
+   * @param  comparator is the function to compare two items in the collection
    * @param <T> is the type of the list
    * @return the sorted list
    */
