@@ -67,17 +67,17 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
     switch (language) {
       case java:
         tmpLanguageFile = createTmpFile(basename + ".java", "output implementation file");
-        tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
+        tmpGrammarFile = createTmpFile(basename + ".html", "grammar file");
         tmpIncludeFile = createTmpFile(basename + "Intf.java", "interface file");
         break;
       case C:
         tmpLanguageFile = createTmpFile(basename + ".c", "output implementation file");
-        tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
+        tmpGrammarFile = createTmpFile(basename + ".html", "grammar file");
         tmpIncludeFile = createTmpFile(basename + ".h", "include file");
         break;
       case pascal:
         tmpLanguageFile = createTmpFile(basename + ".pas", "output implementation file");
-        tmpGrammarFile = createTmpFile(basename + ".txt", "grammar file");
+        tmpGrammarFile = createTmpFile(basename + ".html", "grammar file");
         tmpIncludeFile = createTmpFile(basename + ".inc", "include file");
         break;
     }

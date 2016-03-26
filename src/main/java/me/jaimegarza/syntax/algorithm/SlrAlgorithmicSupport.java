@@ -50,6 +50,11 @@ public class SlrAlgorithmicSupport extends BaseAlgorithmicSupport{
   }
 
   @Override
+  public boolean supportsLookahead() {
+    return false;
+  };
+
+  @Override
   public boolean addLookaheadsToState(State[] I, int state, List<Dot> dots) {
     return false;
   }
@@ -65,7 +70,8 @@ public class SlrAlgorithmicSupport extends BaseAlgorithmicSupport{
   }
 
   @Override
-  public void printLookahead(Dot dot) {
+  public String getPrintableLookahead(Dot dot) {
+    return "";
   }
 
   @Override

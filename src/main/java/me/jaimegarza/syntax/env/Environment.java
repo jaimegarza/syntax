@@ -62,6 +62,7 @@ import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.language.LanguageSupport;
 import me.jaimegarza.syntax.model.parser.Driver;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
+import me.jaimegarza.syntax.util.HtmlWriter;
 import me.jaimegarza.syntax.util.PathUtils;
 
 /**
@@ -74,6 +75,8 @@ import me.jaimegarza.syntax.util.PathUtils;
  */
 @SuppressWarnings("unused")
 public class Environment {
+  private static final String REPORT_FILE_EXTENSION = ".html";
+
   private static final String DEFAULT_RIGHT_MARGIN = "8000";
 
   private static final String CLASSPATH_PREFIX = "classpath:";
@@ -119,6 +122,7 @@ public class Environment {
   public BufferedReader skeleton = null;
   public AlgorithmicSupport algorithm = null;
   public LanguageSupport language = null;
+  public HtmlWriter reportWriter = null;
   
   public Map<String, FormattingPrintStream> lexerModes = new HashMap<String, FormattingPrintStream>();
   
@@ -616,7 +620,7 @@ public class Environment {
       if (externalInclude) {
         this.includeFile = new File(replaceExtension(sourceFile.getPath(), language.getIncludeExtensionSuffix()));
       }
-      this.reportFile = new File(replaceExtension(sourceFile.getPath(), ".txt"));
+      this.reportFile = new File(replaceExtension(sourceFile.getPath(), REPORT_FILE_EXTENSION));
     }
     try {
       source = new BufferedReader(openFileForRead(sourceFile));
@@ -652,13 +656,14 @@ public class Environment {
   private void setReportFile() throws CommandLineParseException {
     File reportFile = getFile(3, false, "report file");
     if (reportFile == null) {
-      reportFile = new File(replaceExtension(outputFile.getAbsolutePath(), ".txt"));
+      reportFile = new File(replaceExtension(outputFile.getAbsolutePath(), REPORT_FILE_EXTENSION));
     }
     if (reportFile != null) {
       this.reportFile = reportFile;
     }
     try {
       this.report = new FormattingPrintStream(this, openFileForWrite(this.reportFile));
+      this.reportWriter = new HtmlWriter(this.report);
     } catch (IOException e) {
       throw new CommandLineParseException("Cannot open file " + reportFile);
     }

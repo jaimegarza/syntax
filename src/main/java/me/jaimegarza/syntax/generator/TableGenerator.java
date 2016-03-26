@@ -157,19 +157,23 @@ public class TableGenerator extends AbstractPhase {
    * @param stateNum is the desired state
    */
   private void printStateReport(int stateNum) {
-    environment.report.println();
-    environment.report.printf("State #%3d", stateNum);
+    environment.reportWriter.title(String.format("State #%3d", stateNum));
     if (I[stateNum].getFrom() >= 0) {
-      environment.report.printf(" Goto from state %d with symbol %s\n", I[stateNum].getFrom(), I[stateNum].getSymbol()
-          .getName());
+      environment.reportWriter.subTitle(String.format(" Goto from state %d with symbol %s", I[stateNum].getFrom(), I[stateNum].getSymbol()
+          .getName()));
     } else {
-      environment.report.println(" - Root");
+      environment.reportWriter.subTitle("<span>Root</span>");
+    }
+    if (environment.algorithm.supportsLookahead()) {
+      environment.reportWriter.tableHead("statehead", right("Rule"), left("Production"), left("Lookahead"));
+    } else {
+      environment.reportWriter.tableHead("statehead", right("Rule"), left("Production"));
     }
     for (Dot dot : I[stateNum].getKernelDots()) {
       printDotReport(dot);
     }
     if (I[stateNum].getClosureDots().size() > 0) {
-      environment.report.println("    ---------------------------------------------------------");
+      environment.reportWriter.tableOneCellRow("<hr/>", "line");
     }
     for (Dot dot : I[stateNum].getClosureDots()) {
       printDotReport(dot);
@@ -182,26 +186,29 @@ public class TableGenerator extends AbstractPhase {
    * @param dot is the dot to report
    */
   private void printDotReport(Dot dot) {
-    environment.report.printf("%3d ", dot.getRule().getRulenum());
-    environment.report.printf("%s -> ", dot.getRule().getLeftHand().getName());
+    String s = dot.getRule().getLeftHand().getName() + " &rArr; ";
     RuleItem item = dot.getRule().getItem(0);
     if (item == null) {
-      environment.report.print(".");
+      s += "&middot;";
     }
     int i = 0;
     while (item != null) {
       if (dot.getItem() != null && dot.getItem() == item) {
-        environment.report.print(". ");
+        s += "&middot; ";
       }
-      environment.report.printf("%s ", item.getSymbol().getName());
+      s += item.getSymbol().getName() + " ";
       item = dot.getRule().getItem(++i);
       if (item == null && dot.getItem() == null) {
-        environment.report.print(".");
+        s += "&middot;";
       }
     }
-    environment.algorithm.printLookahead(dot);
+    if (environment.algorithm.supportsLookahead()) {
+      environment.reportWriter.tableRow(right(dot.getRule().getRulenum()),
+          left(s), left(environment.algorithm.getPrintableLookahead(dot)));
+    } else {
+      environment.reportWriter.tableRow(right(dot.getRule().getRulenum()), left(s));
+    }
     //dot = dot.next();
-    environment.report.println();
     //return dot;
   }
 
@@ -330,23 +337,24 @@ public class TableGenerator extends AbstractPhase {
     if (existingState >= 0) {
       actions = I[existingState].getActions();
       I[stateNumber].setPosition(I[existingState].getPosition());
-      environment.report.printf("\nActions (same as state %d)\n------------------------------\n", existingState);
+      environment.reportWriter.tableHead("tactions", left("Actions (same as state " + existingState + ")"));
     } else {
       I[stateNumber].setPosition(actionNumber);
-      environment.report.printf("\nActions\n--------\n");
+      environment.reportWriter.tableHead("tactions", left("Actions"));
       actionNumber += actions.size();
     }
     I[stateNumber].setDefaultValue(defaultAction);
     I[stateNumber].setActions(actions);
     for (Action action : actions) {
-      environment.report.printf("    With %s ", action.getSymbol().getName());
+      String s = String.format("With %s ", action.getSymbol().getName());
       if (action.getStateNumber() < 0) {
-        environment.report.printf("Reduce by rule %d\n", -action.getStateNumber());
+        s += String.format("Reduce by rule %d", -action.getStateNumber());
       } else if (action.getStateNumber() == ACCEPT) {
-        environment.report.printf("Accept\n");
+        s += "Accept";
       } else {
-        environment.report.printf("Shift to state %d\n", action.getStateNumber());
+        s += String.format("Shift to state %d", action.getStateNumber());
       }
+      environment.reportWriter.tableRow(left(s));
     }
     // compute and emit GOTO's
     int terminals = runtimeData.getTerminals().size();
@@ -364,17 +372,19 @@ public class TableGenerator extends AbstractPhase {
         if (symbol == null) {
           continue;
         }
-        environment.report.printf("    With %s Goto %d\n", symbol.getName(), parserLine[i + terminals]);
+        environment.reportWriter.tableRow(left(String.format("With %s Goto %d", symbol.getName(), parserLine[i + terminals])));
         addGoto(symbol, stateNumber, parserLine[i + terminals]);
       }
     }
     // imprime default
-    environment.report.printf("    Default: ");
+    String s = "Default: ";
     if (defaultAction < 0) {
-      environment.report.printf("Reduce by rule %d\n", -defaultAction);
+      s += String.format("Reduce by rule %d", -defaultAction);
     } else {
-      environment.report.printf("Error\n");
+      s +="Error";
     }
+    environment.reportWriter.tableRow(left(s));
+    environment.reportWriter.tableEnd();
   }
   
   /**
@@ -700,23 +710,25 @@ public class TableGenerator extends AbstractPhase {
     for (Dot dot : I[stateNumber].getAllDots()) {
       if (dot.getItem() == null) { // I like dots at the end of rules
         if (dot.getRule().getLeftHand().equals(runtimeData.getRoot())) {
-          environment.report.println("ACCEPT BY " + -dot.getRule().getRulenum());
+          environment.reportWriter.tableOneCellRow("ACCEPT BY " + -dot.getRule().getRulenum(), "action");
           parserLine[0] = ACCEPT;
         } else {
           for (Symbol tkn : runtimeData.getTerminals()) {
             boolean containsToken = environment.algorithm.dotContains(dot, tkn.getId());
             if (containsToken) {
-              environment.report.printf("REDUCE BY RULE %d with %s\n", dot.getRule().getRulenum(), tkn.toString());
+              environment.reportWriter.tableOneCellRow("REDUCE BY RULE " + dot.getRule().getRulenum() + " with %s" + tkn.toString(), "action");
               if (parserLine[tkn.getId()] > 0) {
                 // Conflict
                 if (!resolveShiftReduceConflict(parserLine, tkn, dot.getRule())) {
-                  environment.report.printf("Warning: Shift/Reduce conflict. With %s Shift to %d, Reduce by rule %d.  (Reduce by rule %d assumed)\n", tkn.getName(),
-                      parserLine[tkn.getId()], dot.getRule().getRulenum(), dot.getRule().getRulenum());
+                  environment.reportWriter.tableOneCellRow(String.format("Warning: Shift/Reduce conflict. With %s Shift to %d, Reduce by rule %d.  (Reduce by rule %d assumed)\n", tkn.getName(),
+                      parserLine[tkn.getId()], dot.getRule().getRulenum(), dot.getRule().getRulenum()), "warning");
                   environment.error(dot.getRule().getLineNumber(),
                       "Warning: Shift/Reduce conflict on state %d[%s Shift:%d Reduce:%d].", stateNumber, tkn.getName(),
                       parserLine[tkn.getId()], dot.getRule().getRulenum());
                 }
               } else if (parserLine[tkn.getId()] < 0) {
+                environment.reportWriter.tableOneCellRow(String.format("Warning: Reduce/Reduce conflict on state %d[%s Reduce:%d Reduce:%d].", stateNumber, tkn.getName(),
+                    -parserLine[tkn.getId()], dot.getRule().getRulenum()), "warning");
                 environment.error(dot.getRule().getLineNumber(),
                     "Warning: Reduce/Reduce conflict on state %d[%s Reduce:%d Reduce:%d].", stateNumber, tkn.getName(),
                     -parserLine[tkn.getId()], dot.getRule().getRulenum());
@@ -859,7 +871,7 @@ public class TableGenerator extends AbstractPhase {
    * @param stateNumber is the current state
    */
   private void completeState(int[] parserLine, int stateNumber) {
-    environment.report.println("    ---------------------------------------------------------");
+    environment.reportWriter.tableOneCellRow("<hr/>", "line");
     for (int i = 0; i < parserLine.length; i++) {
       if (parserLine[i] > 0) {
         Symbol s = runtimeData.findTerminalById(i);
@@ -867,12 +879,13 @@ public class TableGenerator extends AbstractPhase {
           s = runtimeData.findNonTerminalById(i);
         }
         if (s instanceof NonTerminal) {
-          environment.report.printf("GO TO STATE %d with symbol %s\n", parserLine[i], s.getName());
+          environment.reportWriter.tableOneCellRow("GO TO STATE " + parserLine[i] + " with symbol " + s.getName(), "action");
         } else {
-          environment.report.printf("SHIFT ON %s TO STATE %d\n", s.getName(), parserLine[i]);
+          environment.reportWriter.tableOneCellRow("SHIFT ON " + s.getName() + " TO STATE " + parserLine[i], "action");
         }
       }
     }
+    environment.reportWriter.tableEnd();
     computeReduce(parserLine, stateNumber);
     I[stateNumber].setMessage(-1);
     I[stateNumber].setRow(parserLine);

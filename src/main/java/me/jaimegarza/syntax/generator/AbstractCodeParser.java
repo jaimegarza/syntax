@@ -1200,10 +1200,11 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * Assign ids, numbers, and print them.
    */
   protected void finalizeSymbols() {
-    environment.report
-        .printf("ID    Name                                     Full Name                                Value Err  Refs  Prec Assc  Type\n");
-    environment.report
-        .printf("____________________________________________________________________________________________________________________________\n");
+    
+    environment.reportWriter.subHeading("Terminal Symbols");
+    environment.reportWriter.tableHead("symbols", 
+        right("ID"), left("Name"), left("Full Name"), right("Value"),
+        left("Err"), right("Refs"), right("Prec"),  left("Assc"), left("Type"));
   
     int recoveries = 0;
     int terminals = 0;
@@ -1220,12 +1221,10 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
         id.setToken(tok_num);
       }
       id.setId(terminals++);
-      environment.report.printf("%-5d %-40s %-40s %5d %s %5d %5d %-5s ", id.getId(), id.getName(), id.getFullName(), 
-          id.getToken(), id instanceof ErrorToken ? "Yes" : "No ", id.getCount(), id.getPrecedence(), id.getAssociativity().displayName());
-      if (id.getType() != null) {
-        environment.report.printf("%s", id.getType().getName());
-      }
-      environment.report.printf("\n");
+      environment.reportWriter.tableRow(right(id.getId()), left(id.getName()), left(id.getFullName()), 
+          right(id.getToken()), left(id instanceof ErrorToken ? "Yes" : "No "),
+          right(id.getCount()), right(id.getPrecedence()), left(id.getAssociativity().displayName()),
+          left(id.getType() != null ? id.getType().getName() : ""));
       if (id instanceof ErrorToken) {
         int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
         ++recoveries;
@@ -1242,64 +1241,71 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     }
     i = 1;
     
-    environment.report.printf("\n");
-    environment.report
-        .printf("ID    Name                                     Full Name                                Refs  Type\n");
-    environment.report
-        .printf("_________________________________________________________________________________________________________\n");
-  
+    environment.reportWriter.tableEnd();
+    
+    environment.reportWriter.subHeading("Non Terminal Symbols");
+    environment.reportWriter.tableHead("symbols", 
+        right("ID"), left("Name"), left("FullName"), right("Refs"), left("Type"));
+    
     int noterminals = 0;
     for (NonTerminal id : runtimeData.getNonTerminals()) {
       id.setId(noterminals + terminals);
-      environment.report.printf("%-5d %-40s %-40s %4d  ", id.getId(), id.getName(), id.getFullName(),
-          id.getCount());
-      if (id.getType() != null) {
-        environment.report.printf("%s", id.getType().getName());
-      }
-      environment.report.printf("\n");
+      environment.reportWriter.tableRow(
+          right(id.getId()), left(id.getName()), left(id.getFullName()),
+          right(id.getCount()), left(id.getType() != null ? id.getType().getName() : ""));
       noterminals++;
       id.setFirst(null);
       id.setFollow(null);
     }
     
-    environment.report.printf("\n");
-    environment.report
-        .printf("Types\n");
-    environment.report
-        .printf("_____________________________________________\n");
+    environment.reportWriter.tableEnd();
+    
+    environment.reportWriter.subHeading("Types");
+    environment.reportWriter.tableHead("symbols", left("Name"), left("Used By"));
   
     for (Type type : runtimeData.getTypes()) {
-      environment.report.println(type.toString());
+      String s = "<ul>";
+      for (Symbol symbol : type.getUsedBy()) {
+        s += "<li>" + symbol + "</li>\n";
+      }
+      s += "</ul>";
+      environment.reportWriter.tableRow(left(type.getName()), left(s));
     }
+    environment.reportWriter.tableEnd();
     
-    environment.report.printf("\n");
-    environment.report
-        .printf("Error Groups\n");
-    environment.report
-        .printf("_____________________________________________\n");
-  
+    environment.reportWriter.subHeading("Error Groups");
+    environment.reportWriter.tableHead("symbols", left("Name"),
+        left("Display Name"), left("Symbols"));
+    
     for (TokenGroup errorGroup : runtimeData.getErrorGroups()) {
-      environment.report.println(errorGroup.toString());
+      String s = "<ul>";
+      for (Terminal symbol : errorGroup.getTokens()) {
+        s += "<li>" + symbol.toString() + "</li>";
+      }
+      s += "</ul>";
+      environment.reportWriter.tableRow(left(errorGroup.getName()),
+          left(errorGroup.getDisplayName()), left(s));
     }
-  }
+    environment.reportWriter.tableEnd();
+}
 
   /**
    * set rule numbers and print
    */
   protected void finalizeRules() {
-    environment.report.printf("\n");
-    environment.report.printf("Prec Rule  Grammar\n");
-    environment.report.printf("_____________________________________________________\n");
+    environment.reportWriter.subHeading("Grammar");
+    environment.reportWriter.tableHead("rules", right("Prec"), right("Rule"), left("Grammar"));
     int i = 0;
     for (Rule stx : runtimeData.getRules()) {
       stx.setRulenum(i);
-      environment.report.printf("[%2d]  %3d. %s -> ", stx.getPrecedence(), i, stx.getLeftHand().getName());
+      String s = stx.getLeftHand().getName() + " &rArr; ";
       for (RuleItem itm : stx.getItems()) {
-        environment.report.printf("%s ", itm.getSymbol().getName());
+        s += itm.getSymbol().getName() + ' ';
       }
-      environment.report.printf("\n");
+      environment.reportWriter.tableRow(right(stx.getPrecedence()), right(i), left(s));
       i = i + 1;
     }
+    environment.reportWriter.tableEnd();
   }
 
   /**

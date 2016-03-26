@@ -286,29 +286,38 @@ public class StructuralAnalyzer extends AbstractPhase {
    * Print first and follow to the report.
    */
   private void print() {
+    environment.reportWriter.subHeading("First of Non Terminals");
+    environment.reportWriter.tableHead("firstfollow", left("Non Terminal"), left("Set"));
     for (NonTerminal itm : runtimeData.getNonTerminals()) {
-      environment.report.printf("\n");
-      environment.report.printf("First of %s\n", itm.getName());
+      String s = "<ul>";
       for (Terminal tkn : runtimeData.getTerminals()) {
         if (itm.getFirst().contains(tkn.getId())) {
-          environment.report.printf("%s%3d%s%s\n", "   ", tkn.getId(), ". ", tkn.getName());
+          s += "<li>" + tkn.getName() + "(" + tkn.getId() + ")</li>\n";
         }
       }
+      s += "</ul>";
+      environment.reportWriter.tableRow(left(itm.getName()), left(s));
     }
+    environment.reportWriter.tableEnd();
 
     if (environment.getAlgorithmType() == Algorithm.LALR) {
       return;
     }
 
+    environment.reportWriter.subHeading("Follow of Non Terminals");
+    environment.reportWriter.tableHead("firstfollow", left("Non Terminal"), left("Set"));
     for (NonTerminal itm : runtimeData.getNonTerminals()) {
-      environment.report.printf("\n");
+      String s = "<ul>";
       environment.report.printf("Follow of %s\n", itm.getName());
       for (Terminal tkn : runtimeData.getTerminals()) {
         if (itm.getFollow().contains(tkn.getId())) {
-          environment.report.printf("%s%3d%s%s\n", "   ", tkn.getId(), ". ", tkn.getName());
+          s += "<li>" + tkn.getName() + "(" + tkn.getId() + ")</li>\n";
         }
       }
+      s += "</ul>";
+      environment.reportWriter.tableRow(left(itm.getName()), left(s));
     }
+    environment.reportWriter.tableEnd();
   }
 
   /*

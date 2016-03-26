@@ -76,8 +76,9 @@ public interface AlgorithmicSupport {
   /**
    * Print the lookaheads in a dot
    * @param dot is the dot to print
+   * @return the printable string
    */
-  void printLookahead(Dot dot);
+  String getPrintableLookahead(Dot dot);
   
   /**
    * Checks a dot to see if it contains the symbol
@@ -105,5 +106,8 @@ public interface AlgorithmicSupport {
    */
   boolean hasFollows();
 
-
+  /**
+   * Does this algorithm support lookaheads
+   */
+  boolean supportsLookahead();
 }

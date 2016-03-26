@@ -52,6 +52,11 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
   public LalrAlgorithmicSupport(Environment environment) {
     super(environment);
   }
+  
+  @Override
+  public boolean supportsLookahead() {
+    return true;
+  };
 
   @Override
   public boolean addLookaheadsToState(State I[], int state, List<Dot> dots) {
@@ -121,19 +126,20 @@ public class LalrAlgorithmicSupport extends BaseAlgorithmicSupport {
   }
 
   @Override
-  public void printLookahead(Dot dot) {
+  public String getPrintableLookahead(Dot dot) {
     Set<Integer> lookAhead = dot.getLookahead();
     if (lookAhead == null) {
-      return;
+      return "";
     }
 
-    environment.report.print("     { ");
+    String s = "{ ";
     for (Symbol tkn : runtimeData.getTerminals()) {
       if (lookAhead.contains(tkn.getId())) {
-        environment.report.print(tkn.getName() + " ");
+        s += tkn.getName() + " ";
       }
     }
-    environment.report.print("}");
+    s += "}";
+    return s;
   }
 
   @Override

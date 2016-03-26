@@ -32,6 +32,8 @@ package me.jaimegarza.syntax.generator;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.env.RuntimeData;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
+import me.jaimegarza.syntax.util.HtmlWriter;
+import me.jaimegarza.syntax.util.HtmlWriter.HtmlValue;
 
 /**
  * Base clase for all phases.  Common routines will be placed here
@@ -64,4 +66,21 @@ public abstract class AbstractPhase {
   protected void indent(FormattingPrintStream out, int n) {
     environment.language.indent(out, n);
   }
+  
+  /**
+   * Format a report entry for left alignment
+   * @param o is the object to left align
+   */
+  protected HtmlValue left(Object o) {
+    return HtmlWriter.left(o);
+  }
+
+  /**
+   * Format a report entry for right alignment
+   * @param o is the object to right align
+   */
+  protected HtmlValue right(Object o) {
+    return HtmlWriter.right(o);
+  }
+
 }

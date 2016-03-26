@@ -86,6 +86,13 @@ public class Type {
   }
 
   /**
+   * @return the symbols that use it
+   */
+  public List<Symbol> getUsedBy() {
+    return usedBy;
+  }
+  
+  /**
    * @see java.lang.Object#equals(java.lang.Object)
    */
   @Override
