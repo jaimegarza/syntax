@@ -885,8 +885,8 @@ public class TableGenerator extends AbstractPhase {
         }
       }
     }
-    environment.reportWriter.tableEnd();
     computeReduce(parserLine, stateNumber);
+    environment.reportWriter.tableEnd();
     I[stateNumber].setMessage(-1);
     I[stateNumber].setRow(parserLine);
     packState(parserLine, stateNumber);
