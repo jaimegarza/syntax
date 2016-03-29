@@ -86,6 +86,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   protected int actLine;
   protected boolean isFirstToken = true;
   protected int numberOfErrorTokens;
+  
+  public char currentChar;
+  public String recognized;
 
   /**
    * Default Constructor
@@ -369,10 +372,10 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     while (iCount != 0) {
       c2 *= 8;
   
-      if (runtimeData.currentCharacter >= '0' && runtimeData.currentCharacter <= '7') {
-        c2 += runtimeData.currentCharacter - '0';
-        getCharacter();
-      } else if (runtimeData.currentCharacter == '\0') {
+      if (currentChar >= '0' && currentChar <= '7') {
+        c2 += currentChar - '0';
+        getNextCharacter();
+      } else if (currentChar == '\0') {
         return c2;
       } else {
         break;
@@ -391,19 +394,19 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   protected char decodeControlChar() {
     char c2;
-    getCharacter();
+    getNextCharacter();
   
-    if (runtimeData.currentCharacter == '\0') {
+    if (currentChar == '\0') {
       return '\0';
     }
   
-    if (runtimeData.currentCharacter >= 'a' && runtimeData.currentCharacter <= 'z') {
-      c2 = runtimeData.currentCharacter;
-      getCharacter();
+    if (currentChar >= 'a' && currentChar <= 'z') {
+      c2 = currentChar;
+      getNextCharacter();
       return (char) (c2 - ('a' - 1));
-    } else if (runtimeData.currentCharacter >= 'A' && runtimeData.currentCharacter <= 'Z') {
-      c2 = runtimeData.currentCharacter;
-      getCharacter();
+    } else if (currentChar >= 'A' && currentChar <= 'Z') {
+      c2 = currentChar;
+      getNextCharacter();
       return (char) (c2 - ('A' - 1));
     } else {
       return 'c' - 'a';
@@ -419,18 +422,18 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     int iCount = 2;
     char c2 = 0;
   
-    getCharacter();
+    getNextCharacter();
   
     while (iCount != 0) {
       c2 *= 16;
   
-      if (runtimeData.currentCharacter >= '0' && runtimeData.currentCharacter <= '9') {
-        c2 += runtimeData.currentCharacter - '0';
-      } else if (runtimeData.currentCharacter >= 'a' && runtimeData.currentCharacter <= 'f') {
-        c2 += 10 + (runtimeData.currentCharacter - 'a');
-      } else if (runtimeData.currentCharacter >= 'A' && runtimeData.currentCharacter <= 'F') {
-        c2 += 10 + (runtimeData.currentCharacter - 'A');
-      } else if (runtimeData.currentCharacter == '\0') {
+      if (currentChar >= '0' && currentChar <= '9') {
+        c2 += currentChar - '0';
+      } else if (currentChar >= 'a' && currentChar <= 'f') {
+        c2 += 10 + (currentChar - 'a');
+      } else if (currentChar >= 'A' && currentChar <= 'F') {
+        c2 += 10 + (currentChar - 'A');
+      } else if (currentChar == '\0') {
         return '\0';
       } else {
         return 'x' - 'a';
@@ -449,7 +452,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   protected char decodeEscape() {
     char c2;
-    switch (runtimeData.currentCharacter) {
+    switch (currentChar) {
       case '0':
       case '1':
       case '2':
@@ -460,93 +463,100 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
       case '7':
         return decodeOctal();
       case 'a':
-        getCharacter();
+        getNextCharacter();
         return 7;
       case 'b':
-        getCharacter();
+        getNextCharacter();
         return '\b';
       case 'c':
-        getCharacter();
+        getNextCharacter();
         return decodeControlChar();
       case 'e':
-        getCharacter();
+        getNextCharacter();
         return '\\';
       case 'f':
-        getCharacter();
+        getNextCharacter();
         return '\f';
       case 'n':
-        getCharacter();
+        getNextCharacter();
         return '\n';
       case 'r':
-        getCharacter();
+        getNextCharacter();
         return '\r';
       case 't':
-        getCharacter();
+        getNextCharacter();
         return '\t';
       case 'v':
-        getCharacter();
+        getNextCharacter();
         return 11;
       case 'x':
-        getCharacter();
+        getNextCharacter();
         return decodeHex();
       default:
-        c2 = runtimeData.currentCharacter;
-        getCharacter();
+        c2 = currentChar;
+        getNextCharacter();
         return c2;
     }
   }
 
+  @Override
   /**
    * Get the next character. It can go to the stack of chars as needed
    * @return the next character
    */
-  public char getCharacter() {
+  public char getNextCharacter() {
     if (inputChars.size() > 0) {
-      runtimeData.currentCharacter = inputChars.pop();
-      if (runtimeData.currentCharacter == '\n') {
+      currentChar = inputChars.pop();
+      if (currentChar == '\n') {
         runtimeData.lineNumber++;
         runtimeData.columnNumber = 0;
       }
       runtimeData.columnNumber++;
-      return runtimeData.currentCharacter;
+      return currentChar;
     }
   
     // Get one char from stream
     try {
       int rc = environment.source.read();
-      runtimeData.currentCharacter = (char) rc;
+      currentChar = (char) rc;
       // EOF?
       if (rc == -1) {
-        runtimeData.currentCharacter = 0;
+        currentChar = 0;
       }
     } catch (IOException e) {
-      runtimeData.currentCharacter = 0;
+      currentChar = 0;
     }
     
-    if (runtimeData.currentCharacter == -1 || runtimeData.currentCharacter == 0) {
+    if (currentChar == -1 || currentChar == 0) {
       return 0;
     }
   
     // EOL?
-    if (runtimeData.currentCharacter == '\n') {
+    if (currentChar == '\n') {
       runtimeData.lineNumber++;
       runtimeData.columnNumber = 0;
     }
   
     // CTRL-Z?  <-- suspect code
-    if (runtimeData.currentCharacter == 26) {
+    if (currentChar == 26) {
       return 0;
     }
   
     runtimeData.columnNumber++;
-    return runtimeData.currentCharacter;
+    return currentChar;
   }
 
-  public void ungetCharacter(char c) {
+  @Override
+  public void ungetChar(char c) {
     inputChars.push(c);
     if (c == '\n') {
       runtimeData.lineNumber--;
     }
+  }
+  
+  @Override
+  public char getCurrentCharacter() {
+    return currentChar;
   }
 
   /****************************EMBEDDED CODE PROCESSOR **************************/
@@ -593,13 +603,13 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   public boolean generateDollarLetter(Lexer lexer, int elementCount, Type type, String nonTerminalId) {
     String id = "";
-    while (Character.isJavaIdentifierPart(runtimeData.currentCharacter) ) {
-      id += runtimeData.currentCharacter;
-      lexer.getCharacter();
+    while (Character.isJavaIdentifierPart(currentChar) ) {
+      id += currentChar;
+      lexer.getNextCharacter();
     }
     int index = -1;
-    if (runtimeData.currentCharacter == '[') {
-      lexer.getCharacter();
+    if (currentChar == '[') {
+      lexer.getNextCharacter();
       index = getDollarTextIndexFromStream();
       if (index == -2) {
         return false;
@@ -614,7 +624,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
 
     // check to see if this is the symbol of the rule.  No indexing for $$
     if (runtimeData.findNonTerminalByName(nonTerminalId).equals(element) && index == -1) {
-      lexer.ungetCharacter(runtimeData.currentCharacter);
+      lexer.ungetChar(currentChar);
       return generateDollarDollar(lexer, elementCount, nonTerminalId, element.getType());
     }
     
@@ -637,11 +647,11 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     
     // redirect to the $digit routine by placing elements on the stack.
     String s = Integer.toString(itemIndex);
-    ungetCharacter(runtimeData.currentCharacter);
+    ungetChar(currentChar);
     for (int i = s.length()-1; i >= 0; i--) {
-      lexer.ungetCharacter(s.charAt(i));
+      lexer.ungetChar(s.charAt(i));
     }
-    lexer.getCharacter();
+    lexer.getNextCharacter();
     return generateDollarNumber(lexer, elementCount, type == null ? element.getType() : type, 1);
   }
 
@@ -665,28 +675,28 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    */
   protected int getDollarTextIndexFromStream() {
     int index;
-    while (runtimeData.currentCharacter == ' ') {
-      getCharacter();
+    while (currentChar == ' ') {
+      getNextCharacter();
     }
     index = 0;
     int base;
-    if (runtimeData.currentCharacter == '0') {
+    if (currentChar == '0') {
       base = 8;
     } else {
       base = 10;
     }
-    while (Character.isDigit(runtimeData.currentCharacter)) {
-      index = index * base + runtimeData.currentCharacter - '0';
-      getCharacter();
+    while (Character.isDigit(currentChar)) {
+      index = index * base + currentChar - '0';
+      getNextCharacter();
     }
-    while (runtimeData.currentCharacter == ' ') {
-      getCharacter();
+    while (currentChar == ' ') {
+      getNextCharacter();
     }
-    if (runtimeData.currentCharacter != ']') {
+    if (currentChar != ']') {
       environment.error(-1, "Unfinished index detected.");
       return -2;
     }
-    getCharacter();
+    getNextCharacter();
     return index;
   }
   
@@ -703,14 +713,14 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     int num;
     int base;
     num = 0;
-    if (runtimeData.currentCharacter == '0') {
+    if (currentChar == '0') {
       base = 8;
     } else {
       base = 10;
     }
-    while (Character.isDigit(runtimeData.currentCharacter)) {
-      num = num * base + runtimeData.currentCharacter - '0';
-      lexer.getCharacter();
+    while (Character.isDigit(currentChar)) {
+      num = num * base + currentChar - '0';
+      lexer.getNextCharacter();
     }
     num = num * sign - elementCount;
     if (num > 0) {
@@ -787,26 +797,26 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
         environment.output.printf(".%s", type.getName());
       }
     }
-    lexer.getCharacter();
+    lexer.getNextCharacter();
     return true;
   }
 
   public boolean generateConstant(Lexer lexer, char characterType) {
-    environment.output.print(runtimeData.currentCharacter);
-    while ((lexer.getCharacter()) != characterType) {
-      if (runtimeData.currentCharacter == '\0') {
+    environment.output.print(currentChar);
+    while ((lexer.getNextCharacter()) != characterType) {
+      if (currentChar == '\0') {
         environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
         return false;
       }
-      if (runtimeData.currentCharacter == '\n') {
+      if (currentChar == '\n') {
         environment.error(-1, "End of line reached on string literal.");
         return false;
       }
-      if (runtimeData.currentCharacter == '\\') {
-        environment.output.print(runtimeData.currentCharacter);
-        lexer.getCharacter();
+      if (currentChar == '\\') {
+        environment.output.print(currentChar);
+        lexer.getNextCharacter();
       }
-      environment.output.print(runtimeData.currentCharacter);
+      environment.output.print(currentChar);
     }
     return true;
   }
@@ -814,22 +824,22 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   public boolean skipAndOutputCompositeComment(Lexer lexer, char secondaryCharacter, char characterToFind) {
     boolean bBreak;
     
-    environment.output.print(runtimeData.currentCharacter);
-    lexer.getCharacter();
+    environment.output.print(currentChar);
+    lexer.getNextCharacter();
     bBreak = false;
     while (!bBreak) {
-      if (runtimeData.currentCharacter == '\0') {
+      if (currentChar == '\0') {
         environment.error(-1, "Unfinished comment.");
         return false;
       }
-      while (runtimeData.currentCharacter == secondaryCharacter) {
-        environment.output.print(runtimeData.currentCharacter);
-        if ((lexer.getCharacter()) == characterToFind) {
+      while (currentChar == secondaryCharacter) {
+        environment.output.print(currentChar);
+        if ((lexer.getNextCharacter()) == characterToFind) {
           bBreak = true;
         }
       }
-      environment.output.print(runtimeData.currentCharacter);
-      lexer.getCharacter();
+      environment.output.print(currentChar);
+      lexer.getNextCharacter();
     }
     return true;
   }
@@ -963,48 +973,48 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
    * @return true if OK
    */
   protected boolean generateDeclaration() {
-    while (Character.isWhitespace(runtimeData.currentCharacter)) {
-      getCharacter();
+    while (Character.isWhitespace(currentChar)) {
+      getNextCharacter();
     }
     environment.language.emitLine(runtimeData.lineNumber);
-    while (runtimeData.currentCharacter != '\0') {
-      if (runtimeData.currentCharacter == '\\') {
-        if ((getCharacter()) == '}') {
-          getCharacter();
+    while (currentChar != '\0') {
+      if (currentChar == '\\') {
+        if ((getNextCharacter()) == '}') {
+          getNextCharacter();
           return true;
         } else {
           environment.output.print('\\');
         }
-      } else if (runtimeData.currentCharacter == '%') {
-        if ((getCharacter()) == '}') {
-          getCharacter();
+      } else if (currentChar == '%') {
+        if ((getNextCharacter()) == '}') {
+          getNextCharacter();
           return true;
         } else {
           environment.output.print('%');
         }
-      } else if (runtimeData.currentCharacter == '$') {
-        getCharacter();
-        if (runtimeData.currentCharacter == '$') {
-          getCharacter();
-          switch (runtimeData.currentCharacter) {
+      } else if (currentChar == '$') {
+        getNextCharacter();
+        if (currentChar == '$') {
+          getNextCharacter();
+          switch (currentChar) {
             case 'b':
-              getCharacter();
+              getNextCharacter();
               environment.output.print(PathUtils.getFileNameNoExtension(environment.getOutputFile().getAbsolutePath()));
               break;
             case 'n':
-              getCharacter();
+              getNextCharacter();
               environment.output.print(PathUtils.getFileName(environment.getOutputFile().getAbsolutePath()));
               break;
             case 'f':
-              getCharacter();
+              getNextCharacter();
               environment.output.print(environment.getOutputFile().getAbsolutePath());
               break;
             case 'e':
-              getCharacter();
+              getNextCharacter();
               environment.output.print(PathUtils.getFileExtension(environment.getOutputFile().getAbsolutePath()));
               break;
             case 'p':
-              getCharacter();
+              getNextCharacter();
               environment.output.print(PathUtils.getFilePath(environment.getOutputFile().getAbsolutePath()));
               break;
             default:
@@ -1014,8 +1024,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
           environment.output.print('$');
         }
       }
-      environment.output.print(runtimeData.currentCharacter);
-      getCharacter();
+      environment.output.print(currentChar);
+      getNextCharacter();
     }
     environment.error(-1, "End of file before \'\\}\' or \'%%}\'.");
     return false;
@@ -1356,8 +1366,8 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     }
     generateCaseStatement(ruleNumber, "" + (ruleNumber+1) + ". " + nonTerminalName + " -> " + ruleLabel);
     
-    while (runtimeData.currentCharacter == ' ') {
-      getCharacter();
+    while (currentChar == ' ') {
+      getNextCharacter();
     }
     
     if (!environment.language.generateRuleCode(this, this, elementCount, nonTerminalName, runtimeData.columnNumber-2)) {

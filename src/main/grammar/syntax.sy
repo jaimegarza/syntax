@@ -536,32 +536,32 @@ Symbol        :  TOKEN                       = {
   public int getCharacterClassSymbol() {
 
 	while (2 > 1) { //forever
-      if (runtimeData.currentCharacter == '\0') {
+      if (currentChar == '\0') {
         isError = true;
         environment.error(-1, "Statement \"" + runtimeData.currentStringValue + "\" not properly ended with ']'.");
         return ERROR;
       }
 
-      if (runtimeData.currentCharacter == ']') {
+      if (currentChar == ']') {
         // do not advance string
         lexerMode = LexerMode.REGEX;
         return CHARACTER_CLASS;
       }
       
-      char c1 = runtimeData.currentCharacter;
-      getCharacter();
-      if (runtimeData.currentCharacter == '-') {
-        getCharacter();
-        if (runtimeData.currentCharacter == ']' || runtimeData.currentCharacter == '\0') { // last char, so use as a char
+      char c1 = currentChar;
+      getNextCharacter();
+      if (currentChar == '-') {
+        getNextCharacter();
+        if (currentChar == ']' || currentChar == '\0') { // last char, so use as a char
           // do not advance string
           currentCharacterClass.character(c1);
           currentCharacterClass.character('-');
           runtimeData.currentStringValue += "" + c1 + '-';
         } else {
-          char c2 = runtimeData.currentCharacter;
+          char c2 = currentChar;
           runtimeData.currentStringValue += "" + c1 + '-' + c2;
           currentCharacterClass.range(c1, c2);
-          getCharacter();
+          getNextCharacter();
         }
       } else {
         // already advanced
@@ -578,7 +578,7 @@ Symbol        :  TOKEN                       = {
    * @return the next character in the stream
    */
   public char getNextChar(boolean init) {
-    return getCharacter();
+    return getNextCharacter();
   }
 
   public int getRegexSymbol() {
@@ -592,73 +592,73 @@ Symbol        :  TOKEN                       = {
       return TOKEN;
     }
   
-    if (runtimeData.currentCharacter == '|') {
-      getCharacter();
+    if (currentChar == '|') {
+      getNextCharacter();
       return PIPE;
     }
-    if (runtimeData.currentCharacter == '(') {
-      getCharacter();
+    if (currentChar == '(') {
+      getNextCharacter();
       return '(';
     }
-    if (runtimeData.currentCharacter == ')') {
-      getCharacter();
+    if (currentChar == ')') {
+      getNextCharacter();
       return ')';
     }
-    if (runtimeData.currentCharacter == '*') {
-      getCharacter();
+    if (currentChar == '*') {
+      getNextCharacter();
       return STAR;
     }
-    if (runtimeData.currentCharacter == '+') {
-      getCharacter();
+    if (currentChar == '+') {
+      getNextCharacter();
       return PLUS;
     }
-    if (runtimeData.currentCharacter == '?') {
-      getCharacter();
+    if (currentChar == '?') {
+      getNextCharacter();
       return HUH;
     }
-    if (runtimeData.currentCharacter == '.') {
-      getCharacter();
+    if (currentChar == '.') {
+      getNextCharacter();
       return ANY;
     }
-    if (runtimeData.currentCharacter == '/') {
+    if (currentChar == '/') {
       lexerMode = LexerMode.NORMAL;
       isRegexSlash = true;
-      getCharacter();
+      getNextCharacter();
       return '/';
     }
-    if (runtimeData.currentCharacter == '[') {
+    if (currentChar == '[') {
       runtimeData.currentStringValue = "";
       currentCharacterClass = new CharacterClass();
       lexerMode = LexerMode.CHARACTER_CLASS;
-      getCharacter();
-      if (runtimeData.currentCharacter == '^') {
+      getNextCharacter();
+      if (currentChar == '^') {
         runtimeData.currentStringValue += '^';
         currentCharacterClass.negate();
-        getCharacter();
+        getNextCharacter();
       }
-      if (runtimeData.currentCharacter == '-') {
+      if (currentChar == '-') {
         runtimeData.currentStringValue += '-';
         currentCharacterClass.character('-');
-        getCharacter();
-      } else if (runtimeData.currentCharacter == ']') {
+        getNextCharacter();
+      } else if (currentChar == ']') {
         runtimeData.currentStringValue += ']';
         currentCharacterClass.character(']');
-        getCharacter();
-        if (runtimeData.currentCharacter == '-') {
+        getNextCharacter();
+        if (currentChar == '-') {
           runtimeData.currentStringValue += '-';
           currentCharacterClass.character('-');
-          getCharacter();
+          getNextCharacter();
         }
       }
       return '[';
     }
-    if (runtimeData.currentCharacter == ']') {
-      getCharacter();
+    if (currentChar == ']') {
+      getNextCharacter();
       return ']';
     }
   
-    if (runtimeData.currentCharacter == '\\') {
-      getCharacter();
+    if (currentChar == '\\') {
+      getNextCharacter();
       c2 = decodeEscape();
       if (c2 == 0) {
         return '\0';
@@ -672,8 +672,8 @@ Symbol        :  TOKEN                       = {
      * StxValue.node.ranges.prev = NULL; StxValue.node.ranges.charStart = c2;
      * StxValue.node.ranges.charEnd = c2;
      */
-    lexicalValue = new StackElement(-1, tokenNumber, false, "", runtimeData.currentCharacter);
-    getCharacter();
+    lexicalValue = new StackElement(-1, tokenNumber, false, "", currentChar);
+    getNextCharacter();
     return CHAR;
   }
 
@@ -708,24 +708,24 @@ Symbol        :  TOKEN                       = {
     }
   
     while (2 > 1) {
-      while (Character.isWhitespace(runtimeData.currentCharacter)) {
-        getCharacter();
+      while (Character.isWhitespace(currentChar)) {
+        getNextCharacter();
       }
-      if (runtimeData.currentCharacter == '/') {
-        if ((getCharacter()) == '*') {
-          getCharacter();
+      if (currentChar == '/') {
+        if ((getNextCharacter()) == '*') {
+          getNextCharacter();
           end = false;
           while (!end) {
-            while (runtimeData.currentCharacter == '*') {
-              if ((getCharacter()) == '/') {
+            while (currentChar == '*') {
+              if ((getNextCharacter()) == '/') {
                 end = true;
               }
             }
-            getCharacter();
+            getNextCharacter();
           }
         } else {
-          ungetCharacter(runtimeData.currentCharacter);
-          runtimeData.currentCharacter = '/';
+          ungetChar(currentChar);
+          currentChar = '/';
           break;
         }
       } else {
@@ -733,47 +733,47 @@ Symbol        :  TOKEN                       = {
       }
     }
   
-    if (runtimeData.currentCharacter == '\0') {
+    if (currentChar == '\0') {
       return 0;
     }
   
-    if (runtimeData.currentCharacter == '%' || runtimeData.currentCharacter == '\\') {
-      getCharacter();
-      switch (runtimeData.currentCharacter) {
+    if (currentChar == '%' || currentChar == '\\') {
+      getNextCharacter();
+      switch (currentChar) {
         case '0':
-          getCharacter();
+          getNextCharacter();
           return TERM;
         case '<':
-          getCharacter();
+          getNextCharacter();
           return LEFT;
         case '2':
-          getCharacter();
+          getNextCharacter();
           return BINARY;
         case '>':
-          getCharacter();
+          getNextCharacter();
           return RIGHT;
         case '%':
         case '\\':
-          getCharacter();
+          getNextCharacter();
           markers++;
           return MARK;
         case '=':
-          getCharacter();
+          getNextCharacter();
           return PREC;
         case '@':
-          getCharacter();
+          getNextCharacter();
           return NAME;
         case '{':
-          getCharacter();
+          getNextCharacter();
           isCurlyBrace = true;
           return '{';
         case '!':
-          getCharacter();
+          getNextCharacter();
           return ERRDEF;
       }
-      while (Character.isLetterOrDigit(runtimeData.currentCharacter)) {
-        runtimeData.currentStringValue += runtimeData.currentCharacter;
-        getCharacter();
+      while (Character.isLetterOrDigit(currentChar)) {
+        runtimeData.currentStringValue += currentChar;
+        getNextCharacter();
       }
       for (ReservedWord rw : reservedWords) {
         if (runtimeData.currentStringValue.equals(rw.word)) {
@@ -788,103 +788,103 @@ Symbol        :  TOKEN                       = {
       return ERROR;
     }
   
-    if (runtimeData.currentCharacter == ';') {
-      getCharacter();
+    if (currentChar == ';') {
+      getNextCharacter();
       return ';';
     }
   
-    if (runtimeData.currentCharacter == ',') {
-      getCharacter();
+    if (currentChar == ',') {
+      getNextCharacter();
       return ',';
     }
   
-    if (runtimeData.currentCharacter == ':') {
+    if (currentChar == ':') {
       currentNonTerminalName = s2;
-      getCharacter();
+      getNextCharacter();
       return ':';
     }
   
-    if (runtimeData.currentCharacter == '|') {
-      getCharacter();
+    if (currentChar == '|') {
+      getNextCharacter();
       return '|';
     }
   
-    if (runtimeData.currentCharacter == '[') {
-      getCharacter();
+    if (currentChar == '[') {
+      getNextCharacter();
       return '[';
     }
   
-    if (runtimeData.currentCharacter == ']') {
-      getCharacter();
+    if (currentChar == ']') {
+      getNextCharacter();
       return ']';
     }
   
-    if (runtimeData.currentCharacter == '=') {
-      getCharacter();
+    if (currentChar == '=') {
+      getNextCharacter();
       isEqual = true;
       return '=';
     }
   
-    if (runtimeData.currentCharacter == '{') {
+    if (currentChar == '{') {
       isEqual = true;
       return '=';
     }
   
-    if (runtimeData.currentCharacter == '<') {
-      getCharacter();
+    if (currentChar == '<') {
+      getNextCharacter();
       runtimeData.currentStringValue = "";
-      while (runtimeData.currentCharacter != '\0' && runtimeData.currentCharacter != '>' && runtimeData.currentCharacter != '\n') {
-        runtimeData.currentStringValue += runtimeData.currentCharacter;
-        getCharacter();
+      while (currentChar != '\0' && currentChar != '>' && currentChar != '\n') {
+        runtimeData.currentStringValue += currentChar;
+        getNextCharacter();
       }
-      if (runtimeData.currentCharacter != '>') {
+      if (currentChar != '>') {
         isError = true;
         environment.error(-1, "Statement < .. > not ended.");
         return ERROR;
       }
-      getCharacter();
+      getNextCharacter();
       return TYPENAME;
     }
   
-    if (runtimeData.currentCharacter == '/') {
+    if (currentChar == '/') {
       lexerMode = LexerMode.REGEX;
       isRegexSlash = true;
-      getCharacter();
+      getNextCharacter();
       return '/';
     }
   
-    if (Character.isDigit(runtimeData.currentCharacter)) {
+    if (Character.isDigit(currentChar)) {
       runtimeData.currentStringValue = "";
-      while (Character.isDigit(runtimeData.currentCharacter)) {
-        runtimeData.currentStringValue += runtimeData.currentCharacter;
-        getCharacter();
+      while (Character.isDigit(currentChar)) {
+        runtimeData.currentStringValue += currentChar;
+        getNextCharacter();
       }
       tokenNumber = Integer.parseInt(runtimeData.currentStringValue);
       return NUM;
     }
   
     mustClose = false;
-    if (runtimeData.currentCharacter == '\'' || runtimeData.currentCharacter == '"') {
-      c2 = runtimeData.currentCharacter;
+    if (currentChar == '\'' || currentChar == '"') {
+      c2 = currentChar;
       mustClose = true;
-      getCharacter();
+      getNextCharacter();
     } else {
       c2 = ':';
     }
   
     runtimeData.currentStringValue = "";
     do { /* TOKEN */
-      runtimeData.currentStringValue += runtimeData.currentCharacter;
-      getCharacter();
-      if (runtimeData.currentCharacter == '\0') {
+      runtimeData.currentStringValue += currentChar;
+      getNextCharacter();
+      if (currentChar == '\0') {
         break;
       }
-      if (!mustClose && "%\\;,:[]|={< \r\t\n".indexOf(runtimeData.currentCharacter) >= 0) {
+      if (!mustClose && "%\\;,:[]|={< \r\t\n".indexOf(currentChar) >= 0) {
         break;
       }
-    } while (runtimeData.currentCharacter != c2);
+    } while (currentChar != c2);
   
-    if (mustClose && runtimeData.currentCharacter != c2) {
+    if (mustClose && currentChar != c2) {
       isError = true;
       environment.error(-1, "Statement ' .. ' or \" .. \" not ended.");
       return ERROR;
@@ -925,7 +925,7 @@ Symbol        :  TOKEN                       = {
     }
   
     if (mustClose) {
-      getCharacter();
+      getNextCharacter();
       if (runtimeData.currentStringValue.length() == 1) {
         tokenNumber = runtimeData.currentStringValue.charAt(0);
       }

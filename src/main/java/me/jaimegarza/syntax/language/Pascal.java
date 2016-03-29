@@ -99,41 +99,41 @@ public class Pascal extends BaseLanguageSupport {
     boolean end = false;
 
     while (!end) {
-      switch (runtime.currentCharacter) {
+      switch (lexer.getCurrentCharacter()) {
         case '{': /* COMMENT in PAS */
-          environment.output.print(runtime.currentCharacter);
-          while ((lexer.getCharacter()) != '}') {
-            environment.output.print(runtime.currentCharacter);
+          environment.output.print(lexer.getCurrentCharacter());
+          while ((lexer.getNextCharacter()) != '}') {
+            environment.output.print(lexer.getCurrentCharacter());
           }
           break;
 
         case '%':
         case '\\': /* finish an action in PAS */
           end = true;
-          lexer.getCharacter();
+          lexer.getNextCharacter();
           continue;
 
         case '(': /* possible comment in PAS */
-          environment.output.print(runtime.currentCharacter);
-          lexer.getCharacter();
-          if (runtime.currentCharacter != '*') {
+          environment.output.print(lexer.getCurrentCharacter());
+          lexer.getNextCharacter();
+          if (lexer.getCurrentCharacter() != '*') {
             continue;
           }
 
           if (!processor.skipAndOutputCompositeComment(lexer, '*', ')')) {
             return false; 
           }
-          environment.output.print(runtime.currentCharacter);
+          environment.output.print(lexer.getCurrentCharacter());
           continue;
 
         case '\'': /* constant */
         case '"': /* string */
-          processor.generateConstant(lexer, runtime.currentCharacter);
+          processor.generateConstant(lexer, lexer.getCurrentCharacter());
           break;
 
         case '\n':
-          environment.output.print(runtime.currentCharacter);
-          lexer.getCharacter();
+          environment.output.print(lexer.getCurrentCharacter());
+          lexer.getNextCharacter();
           indent(environment.output, environment.getIndent() + 1);
           continue;
 
@@ -150,8 +150,8 @@ public class Pascal extends BaseLanguageSupport {
           }
           break;
       }
-      environment.output.print(runtime.currentCharacter);
-      lexer.getCharacter();
+      environment.output.print(lexer.getCurrentCharacter());
+      lexer.getNextCharacter();
     }
     return true;
   }
@@ -326,12 +326,12 @@ public class Pascal extends BaseLanguageSupport {
                               + "    case integer of\n");
     level = 0;
     hasCharacters = false;
-    while (runtime.currentCharacter != '%' && runtime.currentCharacter != '\\') {
-      if (runtime.currentCharacter == '\r') {
-        lexer.getCharacter();
+    while (lexer.getCurrentCharacter() != '%' && lexer.getCurrentCharacter() != '\\') {
+      if (lexer.getCurrentCharacter() == '\r') {
+        lexer.getNextCharacter();
         continue;
       }
-      if (runtime.currentCharacter == '\n') {
+      if (lexer.getCurrentCharacter() == '\n') {
         if (hasCharacters) {
           environment.output.printf(");\n");
         }
@@ -342,11 +342,11 @@ public class Pascal extends BaseLanguageSupport {
           level++;
         }
         hasCharacters = true;
-        environment.output.print(runtime.currentCharacter);
+        environment.output.print(lexer.getCurrentCharacter());
       }
-      lexer.getCharacter();
+      lexer.getNextCharacter();
     }
-    lexer.getCharacter();
+    lexer.getNextCharacter();
     environment.output.printf("  end;\n");
 
     return true;
@@ -425,36 +425,36 @@ public class Pascal extends BaseLanguageSupport {
 
   @Override
   protected boolean lexerDollar(FormattingPrintStream output, String lexerMode, Lexer lexer, Terminal token) {
-    lexer.getCharacter();
-    if (runtime.currentCharacter == '+') {
-      lexer.getCharacter();
+    lexer.getNextCharacter();
+    if (lexer.getCurrentCharacter() == '+') {
+      lexer.getNextCharacter();
       output.printFragment("getc");
       return true;
-    } else if (runtime.currentCharacter == 'c') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'c') {
+      lexer.getNextCharacter();
       output.printFragment("currentChar");
       return true;
-    } else if (runtime.currentCharacter == 'l') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'l') {
+      lexer.getNextCharacter();
       output.printFragment("lexerMode");
       return true;
-    } else if (runtime.currentCharacter == 'v') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'v') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.LEXICAL_VALUE);
       return true;
-    } else if (runtime.currentCharacter == 't') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 't') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.TOKEN, token.getName());
       return true;
-    } else if (runtime.currentCharacter == 'm') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'm') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.LEXER_FUNCTION_NAME, lexerMode);
       return true;
-    } else if (runtime.currentCharacter == 'r') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'r') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.RECOGNIZED);
       return true;
-    } else if (runtime.currentCharacter == 'x') {
+    } else if (lexer.getCurrentCharacter() == 'x') {
       lexerReturnValue(output, lexerMode, lexer);
       return true;
     }
@@ -464,23 +464,23 @@ public class Pascal extends BaseLanguageSupport {
 
   protected void lexerReturnValue(FormattingPrintStream output, String lexerMode, Lexer lexer) {
     String follows = "";
-    lexer.getCharacter();
-    while (runtime.currentCharacter == ' ') {
+    lexer.getNextCharacter();
+    while (lexer.getCurrentCharacter() == ' ') {
       follows = lexerAccumulateCurrentCharacter(lexer, follows);
     }
-    if (runtime.currentCharacter == '(') {
+    if (lexer.getCurrentCharacter() == '(') {
       String returnValue = "";
       int level = 0;
-      lexer.getCharacter();
-      while ((runtime.currentCharacter != ')' || level > 0) && runtime.currentCharacter != 0) {
-        if (runtime.currentCharacter == '\'') {
+      lexer.getNextCharacter();
+      while ((lexer.getCurrentCharacter() != ')' || level > 0) && lexer.getCurrentCharacter() != 0) {
+        if (lexer.getCurrentCharacter() == '\'') {
           returnValue = readLexerString(lexer, returnValue, '\'');
-        } else if (runtime.currentCharacter == '"') {
+        } else if (lexer.getCurrentCharacter() == '"') {
           returnValue  = readLexerString(lexer, returnValue, '"');
-        } else if (runtime.currentCharacter == '(') {
+        } else if (lexer.getCurrentCharacter() == '(') {
           returnValue = lexerAccumulateCurrentCharacter(lexer, returnValue);
           level++;
-        } else if (runtime.currentCharacter == ')') {
+        } else if (lexer.getCurrentCharacter() == ')') {
           if (level > 0) {
             returnValue = lexerAccumulateCurrentCharacter(lexer, returnValue);
           }
@@ -489,8 +489,8 @@ public class Pascal extends BaseLanguageSupport {
           returnValue = lexerAccumulateCurrentCharacter(lexer, returnValue);
         }
       }
-      if (runtime.currentCharacter == ')') {
-        lexer.getCharacter();
+      if (lexer.getCurrentCharacter() == ')') {
+        lexer.getNextCharacter();
       } else {
         environment.error(runtime.lineNumber, "Unfinished return value.  Recognized %s.", returnValue);
       }
@@ -502,18 +502,18 @@ public class Pascal extends BaseLanguageSupport {
 
   private String readLexerString(Lexer lexer, String s, char separator) {
     s = lexerAccumulateCurrentCharacter(lexer, s);
-    while (runtime.currentCharacter != separator && runtime.currentCharacter != 0) {
+    while (lexer.getCurrentCharacter() != separator && lexer.getCurrentCharacter() != 0) {
       s = lexerAccumulateCurrentCharacter(lexer, s);
     }
-    if (runtime.currentCharacter == separator) {
+    if (lexer.getCurrentCharacter() == separator) {
       s = lexerAccumulateCurrentCharacter(lexer, s);
     }
     return s;
   }
 
   private String lexerAccumulateCurrentCharacter(Lexer lexer, String s) {
-    s = s + runtime.currentCharacter;
-    lexer.getCharacter();
+    s = s + lexer.getCurrentCharacter();
+    lexer.getNextCharacter();
     return s;
   }
   
@@ -523,7 +523,7 @@ public class Pascal extends BaseLanguageSupport {
     boolean bStart = true;
 
     while (!end) {
-      switch (runtime.currentCharacter) {
+      switch (lexer.getCurrentCharacter()) {
         case '$':
           if (lexerDollar(output, lexerMode, lexer, token)) {
             continue;
@@ -531,16 +531,16 @@ public class Pascal extends BaseLanguageSupport {
           break;
 
         case '{': /* COMMENT in PAS */
-          output.print(runtime.currentCharacter);
-          while ((lexer.getCharacter()) != '}') {
-            output.print(runtime.currentCharacter);
+          output.print(lexer.getCurrentCharacter());
+          while ((lexer.getNextCharacter()) != '}') {
+            output.print(lexer.getCurrentCharacter());
           }
           break;
 
         case '%':
         case '\\': /* finact in PAS y ASM */
           end = true;
-          lexer.getCharacter();
+          lexer.getNextCharacter();
           continue;
 
         case '(': /* possible comment in PAS */
@@ -551,14 +551,14 @@ public class Pascal extends BaseLanguageSupport {
 
         case '\'': /* constant */
         case '"': /* string */
-          if(!lexerString(output, lexer, runtime.currentCharacter)) {
+          if(!lexerString(output, lexer, lexer.getCurrentCharacter())) {
             return false;
           }
           break;
 
         case '\n':
-          output.printf("%c", runtime.currentCharacter);
-          lexer.getCharacter();
+          output.printf("%c", lexer.getCurrentCharacter());
+          lexer.getNextCharacter();
           indent(output, environment.getIndent() + additionalIndent);
           continue;
 
@@ -567,13 +567,13 @@ public class Pascal extends BaseLanguageSupport {
           return false;
 
       }
-      if (!bStart || runtime.currentCharacter != '{') {
-        output.print(runtime.currentCharacter);
+      if (!bStart || lexer.getCurrentCharacter() != '{') {
+        output.print(lexer.getCurrentCharacter());
       }
-      if (runtime.currentCharacter > ' ') {
+      if (lexer.getCurrentCharacter() > ' ') {
         bStart = false;
       }
-      lexer.getCharacter();
+      lexer.getNextCharacter();
     }
     return true;
   }

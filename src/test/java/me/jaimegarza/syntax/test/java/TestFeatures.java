@@ -61,18 +61,18 @@ public class TestFeatures extends AbstractGenerationBase {
         "${file.grammar}"
     });
     checkRegularExpressions(tmpGrammarFile, new String[] {
-        " a .*One A.*256.*No.*N/A",
-        " b .*b.*257.*No.*N/A",
-        " c .*c.*32768.*No.*N/A",
-        " d .*d.*32769.*No.*N/A",
-        " e .*e.*300.*No.*LEF",
-        " f .*f.*301.*No.*LEF",
-        " g .*g.*302.*No.*RIG",
-        " h .*h.*303.*No.*RIG",
-        " i .*i.*304.*No.*BIN",
-        " j .*j.*305.*No.*BIN",
-        " k .*k.*32770.*Yes.*N/A",
-        " Expr.*an expression"
+        ">a<.*One A.*256.*No.*N/A",
+        ">b<.*b.*257.*No.*N/A",
+        ">c<.*c.*32768.*No.*N/A",
+        ">d<.*d.*32769.*No.*N/A",
+        ">e<.*e.*300.*No.*LEF",
+        ">f<.*f.*301.*No.*LEF",
+        ">g<.*g.*302.*No.*RIG",
+        ">h<.*h.*303.*No.*RIG",
+        ">i<.*i.*304.*No.*BIN",
+        ">j<.*j.*305.*No.*BIN",
+        ">k<.*k.*32770.*Yes.*N/A",
+        "Expr.*an expression"
     });
     tearDown();
   }
@@ -97,9 +97,9 @@ public class TestFeatures extends AbstractGenerationBase {
         "${file.grammar}"
     });
     checkRegularExpressions(tmpGrammarFile, new String[] {
-        " a .*a.*32768.*N/A.*type1",
-        " b .*b.*32769.*N/A.*type2",
-        " c .*c.*32770.*N/A.*type1",
+        ">a<.*a.*32768.*N/A.*type1",
+        ">b<.*b.*32769.*N/A.*type2",
+        ">c<.*c.*32770.*N/A.*type1",
         "Expr.*type1",
         "Term.*type2",
     });

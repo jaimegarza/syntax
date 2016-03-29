@@ -269,13 +269,13 @@ public class C extends BaseLanguageSupport {
     environment.include.printf("typedef union");
     level = 0;
     while (2 > 1) {
-      if (runtime.currentCharacter == '\0') {
+      if (lexer.getCurrentCharacter() == '\0') {
         environment.error(-1, "End of file processing \'%%union\'.");
         return false;
       }
 
-      environment.include.print(runtime.currentCharacter);
-      switch (runtime.currentCharacter) {
+      environment.include.print(lexer.getCurrentCharacter());
+      switch (lexer.getCurrentCharacter()) {
         case '{':
           ++level;
           break;
@@ -285,11 +285,11 @@ public class C extends BaseLanguageSupport {
           if (level == 0) {
             environment.include.printf(" tstack, *ptstack;\n\n");
             environment.include.printf("#define TSTACK tstack\n" + "#define PTSTACK ptstack\n\n");
-            lexer.getCharacter();
+            lexer.getNextCharacter();
             return true;
           }
       }
-      lexer.getCharacter();
+      lexer.getNextCharacter();
     }
   }
 

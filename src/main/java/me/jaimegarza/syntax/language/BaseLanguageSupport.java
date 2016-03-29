@@ -133,7 +133,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     boolean end = false;
     
     while (!end) {
-      switch (runtime.currentCharacter) {
+      switch (lexer.getCurrentCharacter()) {
         case ';': /* final action in C & comment in ASM */
           if (nBracks == 0) {
             end = true;
@@ -151,9 +151,9 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
           break;
 
         case '/': /* possible comment in C, JAVA */
-          environment.output.print(runtime.currentCharacter);
-          lexer.getCharacter();
-          if (runtime.currentCharacter != '*') {
+          environment.output.print(lexer.getCurrentCharacter());
+          lexer.getNextCharacter();
+          if (lexer.getCurrentCharacter() != '*') {
             continue;
           }
 
@@ -164,12 +164,12 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
 
         case '\'': /* constant */
         case '"': /* string */
-          processor.generateConstant(lexer, runtime.currentCharacter);
+          processor.generateConstant(lexer, lexer.getCurrentCharacter());
           break;
 
         case '\n':
-          environment.output.print(runtime.currentCharacter);
-          lexer.getCharacter();
+          environment.output.print(lexer.getCurrentCharacter());
+          lexer.getNextCharacter();
           indent(environment.output, environment.getIndent() + 2);
           continue;
 
@@ -186,8 +186,8 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
           }
           break;
       }
-      environment.output.print(runtime.currentCharacter);
-      lexer.getCharacter();
+      environment.output.print(lexer.getCurrentCharacter());
+      lexer.getNextCharacter();
     }
 
     return true;
@@ -197,28 +197,28 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     Type type = null;
     int sign = 1;
     
-    lexer.getCharacter();
-    if (runtime.currentCharacter == '<') { /* type */
+    lexer.getNextCharacter();
+    if (lexer.getCurrentCharacter() == '<') { /* type */
       type = processor.getTypeFromStream(lexer);
       if (type == null) { 
         return 0; // command a return false
       }
     }
-    if (runtime.currentCharacter == '$') {
+    if (lexer.getCurrentCharacter() == '$') {
       if (!processor.generateDollarDollar(lexer, elementCount, nonTerminalId, type)) {
         return 0; // command a return false
       }
       return 1; // command a continue
     }
-    if (Character.isLetter(runtime.currentCharacter)) {
+    if (Character.isLetter(lexer.getCurrentCharacter())) {
       return processor.generateDollarLetter(lexer, elementCount, type, nonTerminalId) ? 1 : 0;
     }
 
-    if (runtime.currentCharacter == '-') {
+    if (lexer.getCurrentCharacter() == '-') {
       sign = -sign;
-      lexer.getCharacter();
+      lexer.getNextCharacter();
     }
-    if (Character.isDigit(runtime.currentCharacter)) {
+    if (Character.isDigit(lexer.getCurrentCharacter())) {
       return processor.generateDollarNumber(lexer, elementCount, type, sign) ? 1 : 0;
     }
     
@@ -231,33 +231,33 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   }
 
   protected boolean lexerDollar(FormattingPrintStream output, String lexerMode, Lexer lexer, Terminal token) {
-    lexer.getCharacter();
-    if (runtime.currentCharacter == '+') {
-      lexer.getCharacter();
+    lexer.getNextCharacter();
+    if (lexer.getCurrentCharacter() == '+') {
+      lexer.getNextCharacter();
       output.printFragment("getc");
       return true;
-    } else if (runtime.currentCharacter == 'c') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'c') {
+      lexer.getNextCharacter();
       output.printFragment("currentChar");
       return true;
-    } else if (runtime.currentCharacter == 'l') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'l') {
+      lexer.getNextCharacter();
       output.printFragment("lexerMode");
       return true;
-    } else if (runtime.currentCharacter == 'v') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'v') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.LEXICAL_VALUE);
       return true;
-    } else if (runtime.currentCharacter == 't') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 't') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.TOKEN, token.getName());
       return true;
-    } else if (runtime.currentCharacter == 'm') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'm') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.LEXER_FUNCTION_NAME, lexerMode);
       return true;
-    } else if (runtime.currentCharacter == 'r') {
-      lexer.getCharacter();
+    } else if (lexer.getCurrentCharacter() == 'r') {
+      lexer.getNextCharacter();
       output.printFragment(Fragments.RECOGNIZED);
       return true;
     }
@@ -266,48 +266,48 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   }
 
   protected boolean lexerComment(FormattingPrintStream output, Lexer lexer, char characterToFind) {
-    output.print(runtime.currentCharacter);
-    lexer.getCharacter();
-    if (runtime.currentCharacter != '*') {
+    output.print(lexer.getCurrentCharacter());
+    lexer.getNextCharacter();
+    if (lexer.getCurrentCharacter() != '*') {
       return true;
     }
   
-    output.print(runtime.currentCharacter);
-    lexer.getCharacter();
+    output.print(lexer.getCurrentCharacter());
+    lexer.getNextCharacter();
     boolean bBreak = false;
     while (!bBreak) {
-      if (runtime.currentCharacter == '\0') {
+      if (lexer.getCurrentCharacter() == '\0') {
         environment.error(-1, "Unfinished comment.");
         return false;
       }
-      while (runtime.currentCharacter == '*') {
-        output.print(runtime.currentCharacter);
-        if ((lexer.getCharacter()) == characterToFind) {
+      while (lexer.getCurrentCharacter() == '*') {
+        output.print(lexer.getCurrentCharacter());
+        if ((lexer.getNextCharacter()) == characterToFind) {
           bBreak = true;
         }
       }
-      output.print(runtime.currentCharacter);
-      lexer.getCharacter();
+      output.print(lexer.getCurrentCharacter());
+      lexer.getNextCharacter();
     }
     return true;
   }
 
   protected boolean lexerString(FormattingPrintStream output, Lexer lexer, char characterToFind) {
-    output.print(runtime.currentCharacter);
-    while ((lexer.getCharacter()) != characterToFind) {
-      if (runtime.currentCharacter == '\0') {
+    output.print(lexer.getCurrentCharacter());
+    while ((lexer.getNextCharacter()) != characterToFind) {
+      if (lexer.getCurrentCharacter() == '\0') {
         environment.error(-1, "Statement ' .. ' or \" .. \" not ended");
         return false;
       }
-      if (runtime.currentCharacter == '\n') {
+      if (lexer.getCurrentCharacter() == '\n') {
         environment.error(-1, "End of line reached on string literal.");
         break;
       }
-      if (runtime.currentCharacter == '\\') {
-        output.print(runtime.currentCharacter);
-        lexer.getCharacter();
+      if (lexer.getCurrentCharacter() == '\\') {
+        output.print(lexer.getCurrentCharacter());
+        lexer.getNextCharacter();
       }
-      output.print(runtime.currentCharacter);
+      output.print(lexer.getCurrentCharacter());
     }
     return true;
   }
@@ -347,7 +347,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
     boolean startedWithBracket = false;
   
     while (!end) {
-      switch (runtime.currentCharacter) {
+      switch (lexer.getCurrentCharacter()) {
         case '$':
           if (lexerDollar(output, lexerMode, lexer, token)) {
             continue;
@@ -369,7 +369,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
             end = true;
           }
           if (end && startedWithBracket) {
-            lexer.getCharacter();
+            lexer.getNextCharacter();
             continue;
           }
           break;
@@ -382,14 +382,14 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   
         case '\'': /* constant */
         case '"': /* string */
-          if (!lexerString(output, lexer, runtime.currentCharacter)) {
+          if (!lexerString(output, lexer, lexer.getCurrentCharacter())) {
             return false;
           }
           break;
           
         case '\n':
-          output.print(runtime.currentCharacter);
-          lexer.getCharacter();
+          output.print(lexer.getCurrentCharacter());
+          lexer.getNextCharacter();
           indent(output, environment.getIndent() - (this instanceof C?1:0) + additionalIndent);
           continue;
   
@@ -398,18 +398,18 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
           return false;
   
       }
-      if (startingString && runtime.currentCharacter == '{') {
+      if (startingString && lexer.getCurrentCharacter() == '{') {
         startedWithBracket = true;
-      } else if (!startingString || runtime.currentCharacter != ' ') {
+      } else if (!startingString || lexer.getCurrentCharacter() != ' ') {
         if (startingString) {
           indent(output, environment.getIndent() - (this instanceof C?1:0));
         }
-        output.print(runtime.currentCharacter);
+        output.print(lexer.getCurrentCharacter());
       }
-      if (runtime.currentCharacter > ' ') {
+      if (lexer.getCurrentCharacter() > ' ') {
         startingString = false;
       }
-      lexer.getCharacter();
+      lexer.getNextCharacter();
     }
     output.println();
     return true;

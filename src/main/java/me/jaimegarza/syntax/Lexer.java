@@ -38,16 +38,22 @@ package me.jaimegarza.syntax;
  */
 public interface Lexer {
   /**
-   * Get one character.  Place it in RuntimeData.currentCharacter
+   * Get one character.  Place it in currentChar
    * @return the character
    */
-  char getCharacter();
+  char getNextCharacter();
+
+  /**
+   * Do not get the next character character.  Just return the current char
+   * @return the character
+   */
+  char getCurrentCharacter();
 
   /**
    * Reverse one character.  Place it in RuntimeData.currentCharacter
    * @param c is the character to unget
    */
-  void ungetCharacter(char c);
+  void ungetChar(char c);
   
   /**
    * Standard tokens.  This routine deals with the parser type of symbols

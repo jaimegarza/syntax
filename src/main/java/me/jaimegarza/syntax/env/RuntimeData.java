@@ -118,10 +118,6 @@ public class RuntimeData {
    */
   private boolean stackTypeDefined;
   /**
-   * Keep the current character here
-   */
-  public char currentCharacter;
-  /**
    * Current source line number
    */
   public int lineNumber = 1;

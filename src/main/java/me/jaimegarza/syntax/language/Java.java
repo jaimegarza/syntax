@@ -234,13 +234,13 @@ public class Java extends BaseLanguageSupport {
     environment.include.printf("public static class StackElement");
     level = 0;
     while (2 > 1) {
-      if (runtime.currentCharacter == '\0') {
+      if (lexer.getCurrentCharacter() == '\0') {
         environment.error(-1, "End of file processing \'%%union\'.");
         return false;
       }
 
-      environment.include.print(runtime.currentCharacter);
-      switch (runtime.currentCharacter) {
+      environment.include.print(lexer.getCurrentCharacter());
+      switch (lexer.getCurrentCharacter()) {
         case '{':
           ++level;
           break;
@@ -249,14 +249,14 @@ public class Java extends BaseLanguageSupport {
           --level;
           if (level == 0) {
             environment.include.printf("\n\n");
-            lexer.getCharacter();
+            lexer.getNextCharacter();
             return true;
           }
         case '\n':
           indent(environment.include, 1);
           break;
       }
-      lexer.getCharacter();
+      lexer.getNextCharacter();
     }
   }
 
