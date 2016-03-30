@@ -134,6 +134,11 @@ public class HtmlWriter {
     tableElement("td", valuesAndClasses);
   }
   
+  /**
+   * Produce a row in a table with one cell
+   * @param value the text of the cell
+   * @param className the CSS class name of the cell
+   */
   public void tableOneCellRow(String value, String className) {
     out.print("    <tr><td");
     if (className != null) {
@@ -143,8 +148,8 @@ public class HtmlWriter {
   }
   
   public void tableEnd() {
+    out.println("    <tr><td  colspan=\"" + currentNumberOfColumns + "\" class=\"close\">&nbsp;</td></tr>");
     out.println("  </table>");
-    out.println("<div class=\"close\">&nbsp;</div>");
     out.println();
   }
   
