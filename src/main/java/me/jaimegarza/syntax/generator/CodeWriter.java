@@ -225,12 +225,16 @@ public class CodeWriter extends AbstractPhase {
     environment.reportWriter.tableRow(left("Source"), left(environment.getSourceFile()));
     environment.reportWriter.tableRow(left("Output"), left(environment.getOutputFile()));
     environment.reportWriter.tableRow(left("Include/Interface"), left("" + environment.getIncludeFile()));
+    environment.reportWriter.tableRow(left("Bundle"), left("" + environment.getBundleFile()));
+    environment.reportWriter.tableRow(left("Skeleton"), left("" + environment.getSkeletonFile()));
     environment.reportWriter.tableRow(left("Algorithm"), left(environment.getAlgorithmType()));
     environment.reportWriter.tableRow(left("Language"), left(environment.getLanguageEnum()));
     environment.reportWriter.tableRow(left("Packed?"), left(environment.isPacked()));
     environment.reportWriter.tableRow(left("Tokens"), left(runtimeData.getTerminals().size()));
     environment.reportWriter.tableRow(left("Non Terminals"), left(runtimeData.getNonTerminals().size()));
     environment.reportWriter.tableRow(left("Types"), left(runtimeData.getTypes().size()));
+    environment.reportWriter.tableRow(left("Error Groups"), left(runtimeData.getErrorGroups().size()));
+    environment.reportWriter.tableRow(left("Regular Expressions"), left(runtimeData.getRegularExpressions().size()));
     environment.reportWriter.tableRow(left("Rules"), left(runtimeData.getRules().size()));
     environment.reportWriter.tableRow(left("Errors"), left(runtimeData.getErrorMessages().size()));
     environment.reportWriter.tableRow(left("Actions"), left(runtimeData.getNumberOfActions()));
