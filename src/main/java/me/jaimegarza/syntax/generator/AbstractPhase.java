@@ -82,5 +82,23 @@ public abstract class AbstractPhase {
   protected HtmlValue right(Object o) {
     return HtmlWriter.right(o);
   }
+  
+  /**
+   * Produce one span
+   * @param s is the span contents
+   * @param className is the optional CSS class name, can be null
+   * @return the span
+   */
+  protected String span(String s, String className) {
+    return "<span" + (className != null ? " class=\"" + className + "\"": "") + ">" + s + "</span>";
+  }
 
+  /**
+   * Produce one span
+   * @param s is the span contents
+   * @return the span
+   */
+  protected String span(String s) {
+    return span(s, null);
+  }
 }

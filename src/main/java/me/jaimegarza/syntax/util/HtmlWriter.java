@@ -29,6 +29,11 @@
  */
 package me.jaimegarza.syntax.util;
 
+import java.io.File;
+import java.io.IOException;
+
+import me.jaimegarza.syntax.env.Environment;
+
 /**
  * Class used to write HTML out for the report.
  * <p>
@@ -40,6 +45,7 @@ package me.jaimegarza.syntax.util;
 public class HtmlWriter {
 
   private FormattingPrintStream out;
+  private Environment environment;
   private int currentNumberOfColumns = 0;
 
   /**
@@ -62,9 +68,51 @@ public class HtmlWriter {
   /**
    * Construct a writer to output to the out stream
    * @param out is the stream to write to
+   * @param environment is the environment, used for the report template
    */
-  public HtmlWriter(FormattingPrintStream out) {
+  public HtmlWriter(FormattingPrintStream out, Environment environment) {
     this.out = out;
+    this.environment = environment;
+  }
+
+  /**
+   * Write the report header
+   */
+  public void preface() {
+    try {
+      String line = environment.reportTemplate.readLine();
+      while (line != null) {
+        
+        if (line.trim().equals("%%")) {
+          break;
+        }
+        
+        line = templateLine(line);
+        
+        out.println(line);
+        line = environment.reportTemplate.readLine();
+      }
+    } catch (IOException ioe) {
+      System.err.println("Error reading report template file:" + ioe.getMessage());
+    }
+  }
+  
+  /**
+   * Write the report header
+   */
+  public void epilogue() {
+    try {
+      String line = environment.reportTemplate.readLine();
+      while (line != null) {
+        
+        line = templateLine(line);
+        
+        out.println(line);
+        line = environment.reportTemplate.readLine();
+      }
+    } catch (IOException ioe) {
+      System.err.println("Error reading report template file:" + ioe.getMessage());
+    }
   }
   
   /**
@@ -96,6 +144,7 @@ public class HtmlWriter {
   
   public void tableEnd() {
     out.println("  </table>");
+    out.println("<div class=\"close\">&nbsp;</div>");
     out.println();
   }
   
@@ -144,5 +193,35 @@ public class HtmlWriter {
       out.print(">" + valueAndClass.value.toString() + "</" + cellType + ">");
     }
     out.println("</tr>");
+  }
+  
+  private String getAbsolutePath(File file) {
+    if (file == null){
+      return "N/A";
+    }
+    return file.getAbsolutePath();
+  }
+
+  private String getFileName(File file) {
+    if (file == null){
+      return "N/A";
+    }
+    return file.getName();
+  }
+
+  private String templateLine(String line) {
+    line = line.replaceAll("\\$\\{source.path\\}", getAbsolutePath(environment.getSourceFile()));
+    line = line.replaceAll("\\$\\{source.file\\}", getFileName(environment.getSourceFile()));
+    line = line.replaceAll("\\$\\{output.path\\}", getAbsolutePath(environment.getOutputFile()));
+    line = line.replaceAll("\\$\\{output.file\\}", getFileName(environment.getOutputFile()));
+    line = line.replaceAll("\\$\\{include.path\\}", getAbsolutePath(environment.getIncludeFile()));
+    line = line.replaceAll("\\$\\{include.file\\}", getFileName(environment.getIncludeFile()));
+    line = line.replaceAll("\\$\\{report.path\\}", getAbsolutePath(environment.getReportFile()));
+    line = line.replaceAll("\\$\\{report.file\\}", getFileName(environment.getReportFile()));
+    line = line.replaceAll("\\$\\{bundle.path\\}", getAbsolutePath(environment.getBundleFile()));
+    line = line.replaceAll("\\$\\{bundle.file\\}", getFileName(environment.getBundleFile()));
+    line = line.replaceAll("\\$\\{skeleton.path\\}", getAbsolutePath(environment.getSkeletonFile()));
+    line = line.replaceAll("\\$\\{skeleton.file\\}", getFileName(environment.getSkeletonFile()));
+    return line;
   }
 }

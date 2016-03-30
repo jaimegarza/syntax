@@ -1,4 +1,4 @@
-/*
+/*"su
 Syntax is distributed under the Revised, or 3-clause, BSD license
 ===================================================================
 Copyright (c) 1985, 2012, 2016, Jaime Garza
@@ -220,26 +220,24 @@ public class CodeWriter extends AbstractPhase {
   }
 
   private void reportSummary() {
-    environment.report.println();
-    environment.report.println("Summary:");
-    environment.report.println("=============================================================================================================");
-    environment.report.println("Source:           " + environment.getSourceFile());
-    environment.report.println("Output:           " + environment.getOutputFile());
-    environment.report.println("Include/Interface:" + environment.getIncludeFile());
-    environment.report.println("Algorithm:        " + environment.getAlgorithmType());
-    environment.report.println("Language:         " + environment.getLanguageEnum());
-    environment.report.println("Packed?:          " + environment.isPacked());
-    environment.report.println("Tokens:           " + runtimeData.getTerminals().size());
-    environment.report.println("Non Terminals:    " + runtimeData.getNonTerminals().size());
-    environment.report.println("Types:            " + runtimeData.getTypes().size());
-    environment.report.println("Rules:            " + runtimeData.getRules().size());
-    environment.report.println("Errors:           " + runtimeData.getErrorMessages().size());
-    environment.report.println("Actions:          " + runtimeData.getNumberOfActions());
-    environment.report.println("Gotos:            " + runtimeData.getNumberOfGoTos());
-    environment.report.println("Recoveries:       " + runtimeData.getNumberOfRecoveries());
-    environment.report.println("States:           " + runtimeData.getStates().length);
-    environment.report.println("=============================================================================================================");
-    environment.report.println();
+    environment.reportWriter.subHeading("Summary");
+    environment.reportWriter.tableHead("summary", left("Property"), left("Value"));
+    environment.reportWriter.tableRow(left("Source"), left(environment.getSourceFile()));
+    environment.reportWriter.tableRow(left("Output"), left(environment.getOutputFile()));
+    environment.reportWriter.tableRow(left("Include/Interface"), left("" + environment.getIncludeFile()));
+    environment.reportWriter.tableRow(left("Algorithm"), left(environment.getAlgorithmType()));
+    environment.reportWriter.tableRow(left("Language"), left(environment.getLanguageEnum()));
+    environment.reportWriter.tableRow(left("Packed?"), left(environment.isPacked()));
+    environment.reportWriter.tableRow(left("Tokens"), left(runtimeData.getTerminals().size()));
+    environment.reportWriter.tableRow(left("Non Terminals"), left(runtimeData.getNonTerminals().size()));
+    environment.reportWriter.tableRow(left("Types"), left(runtimeData.getTypes().size()));
+    environment.reportWriter.tableRow(left("Rules"), left(runtimeData.getRules().size()));
+    environment.reportWriter.tableRow(left("Errors"), left(runtimeData.getErrorMessages().size()));
+    environment.reportWriter.tableRow(left("Actions"), left(runtimeData.getNumberOfActions()));
+    environment.reportWriter.tableRow(left("Gotos"), left(runtimeData.getNumberOfGoTos()));
+    environment.reportWriter.tableRow(left("Recoveries"), left(runtimeData.getNumberOfRecoveries()));
+    environment.reportWriter.tableRow(left("States"), left(runtimeData.getStates().length));
+    environment.reportWriter.tableEnd();
   }
   
   private void printEdges() {

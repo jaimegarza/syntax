@@ -129,17 +129,22 @@ public class Syntax {
    * @throws OutputException when the generation could not produce the output file
    */
   public void executeInternal() throws ParsingException, AnalysisException, OutputException {
-    AbstractCodeParser parser = new SyntaxCodeParser(environment);
-    StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
-    TableGenerator generator = new TableGenerator(environment);
-    CodeWriter writer = new CodeWriter(environment);
-    if (environment.isTokenizerMode()) {
-      parser.dumpTokens();
-    } else {
-      parser.execute();
-      analyzer.execute();
-      generator.execute();
-      writer.execute();
+    try {
+      environment.reportWriter.preface();
+      AbstractCodeParser parser = new SyntaxCodeParser(environment);
+      StructuralAnalyzer analyzer = new StructuralAnalyzer(environment);
+      TableGenerator generator = new TableGenerator(environment);
+      CodeWriter writer = new CodeWriter(environment);
+      if (environment.isTokenizerMode()) {
+        parser.dumpTokens();
+      } else {
+        parser.execute();
+        analyzer.execute();
+        generator.execute();
+        writer.execute();
+      }
+    } finally {
+      environment.reportWriter.epilogue();
     }
   }
 

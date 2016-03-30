@@ -186,20 +186,20 @@ public class TableGenerator extends AbstractPhase {
    * @param dot is the dot to report
    */
   private void printDotReport(Dot dot) {
-    String s = dot.getRule().getLeftHand().getName() + " &rArr; ";
+    String s = dot.getRule().getLeftHand().getName() + "&nbsp;&rArr;&nbsp;";
     RuleItem item = dot.getRule().getItem(0);
     if (item == null) {
-      s += "&middot;";
+      s += "<em>.</em>";
     }
     int i = 0;
     while (item != null) {
       if (dot.getItem() != null && dot.getItem() == item) {
-        s += "&middot; ";
+        s += "<em>.</em>&nbsp;";
       }
-      s += item.getSymbol().getName() + " ";
+      s += item.getSymbol().getName() + "&nbsp;";
       item = dot.getRule().getItem(++i);
       if (item == null && dot.getItem() == null) {
-        s += "&middot;";
+        s += "<em>.</em>";
       }
     }
     if (environment.algorithm.supportsLookahead()) {
@@ -337,10 +337,10 @@ public class TableGenerator extends AbstractPhase {
     if (existingState >= 0) {
       actions = I[existingState].getActions();
       I[stateNumber].setPosition(I[existingState].getPosition());
-      environment.reportWriter.tableHead("tactions", left("Actions (same as state " + existingState + ")"));
+      environment.reportWriter.tableOneCellRow("Actions (same as state " + existingState + ")", "thead");
     } else {
       I[stateNumber].setPosition(actionNumber);
-      environment.reportWriter.tableHead("tactions", left("Actions"));
+      environment.reportWriter.tableOneCellRow("Actions", "thead");
       actionNumber += actions.size();
     }
     I[stateNumber].setDefaultValue(defaultAction);
@@ -354,7 +354,7 @@ public class TableGenerator extends AbstractPhase {
       } else {
         s += String.format("Shift to state %d", action.getStateNumber());
       }
-      environment.reportWriter.tableRow(left(s));
+      environment.reportWriter.tableOneCellRow(s, "action");
     }
     // compute and emit GOTO's
     int terminals = runtimeData.getTerminals().size();
@@ -372,7 +372,7 @@ public class TableGenerator extends AbstractPhase {
         if (symbol == null) {
           continue;
         }
-        environment.reportWriter.tableRow(left(String.format("With %s Goto %d", symbol.getName(), parserLine[i + terminals])));
+        environment.reportWriter.tableOneCellRow(String.format("With %s Goto %d", symbol.getName(), parserLine[i + terminals]), "action");
         addGoto(symbol, stateNumber, parserLine[i + terminals]);
       }
     }
@@ -383,8 +383,7 @@ public class TableGenerator extends AbstractPhase {
     } else {
       s +="Error";
     }
-    environment.reportWriter.tableRow(left(s));
-    environment.reportWriter.tableEnd();
+    environment.reportWriter.tableOneCellRow(s, "action");
   }
   
   /**
@@ -485,24 +484,27 @@ public class TableGenerator extends AbstractPhase {
     // consider the groups as a single reporting token
     tokenCount += errorGroups.size();
 
-    environment.report.printf("\nErrors\n-------\n");
+    environment.reportWriter.tableOneCellRow("Errors", "thead");
     if (tokenCount == 1) {
       String message = "";
+      String type;
       if (theToken != null) {
         message = theToken.getFullName() + " expected";
+        type = "token";
       } else {
         // must be a group
         message = errorGroups.get(0).getDisplayName() + " expected";
+        type = "token group";
       }
-      environment.report.println("    " + message);
+      environment.reportWriter.tableOneCellRow(span(message, "error-message") + span(" (" + type + ")", "error-type"), "error");
       I[stateNumber].setMessage(addErrorMessage(message));
     } else if (nonTerminalCount == 1 && theNonTerminal != null) {
       String message = "Expecting " + theNonTerminal.getFullName();
-      environment.report.println("    " + message);
+      environment.reportWriter.tableOneCellRow(span(message, "error-message") + span(" (non terminal)", "error-type"), "error");
       I[stateNumber].setMessage(addErrorMessage(message));
     } else if (reduceCount == 1 && theReducer != null) {
       String message = theReducer.getFullName() + " expected";
-      environment.report.println("    " + message);
+      environment.reportWriter.tableOneCellRow(span(message, "error-message") + span(" (reduce token)", "error-type"), "error");
       I[stateNumber].setMessage(addErrorMessage(message));
     } else if (tokenCount > 0 && (tokenCount < nonTerminalCount || nonTerminalCount == 0)) {
       // includes groups, so go for them first
@@ -536,8 +538,9 @@ public class TableGenerator extends AbstractPhase {
         }
       }
       messageBuffer.append(" expected");
-      environment.report.println("    " + messageBuffer.toString());
-      I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
+      String message = messageBuffer.toString();
+      environment.reportWriter.tableOneCellRow(span(message, "error-message") + span(" (mostly tokens)", "error-type"), "error");
+      I[stateNumber].setMessage(addErrorMessage(message));
     } else if (nonTerminalCount > 0) {
       StringBuilder messageBuffer = new StringBuilder("Expecting ");
       int count = 0;
@@ -563,8 +566,9 @@ public class TableGenerator extends AbstractPhase {
           }
         }
       }
-      environment.report.println("    " + messageBuffer.toString());
-      I[stateNumber].setMessage(addErrorMessage(messageBuffer.toString()));
+      String message = messageBuffer.toString();
+      environment.reportWriter.tableOneCellRow(span(message, "error-message") + span(" (mostly non-terminals)", "error-type"), "error");
+      I[stateNumber].setMessage(addErrorMessage(message));
     } else if (reduceCount > 0) {
       StringBuilder messageBuffer = new StringBuilder("");
       int count = 0;
@@ -604,13 +608,14 @@ public class TableGenerator extends AbstractPhase {
       } else {
         message = "One of " + message;
       }
-      environment.report.println("    " + message);
+      environment.reportWriter.tableOneCellRow(span(message, "error-message") + span(" (mostly-reductions)", "error-type"), "error");
       I[stateNumber].setMessage(addErrorMessage(message));
     } else if (acceptCount == 1) {
       String message = "No more elements expected";
-      environment.report.println("    " + message);
+      environment.reportWriter.tableOneCellRow(span(message, "error-message") + span(" (accept)", "error-type"), "error");
       I[stateNumber].setMessage(addErrorMessage(message));
     } else {
+      environment.reportWriter.tableOneCellRow(span("N/A", "error-type"), "error");
       I[stateNumber].setMessage(-1);
     }
   }
@@ -886,11 +891,11 @@ public class TableGenerator extends AbstractPhase {
       }
     }
     computeReduce(parserLine, stateNumber);
-    environment.reportWriter.tableEnd();
     I[stateNumber].setMessage(-1);
     I[stateNumber].setRow(parserLine);
     packState(parserLine, stateNumber);
     computeErrorsForState(parserLine, stateNumber);
+    environment.reportWriter.tableEnd();
   }
 
   /**

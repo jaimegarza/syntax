@@ -91,6 +91,8 @@ public class Environment {
   private static final boolean NOT_REQUIRED = false;
   private static final boolean REQUIRED = true;
 
+  private static final String REPORT_TEMPLATE = "report.html";
+
   private String relatedTitle;
   private String[] args;
   private CommandLine cmd = null;
@@ -112,6 +114,7 @@ public class Environment {
   private File reportFile;
   private File bundleFile;
   private File skeletonFile;
+  private File reportTemplateFile;
   private RuntimeData runtimeData = new RuntimeData();
 
   public BufferedReader source = null;
@@ -120,6 +123,7 @@ public class Environment {
   public FormattingPrintStream report = null;
   public FormattingPrintStream bundle = null;
   public BufferedReader skeleton = null;
+  public BufferedReader reportTemplate = null;
   public AlgorithmicSupport algorithm = null;
   public LanguageSupport language = null;
   public HtmlWriter reportWriter = null;
@@ -130,6 +134,7 @@ public class Environment {
   private Locale locale;
 
   private Driver driver;
+
 
   /**
    * Construct an environment with the given arguments
@@ -214,6 +219,7 @@ public class Environment {
       setReportFile();
       setBundleName();
       setSkeletonFile();
+      setReportTemplate();
     } catch (CommandLineParseException e) {
       System.out.println("Command line error: " + e.getMessage());
       printHelp();
@@ -475,6 +481,23 @@ public class Environment {
       }
     }
   }
+  
+  /**
+   * Obtain the report file template
+   * @throws CommandLineParseException 
+   */ 
+  private void setReportTemplate() throws CommandLineParseException {
+    URL url = Thread.currentThread().getContextClassLoader().getResource(REPORT_TEMPLATE);
+    if (url == null) {
+      throw new CommandLineParseException("filename " + REPORT_TEMPLATE + " not found in the class path");
+    }
+    reportTemplateFile = new File(URI.create(url.toString()));
+    try {
+      reportTemplate = new BufferedReader(openFileForRead(reportTemplateFile));
+    } catch (IOException e) {
+      throw new CommandLineParseException("Cannot open report template file " + REPORT_TEMPLATE);
+    }
+  }
 
   /**
    * compute the verbosity from options
@@ -663,7 +686,7 @@ public class Environment {
     }
     try {
       this.report = new FormattingPrintStream(this, openFileForWrite(this.reportFile));
-      this.reportWriter = new HtmlWriter(this.report);
+      this.reportWriter = new HtmlWriter(this.report, this);
     } catch (IOException e) {
       throw new CommandLineParseException("Cannot open file " + reportFile);
     }
