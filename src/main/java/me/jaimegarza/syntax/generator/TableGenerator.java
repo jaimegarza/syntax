@@ -189,17 +189,17 @@ public class TableGenerator extends AbstractPhase {
     String s = dot.getRule().getLeftHand().getName() + "&nbsp;&rArr;&nbsp;";
     RuleItem item = dot.getRule().getItem(0);
     if (item == null) {
-      s += "<em>.</em>";
+      s += "<span class=\"dot\">.</span>";
     }
     int i = 0;
     while (item != null) {
       if (dot.getItem() != null && dot.getItem() == item) {
-        s += "<em>.</em>&nbsp;";
+        s += "<span class=\"dot\">.</span>&nbsp;";
       }
       s += item.getSymbol().getName() + "&nbsp;";
       item = dot.getRule().getItem(++i);
       if (item == null && dot.getItem() == null) {
-        s += "<em>.</em>";
+        s += "<span class=\"dot\">.</span>";
       }
     }
     if (environment.algorithm.supportsLookahead()) {
@@ -337,10 +337,10 @@ public class TableGenerator extends AbstractPhase {
     if (existingState >= 0) {
       actions = I[existingState].getActions();
       I[stateNumber].setPosition(I[existingState].getPosition());
-      environment.reportWriter.tableOneCellRow("Actions (same as state " + existingState + ")", "thead");
+      environment.reportWriter.tableOneCellRow("Packed Actions (same as state " + existingState + ")", "thead");
     } else {
       I[stateNumber].setPosition(actionNumber);
-      environment.reportWriter.tableOneCellRow("Actions", "thead");
+      environment.reportWriter.tableOneCellRow("Packed Actions", "thead");
       actionNumber += actions.size();
     }
     I[stateNumber].setDefaultValue(defaultAction);
