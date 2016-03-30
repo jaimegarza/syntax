@@ -204,7 +204,7 @@ public class HtmlWriter {
     if (file == null){
       return "N/A";
     }
-    return file.getAbsolutePath();
+    return file.getAbsolutePath().replaceAll("\\\\", "/");
   }
 
   private String getFileName(File file) {
