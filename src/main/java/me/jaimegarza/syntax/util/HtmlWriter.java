@@ -148,8 +148,8 @@ public class HtmlWriter {
   }
   
   public void tableEnd() {
-    out.println("    <tr><td  colspan=\"" + currentNumberOfColumns + "\" class=\"close\">&nbsp;</td></tr>");
     out.println("  </table>");
+    out.println("<div class=\"close\">&nbsp;</div>");
     out.println();
   }
   
