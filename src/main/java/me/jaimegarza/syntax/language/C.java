@@ -174,6 +174,11 @@ public class C extends BaseLanguageSupport {
   }
     
   @Override
+  public String getLexerModeRoutine(String lexerMode) {
+    return "unsigned long int StxLexer_" + computeModeName(lexerMode) + "()";
+  }
+    
+  @Override
   public void generateLexerModeFooter(String lexerMode) {
     environment.include.println();
     indent(environment.output, environment.getIndent() - 1);

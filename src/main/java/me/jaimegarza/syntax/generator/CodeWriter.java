@@ -232,6 +232,7 @@ public class CodeWriter extends AbstractPhase {
     environment.reportWriter.tableRow(left("Packed?"), left(environment.isPacked()));
     environment.reportWriter.tableRow(left("Tokens"), left(runtimeData.getTerminals().size()));
     environment.reportWriter.tableRow(left("Non Terminals"), left(runtimeData.getNonTerminals().size()));
+    environment.reportWriter.tableRow(left("Lexer Modes"), left(environment.getLexerModes().size()));
     environment.reportWriter.tableRow(left("Types"), left(runtimeData.getTypes().size()));
     environment.reportWriter.tableRow(left("Error Groups"), left(runtimeData.getErrorGroups().size()));
     environment.reportWriter.tableRow(left("Regular Expressions"), left(runtimeData.getRegularExpressions().size()));

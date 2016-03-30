@@ -139,6 +139,11 @@ public class Java extends BaseLanguageSupport {
   }
 
   @Override
+  public String getLexerModeRoutine(String lexerMode) {
+    return "int parserElement_" + computeModeName(lexerMode) + "()";
+  }
+    
+  @Override
   public void generateLexerModeFooter(String lexerMode) {
     if (environment.lexerModes.size() > 1) {
       indent(environment.output, environment.getIndent());

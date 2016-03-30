@@ -218,6 +218,11 @@ public class Pascal extends BaseLanguageSupport {
   }
 
   @Override
+  public String getLexerModeRoutine(String lexerMode) {
+    return "function StxLexer_" + computeModeName(lexerMode) + ":longint";
+  }
+    
+  @Override
   public void generateLexerModeFooter(String lexerMode) {
     environment.output.println();
     indent(environment.output, environment.getIndent());

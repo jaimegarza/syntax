@@ -1297,6 +1297,14 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
           left(errorGroup.getDisplayName()), left(s));
     }
     environment.reportWriter.tableEnd();
+
+    environment.reportWriter.subHeading("Lexer Modes");
+    environment.reportWriter.tableHead("lexermodes", left("Name"), left("Routine"));
+    
+    for (String lexerMode : environment.getLexerModes().keySet()) {
+      environment.reportWriter.tableRow(left(lexerMode), left(environment.language.getLexerModeRoutine(lexerMode)));
+    }
+    environment.reportWriter.tableEnd();
 }
 
   /**

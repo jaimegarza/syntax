@@ -380,4 +380,11 @@ public interface LanguageSupport {
    */
   void generateRegexEnd(FormattingPrintStream output);
 
+  /**
+   * Given a lexer mode, return the routine definition
+   * @param lexerMode is the desired lexer mode
+   * @return the routine definition
+   */
+  String getLexerModeRoutine(String lexerMode);
+
 }

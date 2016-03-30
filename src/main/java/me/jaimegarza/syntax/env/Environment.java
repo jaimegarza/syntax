@@ -953,6 +953,13 @@ public class Environment {
   }
   
   /**
+   * @return the lexerModes
+   */
+  public Map<String, FormattingPrintStream> getLexerModes() {
+    return lexerModes;
+  }
+
+  /**
    * @see java.lang.Object#toString()
    */
   @Override
