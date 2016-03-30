@@ -79,18 +79,18 @@ public class TestJavaExpandedParser extends AbstractGenerationBase {
   };
 
   private static final String grammarExpandedChecks[] = {
-      "Algorithm:.*SLR",
-      "Language:.*java",
-      "Packed\\?:.*.*false",
-      "Tokens:.*18",
-      "Non Terminals:.*2",
-      "Types:.*1",
-      "Rules:.*17",
-      "Errors:.*3",
-      "Actions:.*0",
-      "Gotos:.*0",
-      "Recoveries:.*0",
-      "States:.*34",
+      "Algorithm.*SLR",
+      "Language.*java",
+      "Packed\\?.*.*false",
+      "Tokens.*18",
+      "Non Terminals.*2",
+      "Types.*1",
+      "Rules.*17",
+      "Errors.*3",
+      "Actions.*0",
+      "Gotos.*0",
+      "Recoveries.*0",
+      "States.*34",
   };
 
   @BeforeTest

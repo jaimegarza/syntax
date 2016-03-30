@@ -77,18 +77,18 @@ public class TestJavaExpandedScanner extends AbstractGenerationBase {
   };
 
   private static final String grammarPackedChecks[] = {
-      "Algorithm:.*SLR",
-      "Language:.*java",
-      "Packed\\?:.*.*false",
-      "Tokens:.*18",
-      "Non Terminals:.*2",
-      "Types:.*1",
-      "Rules:.*17",
-      "Errors:.*3",
-      "Actions:.*0",
-      "Gotos:.*0",
-      "Recoveries:.*0",
-      "States:.*34",
+      "Algorithm.*SLR",
+      "Language.*java",
+      "Packed\\?.*.*false",
+      "Tokens.*18",
+      "Non Terminals.*2",
+      "Types.*1",
+      "Rules.*17",
+      "Errors.*3",
+      "Actions.*0",
+      "Gotos.*0",
+      "Recoveries.*0",
+      "States.*34",
   };
 
   protected static final int MAX_COMPILE_ERRORS = 10;

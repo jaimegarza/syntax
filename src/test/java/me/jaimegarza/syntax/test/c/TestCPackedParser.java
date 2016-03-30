@@ -72,18 +72,18 @@ public class TestCPackedParser extends AbstractGenerationBase {
   };
 
   private static final String grammarPackedParserChecks[] = {
-      "Algorithm:.*SLR",
-      "Language:.*C",
-      "Packed\\?:.*.*true",
-      "Tokens:.*18",
-      "Non Terminals:.*2",
-      "Types:.*1",
-      "Rules:.*17",
-      "Errors:.*8",
-      "Actions:.*57",
-      "Gotos:.*16",
-      "Recoveries:.*0",
-      "States:.*34",
+      "Algorithm.*SLR",
+      "Language.*C",
+      "Packed\\?.*.*true",
+      "Tokens.*18",
+      "Non Terminals.*2",
+      "Types.*1",
+      "Rules.*17",
+      "Errors.*8",
+      "Actions.*57",
+      "Gotos.*16",
+      "Recoveries.*0",
+      "States.*34",
   };
 
   @BeforeTest

@@ -75,16 +75,16 @@ public class TestPascalExpandedScanner extends AbstractGenerationBase {
   };
 
   private static final String grammarTabularParserChecks[] = {
-      "Algorithm:.*SLR",
-      "Language:.*pascal",
-      "Packed\\?:.*.*false",
-      "Tokens:.*18",
-      "Non Terminals:.*2",
-      "Types:.*1",
-      "Rules:.*17",
-      "Errors:.*8",
-      "Recoveries:.*0",
-      "States:.*34",
+      "Algorithm.*SLR",
+      "Language.*pascal",
+      "Packed\\?.*.*false",
+      "Tokens.*18",
+      "Non Terminals.*2",
+      "Types.*1",
+      "Rules.*17",
+      "Errors.*8",
+      "Recoveries.*0",
+      "States.*34",
   };
 
   @BeforeTest

@@ -71,16 +71,16 @@ public class TestPascalPackedParser extends AbstractGenerationBase {
   };
 
   private static final String grammarPackedParserChecks[] = {
-      "Algorithm:.*SLR",
-      "Language:.*pascal",
-      "Packed\\?:.*.*true",
-      "Tokens:.*18",
-      "Non Terminals:.*2",
-      "Types:.*1",
-      "Rules:.*17",
-      "Errors:.*8",
-      "Recoveries:.*0",
-      "States:.*34",
+      "Algorithm.*SLR",
+      "Language.*pascal",
+      "Packed\\?.*.*true",
+      "Tokens.*18",
+      "Non Terminals.*2",
+      "Types.*1",
+      "Rules.*17",
+      "Errors.*8",
+      "Recoveries.*0",
+      "States.*34",
   };
 
   @BeforeTest

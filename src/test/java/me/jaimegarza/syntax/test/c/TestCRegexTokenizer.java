@@ -73,18 +73,18 @@ public class TestCRegexTokenizer extends AbstractGenerationBase {
   };
 
   private static final String grammarTabularParserChecks[] = {
-      "Algorithm:.*LALR",
-      "Language:.*C",
-      "Packed\\?:.*.*false",
-      "Tokens:.*10",
-      "Non Terminals:.*3",
-      "Types:.*0",
-      "Rules:.*12",
-      "Errors:.*3",
-      "Actions:.*0",
-      "Gotos:.*0",
-      "Recoveries:.*0",
-      "States:.*13",
+      "Algorithm.*LALR",
+      "Language.*C",
+      "Packed\\?.*.*false",
+      "Tokens.*10",
+      "Non Terminals.*3",
+      "Types.*0",
+      "Rules.*12",
+      "Errors.*3",
+      "Actions.*0",
+      "Gotos.*0",
+      "Recoveries.*0",
+      "States.*13",
   };
 
   @BeforeTest

@@ -337,7 +337,7 @@ public class TableGenerator extends AbstractPhase {
     if (existingState >= 0) {
       actions = I[existingState].getActions();
       I[stateNumber].setPosition(I[existingState].getPosition());
-      environment.reportWriter.tableOneCellRow("Packed Actions (same as state " + existingState + ")", "thead");
+      environment.reportWriter.tableOneCellRow("Packed Actions " + span("(same as state " + existingState + ")", "same-action"), "thead");
     } else {
       I[stateNumber].setPosition(actionNumber);
       environment.reportWriter.tableOneCellRow("Packed Actions", "thead");
