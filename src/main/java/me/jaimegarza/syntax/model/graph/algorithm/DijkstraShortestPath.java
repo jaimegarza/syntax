@@ -57,6 +57,7 @@ public class DijkstraShortestPath<T extends Node> {
   private double distTo[][];
   private Transition edgeTo[][];
   private Node pred[][];
+  private double maxDist = 0.0;
   
   // working elements
   private PriorityQueue<PQ> pq;
@@ -88,6 +89,9 @@ public class DijkstraShortestPath<T extends Node> {
       for (int j = 0; j < graph.V(); j++) {
         distTo[i][j] = Math.min(distTo[i][j], distTo[j][i]);
         distTo[j][i] = distTo[i][j];
+        if (distTo[i][j] > maxDist) {
+          maxDist = distTo[i][j];
+        }
       }
     }
   }
@@ -218,5 +222,33 @@ public class DijkstraShortestPath<T extends Node> {
     System.out.println("Size:" + pq.size());
     System.out.println("Pool:" + pq.poll());
     System.out.println("pq:" + pq);
+  }
+
+  /**
+   * @return the distTo
+   */
+  public double[][] getDistTo() {
+    return distTo;
+  }
+
+  /**
+   * @return the edgeTo
+   */
+  public Transition[][] getEdgeTo() {
+    return edgeTo;
+  }
+
+  /**
+   * @return the pred
+   */
+  public Node[][] getPred() {
+    return pred;
+  }
+
+  /**
+   * @return the maxDist
+   */
+  public double getMaxDist() {
+    return maxDist;
   }
 }

@@ -29,6 +29,34 @@
 */
 package me.jaimegarza.syntax.model.graph.algorithm;
 
-public class KamadaKawai {
+import me.jaimegarza.syntax.model.graph.DirectedGraph;
+import me.jaimegarza.syntax.model.graph.Node;
 
+/**
+ * KamadaKawai algorithm for laying up a graph. It is done in iterations
+ * until a max number, or until a negligible change in E.
+ * <p>
+ * Based on the paper by Kamada and Kawai of 1988, "An alorithm for Drawing
+ * General Unidirected Graphs".
+ * <p>
+ * Although they specify a newton-raphson, I decided to iterate by observing E
+ * changes.
+ * 
+ * @author jgarza
+ *
+ * @param <T> is the type of node that this graph supports.
+ */
+public class KamadaKawai<T extends Node> {
+  private double K = 1; // Not specified in the paper
+  private double L; // L=L0/max_ij, computed from the size of the graph and the max distance
+
+  public KamadaKawai(DirectedGraph<T> graph, int maxWidth, int maxHeight) {
+    DijkstraShortestPath<T> shortestPath = new DijkstraShortestPath<>(graph);
+    int L0 = Math.min(maxWidth, maxHeight);
+    L = L0/shortestPath.getMaxDist();
+    
+    // Now I have L and K
+  }
+  
+  
 }
