@@ -46,6 +46,7 @@ import me.jaimegarza.syntax.util.CollectionUtils;
  */
 public abstract class Node {
   protected int id;
+  protected int index;
   protected DirectedGraph<? extends Node> graph;
   protected Set<Transition> transitions = new HashSet<Transition>();
   protected boolean accept = false;
@@ -201,5 +202,19 @@ public abstract class Node {
     }
     sb.append("}");
     return sb.toString();
+  }
+
+  /**
+   * @return the index
+   */
+  public int getIndex() {
+    return index;
+  }
+
+  /**
+   * @param index the index to set
+   */
+  public void setIndex(int index) {
+    this.index = index;
   }
 }

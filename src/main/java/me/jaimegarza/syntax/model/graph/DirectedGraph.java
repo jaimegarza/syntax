@@ -32,6 +32,8 @@ package me.jaimegarza.syntax.model.graph;
 import java.util.LinkedList;
 import java.util.List;
 
+import me.jaimegarza.syntax.model.graph.algorithm.DijkstraShortestPath;
+
 /**
  * Abstract class defining a graph with directed transitions
  * @author jgarza
@@ -62,6 +64,18 @@ public abstract class DirectedGraph<T extends Node> {
    */
   public T getNode(int index) {
     return nodes.get(index);
+  }
+  
+  /**
+   * @return the number of nodes
+   */
+  public int V() {
+    return nodes.size();
+  }
+  
+  public void layout() {
+    DijkstraShortestPath<T> shortesPaths = new DijkstraShortestPath<T>(this);
+    System.out.println(shortesPaths);
   }
 
   @Override

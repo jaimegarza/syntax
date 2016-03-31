@@ -49,7 +49,9 @@ public class Dfa extends DirectedGraph<DfaNode> {
    */
   public DfaNode newNode(Set<NfaNode> closure) {
     DfaNode node = new DfaNode(this, closure);
+    int index = nodes.size();
     nodes.add(node);
+    node.setIndex(index);
     return node;
   }
   

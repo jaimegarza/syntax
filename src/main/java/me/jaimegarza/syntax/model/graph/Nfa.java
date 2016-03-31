@@ -45,7 +45,9 @@ public class Nfa extends DirectedGraph<NfaNode> {
    */
   public NfaNode newNode() {
     NfaNode node = new NfaNode(this);
+    int index = nodes.size();
     nodes.add(node);
+    node.setIndex(index);
     return node;
   }
   
