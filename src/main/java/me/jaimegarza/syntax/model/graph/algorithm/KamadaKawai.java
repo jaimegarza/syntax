@@ -53,7 +53,7 @@ public class KamadaKawai<T extends Node> {
   private static final double DELTA_TOLERANCE = 0.1d;
   private static final int MAX_ENERGY_ITERATION = 500;
   private static final int MAX_DELTA_ITERATION = 50;
-  private static final double SCALE_FOR_MARGIN = 0.9d;
+  private static final double SCALE_FOR_MARGIN = 0.90d;
   
   private double K = 1; // Not specified in the paper
   private double L; // L=L0/max_ij, computed from the size of the graph and the max distance
@@ -69,22 +69,21 @@ public class KamadaKawai<T extends Node> {
     this.width = (int)(maxWidth * SCALE_FOR_MARGIN);
     this.height = (int)(maxHeight * SCALE_FOR_MARGIN);
     L0 = Math.min(this.width, this.height);
+    shortestPath = new DijkstraShortestPath<>(graph);
   }
   
   public void compute() {
-    shortestPath = new DijkstraShortestPath<>(graph);
     L = L0/shortestPath.getMaxDist();
     d = shortestPath.getDistances();
     
     // Temporary for debug
-    System.out.println(graph);
     System.out.println(shortestPath);
     
-    computeStartingCoordinates();
-
     double E = E();
     double currentE;
     int energyIteration = 0;
+
+    computeStartingCoordinates();
 
     do {
       currentE = E;
@@ -114,8 +113,10 @@ public class KamadaKawai<T extends Node> {
       }
       E = E();
     } while (Math.abs(currentE-E) > ENERGY_TOLERANCE && energyIteration < MAX_ENERGY_ITERATION);
+    
+    center();
   }
-
+  
   /**
    * Assign a starting location to each node at random
    */
@@ -128,7 +129,30 @@ public class KamadaKawai<T extends Node> {
       n_i.setY(random.nextInt(height));
     }
   }
-  
+
+  /**
+   * Move the whole thing to the center
+   */
+  private void center() {
+    double totalx = 0;
+    double totaly = 0;
+    for (int i = 0; i < graph.V(); i++) {
+      Node v_i = graph.getNode(i);
+      totalx += v_i.getX();
+      totaly += v_i.getY();
+    }
+    double avgx = totalx / graph.V();
+    double avgy = totaly / graph.V();
+    double dx = width / 2 - avgx;
+    double dy = height / 2 - avgy;
+    
+    for (int i = 0; i < graph.V(); i++) {
+      Node v_i = graph.getNode(i);
+      v_i.setX((int)(v_i.getX() + dx));
+      v_i.setY((int)(v_i.getY() + dy));
+    }
+  }
+
   /**
    * Kawai Kamada eq (5)
    * 
@@ -140,8 +164,8 @@ public class KamadaKawai<T extends Node> {
       Node v_i = graph.getNode(i);
       for (int j = i + 1; j < graph.V(); j++) {
         Node v_j = graph.getNode(j);
-        double l_ij = l_ij(i, j);
-        double k_ij = k_ij(i, j);
+        double l_ij = calcLij(i, j);
+        double k_ij = calcKij(i, j);
         double dx_ij = v_i.getX() - v_j.getX();
         double dy_ij = v_i.getY() - v_j.getY();
 
@@ -164,8 +188,8 @@ public class KamadaKawai<T extends Node> {
     for (int i = 0; i < graph.V(); i++) {
       if (i != m) {
         Node v_i = graph.getNode(i);
-        double l_mi = l_ij(m, i);
-        double k_mi = k_ij(m, i);
+        double l_mi = calcLij(m, i);
+        double k_mi = calcKij(m, i);
         double dx_mi = v_m.getX() - v_i.getX();
         double dy_mi = v_m.getY() - v_i.getY();
         double dist = Math.sqrt(dx_mi*dx_mi + dy_mi*dy_mi);
@@ -184,37 +208,38 @@ public class KamadaKawai<T extends Node> {
   private Delta DxDy(int m) {
     double dE_dx_m = 0;
     double dE_dy_m = 0;
-    double d2E_d2x_m = 0;
+    double d2E_dx2_m = 0;
     double d2E_dx_m_dy_m = 0;
     double d2E_dy_m_dx_m = 0;
-    double d2E_d2y_m = 0;
+    double d2E_dy2_m = 0;
     Node v_m = graph.getNode(m);
 
     for (int i = 0; i < graph.V(); i++) {
       if (i != m) {
         Node v_i = graph.getNode(i);
-        double l_mi = l_ij(m, i);
-        double k_mi = k_ij(m, i);
+        double l_mi = calcLij(m, i);
+        double k_mi = calcKij(m, i);
         double dx = v_m.getX() - v_i.getX();
         double dy = v_m.getY() - v_i.getY();
-        double d = Math.sqrt(dx*dx + dy*dy);
-        double dCube = d*d*d;
+        double dist = Math.sqrt(dx*dx + dy*dy);
+        double distCube = dist*dist*dist;
 
-        dE_dx_m += k_mi * (1 - l_mi / d) * dx;
-        dE_dy_m += k_mi * (1 - l_mi / d) * dy;
-        d2E_d2x_m += k_mi * (1 - l_mi * dy * dy / dCube);
-        d2E_dx_m_dy_m += k_mi * l_mi * dx * dy / dCube;
-        d2E_d2y_m += k_mi * (1 - l_mi * dx * dx / dCube);
+        dE_dx_m += k_mi * (dx - l_mi * dx / dist);           // (7)
+        dE_dy_m += k_mi * (dy - l_mi * dy / dist);           // (8)
+        
+        d2E_dx2_m += k_mi * (1 - l_mi * dy * dy / distCube); // (13)
+        d2E_dx_m_dy_m += k_mi * l_mi * dx * dy / distCube;   // (14)
+        d2E_dy_m_dx_m += k_mi * l_mi * dx * dy / distCube;   // (15)
+        d2E_dy2_m += k_mi * (1 - l_mi * dx * dx / distCube); // (16)
       }
     }
-    d2E_dy_m_dx_m = d2E_dx_m_dy_m;
 
-    double delta_x = (d2E_dx_m_dy_m * dE_dy_m - d2E_d2y_m * dE_dx_m) / d2E_d2x_m * d2E_d2y_m - d2E_dx_m_dy_m * d2E_dy_m_dx_m;
-    double delta_y = (d2E_dy_m_dx_m * dE_dx_m - d2E_d2x_m * dE_dy_m) / d2E_d2x_m * d2E_d2y_m - d2E_dx_m_dy_m * d2E_dy_m_dx_m;
+    double delta_x = (d2E_dx_m_dy_m * dE_dy_m - d2E_dy2_m * dE_dx_m) / (d2E_dx2_m * d2E_dy2_m - d2E_dx_m_dy_m * d2E_dy_m_dx_m);
+    double delta_y = (d2E_dy_m_dx_m * dE_dx_m - d2E_dx2_m * dE_dy_m) / (d2E_dx2_m * d2E_dy2_m - d2E_dx_m_dy_m * d2E_dy_m_dx_m);
     return new Delta(delta_x, delta_y);
   }
 
-  private double l_ij(int i, int j) {
+  private double calcLij(int i, int j) {
     double dist = d[i][j];
     
     if (dist == Double.POSITIVE_INFINITY) {
@@ -223,13 +248,28 @@ public class KamadaKawai<T extends Node> {
     return L * dist;
   }
 
-  private double k_ij(int i, int j) {
+  private double calcKij(int i, int j) {
     double dist = d[i][j];
     
     if (dist == Double.POSITIVE_INFINITY) {
       dist = shortestPath.getMaxDist();
     }
     return K / (dist*dist);
+  }
+  
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder("Coordinates: ");
+    for (Node n: graph.getNodes()) {
+      sb.append('[')
+        .append(n.getId())
+        .append(" (")
+        .append(n.getX())
+        .append(',')
+        .append(n.getY())
+        .append(")] ");
+    }
+    return sb.toString();
   }
 
   private static class Delta {

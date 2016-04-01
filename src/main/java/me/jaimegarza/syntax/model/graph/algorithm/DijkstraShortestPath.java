@@ -140,7 +140,10 @@ public class DijkstraShortestPath<T extends Node> {
       for (int j = 0; j < graph.V(); j++) {
         builder.append(distTo[i][j] < Double.POSITIVE_INFINITY ? String.format("%5.0f ", distTo[i][j]) : "  INF ");
       }
-      builder.append("]\n");
+      builder.append("]");
+      if (i != graph.V()-1) {
+        builder.append("\n");
+      }
     }
     return builder.toString();
   }

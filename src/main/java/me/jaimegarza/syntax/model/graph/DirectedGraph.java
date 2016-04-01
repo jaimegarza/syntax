@@ -77,17 +77,7 @@ public abstract class DirectedGraph<T extends Node> {
     KamadaKawai<T> layoutAlgorithm = new KamadaKawai<>(this, width, height);
     layoutAlgorithm.compute();
     
-    StringBuilder sb = new StringBuilder();
-    for (Node n: nodes) {
-      sb.append('[')
-        .append(n.getId())
-        .append(" (")
-        .append(n.getX())
-        .append(',')
-        .append(n.getY())
-        .append(")] ");
-    }
-    System.out.println(sb);
+    System.out.println(layoutAlgorithm);
   }
 
   @Override
