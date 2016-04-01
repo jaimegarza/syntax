@@ -215,7 +215,7 @@ public class NfaUtil {
     c.getEnd().setAccept(true);
     
     dfa.generateFromNfa(graph);
-    dfa.layout();
+    dfa.layout(100, 100);
     /*System.out.println(graph);
     /System.out.println(dfa);
     for (DfaNode node : dfa.getNodes()) {

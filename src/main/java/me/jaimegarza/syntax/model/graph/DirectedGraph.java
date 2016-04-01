@@ -32,7 +32,7 @@ package me.jaimegarza.syntax.model.graph;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.model.graph.algorithm.DijkstraShortestPath;
+import me.jaimegarza.syntax.model.graph.algorithm.KamadaKawai;
 
 /**
  * Abstract class defining a graph with directed transitions
@@ -73,9 +73,21 @@ public abstract class DirectedGraph<T extends Node> {
     return nodes.size();
   }
   
-  public void layout() {
-    DijkstraShortestPath<T> shortesPaths = new DijkstraShortestPath<T>(this);
-    System.out.println(shortesPaths);
+  public void layout(int width, int height) {
+    KamadaKawai<T> layoutAlgorithm = new KamadaKawai<>(this, width, height);
+    layoutAlgorithm.compute();
+    
+    StringBuilder sb = new StringBuilder();
+    for (Node n: nodes) {
+      sb.append('[')
+        .append(n.getId())
+        .append(" (")
+        .append(n.getX())
+        .append(',')
+        .append(n.getY())
+        .append(")] ");
+    }
+    System.out.println(sb);
   }
 
   @Override

@@ -89,7 +89,7 @@ public class DijkstraShortestPath<T extends Node> {
       for (int j = 0; j < graph.V(); j++) {
         distTo[i][j] = Math.min(distTo[i][j], distTo[j][i]);
         distTo[j][i] = distTo[i][j];
-        if (distTo[i][j] > maxDist) {
+        if (distTo[i][j] > maxDist && distTo[i][j] < Double.POSITIVE_INFINITY) {
           maxDist = distTo[i][j];
         }
       }
