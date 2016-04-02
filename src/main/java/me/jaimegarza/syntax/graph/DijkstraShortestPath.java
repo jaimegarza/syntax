@@ -27,7 +27,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.model.graph.algorithm;
+package me.jaimegarza.syntax.graph;
 
 import java.util.PriorityQueue;
 

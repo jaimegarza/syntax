@@ -32,7 +32,7 @@ package me.jaimegarza.syntax.model.graph;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.jaimegarza.syntax.model.graph.algorithm.KamadaKawai;
+import me.jaimegarza.syntax.graph.KamadaKawai;
 
 /**
  * Abstract class defining a graph with directed transitions
