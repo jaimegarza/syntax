@@ -76,6 +76,7 @@ public class SyntaxCodeParser extends AbstractCodeParser {
   private Nfa currentNfa = null;
   private Terminal currentTerminal = null;
   private Dfa currentDfa = null;
+  private String currentRegex;
   
   private enum LexerMode {
     NORMAL, REGEX, CHARACTER_CLASS
@@ -397,7 +398,7 @@ REnd          : '/' TOKEN
               ;
 
 RExp          : RegExp                       = {
-                                                 currentDfa = NfaUtil.finalize(currentNfa, $RegExp);
+                                                 currentDfa = NfaUtil.finalize(currentNfa, currentRegex, $RegExp);
                                                  runtimeData.addRegularExpression(currentDfa);
                                                }
               ;
@@ -549,8 +550,10 @@ Symbol        :  TOKEN                       = {
       }
       
       char c1 = currentChar;
+      currentRegex += currentChar;
       getNextCharacter();
       if (currentChar == '-') {
+        currentRegex += currentChar;
         getNextCharacter();
         if (currentChar == ']' || currentChar == '\0') { // last char, so use as a char
           // do not advance string
@@ -561,6 +564,7 @@ Symbol        :  TOKEN                       = {
           char c2 = currentChar;
           runtimeData.currentStringValue += "" + c1 + '-' + c2;
           currentCharacterClass.range(c1, c2);
+          currentRegex += currentChar;
           getNextCharacter();
         }
       } else {
@@ -593,30 +597,37 @@ Symbol        :  TOKEN                       = {
     }
   
     if (currentChar == '|') {
+      currentRegex += currentChar;
       getNextCharacter();
       return PIPE;
     }
     if (currentChar == '(') {
+      currentRegex += currentChar;
       getNextCharacter();
       return '(';
     }
     if (currentChar == ')') {
+      currentRegex += currentChar;
       getNextCharacter();
       return ')';
     }
     if (currentChar == '*') {
+      currentRegex += currentChar;
       getNextCharacter();
       return STAR;
     }
     if (currentChar == '+') {
+      currentRegex += currentChar;
       getNextCharacter();
       return PLUS;
     }
     if (currentChar == '?') {
+      currentRegex += currentChar;
       getNextCharacter();
       return HUH;
     }
     if (currentChar == '.') {
+      currentRegex += currentChar;
       getNextCharacter();
       return ANY;
     }
@@ -630,34 +641,41 @@ Symbol        :  TOKEN                       = {
       runtimeData.currentStringValue = "";
       currentCharacterClass = new CharacterClass();
       lexerMode = LexerMode.CHARACTER_CLASS;
+      currentRegex += currentChar;
       getNextCharacter();
       if (currentChar == '^') {
         runtimeData.currentStringValue += '^';
         currentCharacterClass.negate();
+        currentRegex += currentChar;
         getNextCharacter();
       }
       if (currentChar == '-') {
         runtimeData.currentStringValue += '-';
         currentCharacterClass.character('-');
+        currentRegex += currentChar;
         getNextCharacter();
       } else if (currentChar == ']') {
         runtimeData.currentStringValue += ']';
         currentCharacterClass.character(']');
+        currentRegex += currentChar;
         getNextCharacter();
         if (currentChar == '-') {
           runtimeData.currentStringValue += '-';
           currentCharacterClass.character('-');
+          currentRegex += currentChar;
           getNextCharacter();
         }
       }
       return '[';
     }
     if (currentChar == ']') {
+     currentRegex += currentChar;
       getNextCharacter();
       return ']';
     }
   
     if (currentChar == '\\') {
+      currentRegex += currentChar;
       getNextCharacter();
       c2 = decodeEscape();
       if (c2 == 0) {
@@ -673,6 +691,7 @@ Symbol        :  TOKEN                       = {
      * StxValue.node.ranges.charEnd = c2;
      */
     lexicalValue = new StackElement(-1, tokenNumber, false, "", currentChar);
+    currentRegex += currentChar;
     getNextCharacter();
     return CHAR;
   }
@@ -849,6 +868,7 @@ Symbol        :  TOKEN                       = {
     if (currentChar == '/') {
       lexerMode = LexerMode.REGEX;
       isRegexSlash = true;
+      currentRegex = "";
       getNextCharacter();
       return '/';
     }

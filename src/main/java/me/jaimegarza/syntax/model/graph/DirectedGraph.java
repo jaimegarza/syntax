@@ -73,11 +73,11 @@ public abstract class DirectedGraph<T extends Node> {
     return nodes.size();
   }
   
-  public void layout(int width, int height) {
+  public String layout(int width, int height) {
     KamadaKawai<T> layoutAlgorithm = new KamadaKawai<>(this, width, height);
     layoutAlgorithm.compute();
     
-    System.out.println(layoutAlgorithm);
+    return layoutAlgorithm.toString();
   }
 
   @Override

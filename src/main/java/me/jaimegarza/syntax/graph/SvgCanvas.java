@@ -37,7 +37,11 @@ public class SvgCanvas {
   private String instructions = "";
   
   private static final double NODE_RADIUS = 10;
-  private static final double ACCEPT_RADIUS = 15;
+  private static final double ACCEPT_RADIUS = 8;
+  private static final double NODE_TEXT_OFFSET_Y = 22;
+  private static final double NODE_TEXT_OFFSET_X = 0;
+  private static final int LEFT_MARGIN = 25;
+  private static final int TOP_MARGIN=25;
   
   public SvgCanvas(int width, int height) {
     this.width = width;
@@ -45,20 +49,26 @@ public class SvgCanvas {
   }
   
   public void node(Node n) {
-    circle(n.isStarting() ? "g-node" : "g-starting-node", n.getX(), n.getY(), NODE_RADIUS);
+    circle(n.isStarting() ? "g-starting-node" : "g-node", n.getX(), n.getY(), NODE_RADIUS);
     if (n.isAccept()) {
       circle("g-accept", n.getX(), n.getY(), ACCEPT_RADIUS);
     }
+    text("g-node-text", n.getX() + NODE_TEXT_OFFSET_X, n.getY() + NODE_TEXT_OFFSET_Y, "" + n.getId());
   }
   
   public String getGraph() {
-    return "<svg width=\"" + width + "\" height=\"" + height + "\">"
+    return "<svg width=\"" + width + "\" height=\"" + height + "\">\n"
         + instructions
         + "</svg>\n";
   }
   
   private void circle(String className, double x, double y, double radius) {
     instructions +=
-      String.format("  <circle class=\"%s\" cx=\"%f\" cy=\"%f\" r=\"%f\"/>\n", className, x, y, radius);
+      String.format("  <circle class=\"%s\" cx=\"%.2f\" cy=\"%.2f\" r=\"%f\"/>\n", className, x + LEFT_MARGIN, y + TOP_MARGIN, radius);
+  }
+
+  private void text(String className, double x, double y, String text) {
+    instructions +=
+      String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"middle\" text-anchor=\"middle\">%s</text>\n", className, x + LEFT_MARGIN, y + TOP_MARGIN, text);
   }
 }

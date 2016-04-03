@@ -53,7 +53,7 @@ public class KamadaKawai<T extends Node> {
   private static final double DELTA_TOLERANCE = 0.1d;
   private static final int MAX_ENERGY_ITERATION = 500;
   private static final int MAX_DELTA_ITERATION = 50;
-  private static final double SCALE_FOR_MARGIN = 0.90d;
+  private static final double SCALE_FOR_MARGIN = 0.75d;
   
   private double K = 1; // Not specified in the paper
   private double L; // L=L0/max_ij, computed from the size of the graph and the max distance
@@ -281,5 +281,12 @@ public class KamadaKawai<T extends Node> {
       this.dx = dx;
       this.dy = dy;
     }
+  }
+
+  /**
+   * @return the shortestPath
+   */
+  public DijkstraShortestPath<T> getShortestPath() {
+    return shortestPath;
   }
 }

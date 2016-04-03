@@ -209,10 +209,11 @@ public class NfaUtil {
    * @param c the starting and ending nodes of the nfa
    * @return a new DFA
    */
-  public static Dfa finalize(Nfa graph, Construct c) {
+  public static Dfa finalize(Nfa graph, String regex, Construct c) {
     Dfa dfa = new Dfa();
     c.getStart().setStarting(true);
     c.getEnd().setAccept(true);
+    dfa.setRegex(regex);
     
     dfa.generateFromNfa(graph);
     dfa.layout(100, 100);

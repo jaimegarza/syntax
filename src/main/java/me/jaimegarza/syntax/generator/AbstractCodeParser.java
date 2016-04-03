@@ -40,6 +40,7 @@ import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.exception.ParsingException;
+import me.jaimegarza.syntax.model.graph.Dfa;
 import me.jaimegarza.syntax.model.parser.Associativity;
 import me.jaimegarza.syntax.model.parser.ErrorToken;
 import me.jaimegarza.syntax.model.parser.NonTerminal;
@@ -51,6 +52,7 @@ import me.jaimegarza.syntax.model.parser.TokenGroup;
 import me.jaimegarza.syntax.model.parser.Type;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 import me.jaimegarza.syntax.util.PathUtils;
+import me.jaimegarza.syntax.util.SvgUtil;
 
 /**
  * This class contains the "non-parser" code, or supporting code for the syntax
@@ -65,6 +67,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
   private static final String DEFAULT_LEXER_MODE = "default";
 
   protected static final String DISTINGUISHED_SYMBOL_NAME = "$start";
+
+  private static final int GRAPH_WIDTH = 200;
+  private static final int GRAPH_HEIGH = 200;
 
   protected Stack<Character> inputChars = new Stack<Character>();
   protected boolean bActionDone = false;
@@ -1303,6 +1308,16 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     
     for (String lexerMode : environment.getLexerModes().keySet()) {
       environment.reportWriter.tableRow(left(lexerMode), left(environment.language.getLexerModeRoutine(lexerMode)));
+    }
+    environment.reportWriter.tableEnd();
+    
+    environment.reportWriter.subHeading("Regular Expressions");
+    environment.reportWriter.tableHead("lexermodes", left("Expression"), left("Graph"));
+    
+    for (Dfa graph : runtimeData.getRegularExpressions()) {
+      graph.layout(GRAPH_WIDTH,  GRAPH_HEIGH);
+      String image = SvgUtil.render(graph, GRAPH_WIDTH, GRAPH_HEIGH);
+      environment.reportWriter.tableRow(left("/"+graph.getRegex()+"/"), left(image));
     }
     environment.reportWriter.tableEnd();
 }

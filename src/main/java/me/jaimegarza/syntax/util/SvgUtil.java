@@ -35,7 +35,7 @@ import me.jaimegarza.syntax.model.graph.Node;
 
 public class SvgUtil {
 
-  public String render(DirectedGraph<? extends Node> graph, int width, int height) {
+  public static String render(DirectedGraph<? extends Node> graph, int width, int height) {
     SvgCanvas canvas = new SvgCanvas(width, height);
     
     for (Node node : graph.getNodes()) {
