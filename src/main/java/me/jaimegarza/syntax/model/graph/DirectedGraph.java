@@ -85,6 +85,13 @@ public abstract class DirectedGraph<T extends Node> {
     return getClass().getSimpleName() + "[nodes=" + nodes + "]";
   }
 
+  public String toHtmlString() {
+    StringBuilder b = new StringBuilder();
+    for (Node n: nodes) {
+      b.append(n + "<br/>\n");
+    }
+    return b.toString();
+  }
   /**
    * @return the regex
    */

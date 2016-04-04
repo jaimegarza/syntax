@@ -30,18 +30,23 @@
 package me.jaimegarza.syntax.graph;
 
 import me.jaimegarza.syntax.model.graph.Node;
+import me.jaimegarza.syntax.model.graph.Transition;
 
 public class SvgCanvas {
   private int width;
   private int height;
   private String instructions = "";
   
-  private static final double NODE_RADIUS = 10;
-  private static final double ACCEPT_RADIUS = 8;
-  private static final double NODE_TEXT_OFFSET_Y = 22;
+  private static final double NODE_RADIUS = 8;
+  private static final double ACCEPT_RADIUS = 6;
+  private static final double NODE_TEXT_OFFSET_Y = 14;
   private static final double NODE_TEXT_OFFSET_X = 0;
   private static final int LEFT_MARGIN = 25;
   private static final int TOP_MARGIN=25;
+  private static final double TRANSITION_TEXT_OFFSET_Y = 10;
+  private static final double TRANSITION_TEXT_OFFSET_X = 0;
+  private static final double ARROWHEAD_ANGLE = 10 * Math.PI / 180;
+  private static final double ARROWHEAD_LENGTH = 20;
   
   public SvgCanvas(int width, int height) {
     this.width = width;
@@ -53,7 +58,33 @@ public class SvgCanvas {
     if (n.isAccept()) {
       circle("g-accept", n.getX(), n.getY(), ACCEPT_RADIUS);
     }
-    text("g-node-text", n.getX() + NODE_TEXT_OFFSET_X, n.getY() + NODE_TEXT_OFFSET_Y, "" + n.getId());
+    text("g-node-text", new Point(n.getX() + NODE_TEXT_OFFSET_X, n.getY() + NODE_TEXT_OFFSET_Y), "" + n.getId(), "middle");
+  }
+  
+  public void transitionStraight(Transition t) {
+    Point pFrom = new Point(t.getFrom().getX(), t.getFrom().getY());
+    Point pTo = new Point(t.getTo().getX(), t.getTo().getY());
+    
+    LineData coords = arrow("g-transition", pFrom, pTo, NODE_RADIUS);
+    double angle = coords.d;
+    double textX = (pTo.getX()+pFrom.getX())/2;
+    double textY = (pTo.getY()+pFrom.getY())/2;
+    String textAnchor;
+    
+    if (angle > Math.PI) {
+      textY -= TRANSITION_TEXT_OFFSET_Y;
+    } else {
+      textY += TRANSITION_TEXT_OFFSET_Y;
+    }
+
+    if (angle < Math.PI /2 || angle >= 3*Math.PI/2) {
+      textX += TRANSITION_TEXT_OFFSET_X;
+      textAnchor = "end";
+    } else {
+      textX -= TRANSITION_TEXT_OFFSET_X;
+      textAnchor = "start";
+    }
+    text("g-transition-text", new Point(textX, textY), t.getSymbol().toHtmlString(), textAnchor);
   }
   
   public String getGraph() {
@@ -67,8 +98,80 @@ public class SvgCanvas {
       String.format("  <circle class=\"%s\" cx=\"%.2f\" cy=\"%.2f\" r=\"%f\"/>\n", className, x + LEFT_MARGIN, y + TOP_MARGIN, radius);
   }
 
-  private void text(String className, double x, double y, String text) {
+  private void text(String className, Point p, String text, String textAnchor) {
     instructions +=
-      String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"middle\" text-anchor=\"middle\">%s</text>\n", className, x + LEFT_MARGIN, y + TOP_MARGIN, text);
+      String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"middle\" text-anchor=\"%s\">%s</text>\n", className, p.getX() + LEFT_MARGIN, p.getY() + TOP_MARGIN, textAnchor, text);
   }
+  
+  private LineData arrow(String className, Point p1, Point p2, double r) {
+    double angle = Math.atan2(p2.getY()-p1.getY(), p2.getX()-p1.getX());
+    
+    // first circle
+    Point c1_1 = new Point(r * Math.cos(angle) + p1.getX(), r * Math.sin(angle) + p1.getY());
+    Point c1_2 = new Point(r * Math.cos(angle+Math.PI) + p1.getX(), r * Math.sin(angle+Math.PI) + p1.getY());
+
+    // second circle
+    Point c2_1 = new Point(r * Math.cos(angle) + p2.getX(), r * Math.sin(angle) + p2.getY());
+    Point c2_2 = new Point(r * Math.cos(angle+Math.PI) + p2.getX(), r * Math.sin(angle+Math.PI) + p2.getY());
+    
+    LineData ld = new LineData(c1_1, c2_1, distance(c1_1, c2_1));
+    ld = computeMin(ld, c1_2, c2_1);
+    ld = computeMin(ld, c1_1, c2_2);
+    ld = computeMin(ld, c1_2, c2_2);
+    
+    Point c1 = ld.p1;
+    Point c2 = ld.p2;
+    
+    //circle("xxx", c1.x, c1.y,3);
+    //circle("xxx", c2.x, c2.y,3);
+    instructions +=
+        String.format("  <path class=\"%s\" d=\"M%.2f %.2f L%.2f %2f\"/>\n", className, 
+            c1.getX() + LEFT_MARGIN, c1.getY() + TOP_MARGIN, c2.getX() + LEFT_MARGIN, c2.getY() + TOP_MARGIN);
+    
+    arrowHead(className, p2, angle, c2);
+    return new LineData(c1, c2, angle);
+  }
+
+  private void arrowHead(String className, Point p2, double angle, Point c2) {
+    double alphaAngle1 = angle + Math.PI - ARROWHEAD_ANGLE;
+    double alphaAngle2 = angle + Math.PI + ARROWHEAD_ANGLE;
+    
+    Point arrowEdge1 = new Point(ARROWHEAD_LENGTH * Math.cos(alphaAngle1) + p2.getX(),
+        ARROWHEAD_LENGTH * Math.sin(alphaAngle1) + p2.getY());
+        
+    Point arrowEdge2 = new Point(ARROWHEAD_LENGTH * Math.cos(alphaAngle2) + p2.getX(),
+        ARROWHEAD_LENGTH * Math.sin(alphaAngle2) + p2.getY());
+
+    instructions += 
+        String.format("  <polygon class=\"%s-head\" points=\"%.2f,%.2f %.2f,%.2f %.2f,%.2f\"/>", 
+            className, arrowEdge1.getX() + LEFT_MARGIN, arrowEdge1.getY() + TOP_MARGIN, 
+            c2.getX() + LEFT_MARGIN, c2.getY() + TOP_MARGIN, 
+            arrowEdge2.getX() + LEFT_MARGIN, arrowEdge2.getY() + TOP_MARGIN);
+  }
+  
+  private LineData computeMin(LineData ld, Point p1, Point p2) {
+    double d = distance(p1, p2);
+    if (d < ld.d) {
+      return new LineData(p1, p2, d);
+    } else {
+      return ld;
+    }
+  }
+  
+  private double distance(Point p1, Point p2) {
+    return Math.sqrt((p2.getX()-p1.getX())*(p2.getX()-p1.getX()) + (p2.getY()-p1.getY())*(p2.getY()-p1.getY()));
+  }
+  
+  private static class LineData {
+    Point p1;
+    Point p2;
+    double d;
+    
+    public LineData(Point p1, Point p2, double d) {
+      this.p1 = p1;
+      this.p2 = p2;
+      this.d = d;
+    }
+  }
+  
 }

@@ -52,7 +52,7 @@ public class KamadaKawai<T extends Node> {
   private static final double ENERGY_TOLERANCE = 1d;
   private static final double DELTA_TOLERANCE = 0.1d;
   private static final int MAX_ENERGY_ITERATION = 500;
-  private static final int MAX_DELTA_ITERATION = 50;
+  private static final int MAX_DELTA_ITERATION = 500;
   private static final double SCALE_FOR_MARGIN = 0.75d;
   
   private double K = 1; // Not specified in the paper

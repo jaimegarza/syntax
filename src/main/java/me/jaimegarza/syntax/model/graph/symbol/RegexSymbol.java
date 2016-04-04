@@ -79,5 +79,10 @@ public abstract class RegexSymbol {
    * @return the array of strings to be written to the edge table
    */
   public abstract int[] getCodeArray();
+  
+  /**
+   * Return a string suitable for Html
+   */
+  public abstract String toHtmlString();
 
 }

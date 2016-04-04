@@ -1317,7 +1317,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     for (Dfa graph : runtimeData.getRegularExpressions()) {
       graph.layout(GRAPH_WIDTH,  GRAPH_HEIGH);
       String image = SvgUtil.render(graph, GRAPH_WIDTH, GRAPH_HEIGH);
-      environment.reportWriter.tableRow(left("/"+graph.getRegex()+"/"), left(image));
+      environment.reportWriter.tableRow(left("/"+graph.getRegex()+"/<br/>" + graph.toHtmlString()), left(image));
     }
     environment.reportWriter.tableEnd();
 }

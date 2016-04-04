@@ -107,4 +107,8 @@ public class Character extends RegexSymbol {
     return canonical();
   }
 
+  @Override
+  public String toHtmlString() {
+    return ""+character;
+  }
 }

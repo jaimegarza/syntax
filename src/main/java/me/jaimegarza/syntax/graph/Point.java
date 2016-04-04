@@ -27,33 +27,61 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.util;
+package me.jaimegarza.syntax.graph;
 
-import me.jaimegarza.syntax.graph.SvgCanvas;
-import me.jaimegarza.syntax.model.graph.DirectedGraph;
-import me.jaimegarza.syntax.model.graph.Node;
-import me.jaimegarza.syntax.model.graph.Transition;
-
-public class SvgUtil {
-
-  public static String render(DirectedGraph<? extends Node> graph, int width, int height) {
-    SvgCanvas canvas = new SvgCanvas(width, height);
-    
-    for (Node node : graph.getNodes()) {
-      // Do straight arrows first to compute best arc in the reentrant nodes
-      for (Transition transition: node.getTransitions()) {
-        if (transition.getTo() != node) {
-          canvas.transitionStraight(transition);
-        }
-      }
-      // Now do arcs in best posible way
-      for (Transition transition: node.getTransitions()) {
-        if (transition.getTo() != node) {
-          canvas.transitionStraight(transition);
-        }
-      }
-      canvas.node(node);
-    }
-    return canvas.getGraph();
+/**
+ * Simple representation of a point in space
+ * @author jgarza
+ *
+ */
+public class Point {
+  private double x;
+  private double y;
+  
+  public Point(double x, double y) {
+    this.x = x;
+    this.y = y;
   }
+
+  /**
+   * @return the x
+   */
+  public double getX() {
+    return x;
+  }
+
+  /**
+   * @return the y
+   */
+  public double getY() {
+    return y;
+  }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    try {
+      Point p = (Point) obj;
+      return x == p.x && y == p.y;
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 + Double.hashCode(x) + Double.hashCode(y);
+  }
+
+  @Override
+  public String toString() {
+    return "(" + x + "," + y + ")";
+  }
+
 }
+

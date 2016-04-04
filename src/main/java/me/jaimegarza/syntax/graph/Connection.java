@@ -27,33 +27,62 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.util;
+package me.jaimegarza.syntax.graph;
 
-import me.jaimegarza.syntax.graph.SvgCanvas;
-import me.jaimegarza.syntax.model.graph.DirectedGraph;
-import me.jaimegarza.syntax.model.graph.Node;
-import me.jaimegarza.syntax.model.graph.Transition;
+/**
+ * Representation of a source and origin point
+ * @author jgarza
+ *
+ */
+public class Connection {
+  
+  private Point from;
+  private Point to;
 
-public class SvgUtil {
-
-  public static String render(DirectedGraph<? extends Node> graph, int width, int height) {
-    SvgCanvas canvas = new SvgCanvas(width, height);
-    
-    for (Node node : graph.getNodes()) {
-      // Do straight arrows first to compute best arc in the reentrant nodes
-      for (Transition transition: node.getTransitions()) {
-        if (transition.getTo() != node) {
-          canvas.transitionStraight(transition);
-        }
-      }
-      // Now do arcs in best posible way
-      for (Transition transition: node.getTransitions()) {
-        if (transition.getTo() != node) {
-          canvas.transitionStraight(transition);
-        }
-      }
-      canvas.node(node);
-    }
-    return canvas.getGraph();
+  public Connection(Point from, Point to) {
+    this.from = from;
+    this.to = to;
   }
+
+  /**
+   * @return the x
+   */
+  public Point getFrom() {
+    return from;
+  }
+
+  /**
+   * @return the y
+   */
+  public Point getTo() {
+    return to;
+  }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    try {
+      Connection c = (Connection) obj;
+      return from.equals(c.from) && to.equals(c.to);
+    } catch (NullPointerException unused) {
+      return false;
+    } catch (ClassCastException unused) {
+      return false;
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 + from.hashCode() + to.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "{" + from + "->" + to + "}";
+  }
+
 }
+

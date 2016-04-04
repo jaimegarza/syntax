@@ -91,4 +91,8 @@ public class AnyCharacter extends RegexSymbol {
     return canonical();
   }
   
+  @Override
+  public String toHtmlString() {
+    return "&lt;ANY&gt;";
+  }
 }

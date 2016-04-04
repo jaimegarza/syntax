@@ -91,4 +91,8 @@ public class Epsilon extends RegexSymbol {
     return canonical();
   }
 
+  @Override
+  public String toHtmlString() {
+    return "&epsilon";
+  }
 }

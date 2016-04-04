@@ -164,4 +164,8 @@ public class CharacterClass extends RegexSymbol {
     return negate;
   }
 
+  @Override
+  public String toHtmlString() {
+    return "[" + toString() + "]";
+  }
 }
