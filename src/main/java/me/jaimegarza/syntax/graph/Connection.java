@@ -37,11 +37,15 @@ package me.jaimegarza.syntax.graph;
 public class Connection {
   
   private Point from;
+  private double fromAngle;
   private Point to;
+  private double toAngle;
 
-  public Connection(Point from, Point to) {
+  public Connection(Point from, double fromAngle, Point to, double toAngle) {
     this.from = from;
+    this.fromAngle = fromAngle;
     this.to = to;
+    this.toAngle = toAngle;
   }
 
   /**
@@ -82,6 +86,20 @@ public class Connection {
   @Override
   public String toString() {
     return "{" + from + "->" + to + "}";
+  }
+
+  /**
+   * @return the fromAngle
+   */
+  public double getFromAngle() {
+    return fromAngle;
+  }
+
+  /**
+   * @return the toAngle
+   */
+  public double getToAngle() {
+    return toAngle;
   }
 
 }

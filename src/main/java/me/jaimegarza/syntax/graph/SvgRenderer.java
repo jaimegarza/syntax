@@ -27,33 +27,104 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ===============================================================================
 */
-package me.jaimegarza.syntax.util;
+package me.jaimegarza.syntax.graph;
 
-import me.jaimegarza.syntax.graph.SvgCanvas;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import me.jaimegarza.syntax.model.graph.DirectedGraph;
 import me.jaimegarza.syntax.model.graph.Node;
 import me.jaimegarza.syntax.model.graph.Transition;
 
-public class SvgUtil {
+public class SvgRenderer {
 
-  public static String render(DirectedGraph<? extends Node> graph, int width, int height) {
+  public String render(DirectedGraph<? extends Node> graph, int width, int height) {
     SvgCanvas canvas = new SvgCanvas(width, height);
     
     for (Node node : graph.getNodes()) {
       // Do straight arrows first to compute best arc in the reentrant nodes
       for (Transition transition: node.getTransitions()) {
         if (transition.getTo() != node) {
-          canvas.transitionStraight(transition);
+          Connection c = canvas.transitionNodeToNode(transition);
+          registerAngle(node, c.getFromAngle());
+          registerAngle(transition.getTo(), c.getToAngle());
         }
       }
       // Now do arcs in best posible way
       for (Transition transition: node.getTransitions()) {
-        if (transition.getTo() != node) {
-          canvas.transitionStraight(transition);
+        if (transition.getTo() == node) {
+          double angle = computeBestAngle(node);
+          canvas.transitionToSelf(transition, angle);
         }
       }
       canvas.node(node);
     }
     return canvas.getGraph();
+  }
+  
+  private Map<Node, List<Double>> angles = new HashMap<>();
+  
+  private List<Double> getNodeAngles(Node n) {
+    List<Double> dl = angles.get(n);
+    if (dl == null) {
+      dl = new ArrayList<>();
+      angles.put(n, dl);
+    }
+    return dl;
+  }
+  
+  private void registerAngle(Node n, double angle) {
+    while (angle > 2 * Math.PI) {
+      angle -= 2 * Math.PI;
+    }
+    while (angle < 0) {
+      angle += 2 * Math.PI;
+    }
+    List<Double> dl = getNodeAngles(n);
+    dl.add(angle);
+  }
+  
+  private double computeBestAngle(Node n) {
+    List<Double> dl = getNodeAngles(n);
+    
+    if (dl.size() == 0) {
+      return Math.random() * 2 * Math.PI;
+    }
+    
+    Collections.sort(dl);
+    double maxRange = 0;
+    int index = -1;
+    
+    for (int i = 0; i < dl.size() - 1; i++) {
+      double x = dl.get(i);
+      double y = dl.get(i+1);
+      double delta = y - x;
+      if (delta > maxRange) {
+        maxRange = delta;
+        index = i;
+      }
+    }
+    
+    double x = dl.get(dl.size()-1);
+    double y = dl.get(0) + 2 * Math.PI;
+    double delta = y - x;
+    if (delta > maxRange) {
+      maxRange = delta;
+      index = dl.size()-1;
+    }
+    
+    if (index == -1) {
+      return Math.PI / 2;
+    }
+    
+    double openAngle = dl.get(index) + maxRange/2;
+    if (openAngle > 2 * Math.PI) {
+      openAngle -= 2 * Math.PI;
+    }
+    
+    return openAngle;
   }
 }

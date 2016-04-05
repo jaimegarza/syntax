@@ -40,6 +40,7 @@ import me.jaimegarza.syntax.EmbeddedCodeProcessor;
 import me.jaimegarza.syntax.Lexer;
 import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.exception.ParsingException;
+import me.jaimegarza.syntax.graph.SvgRenderer;
 import me.jaimegarza.syntax.model.graph.Dfa;
 import me.jaimegarza.syntax.model.parser.Associativity;
 import me.jaimegarza.syntax.model.parser.ErrorToken;
@@ -52,7 +53,6 @@ import me.jaimegarza.syntax.model.parser.TokenGroup;
 import me.jaimegarza.syntax.model.parser.Type;
 import me.jaimegarza.syntax.util.FormattingPrintStream;
 import me.jaimegarza.syntax.util.PathUtils;
-import me.jaimegarza.syntax.util.SvgUtil;
 
 /**
  * This class contains the "non-parser" code, or supporting code for the syntax
@@ -1315,8 +1315,9 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
     environment.reportWriter.tableHead("lexermodes", left("Expression"), left("Graph"));
     
     for (Dfa graph : runtimeData.getRegularExpressions()) {
+      SvgRenderer renderer = new SvgRenderer();
       graph.layout(GRAPH_WIDTH,  GRAPH_HEIGH);
-      String image = SvgUtil.render(graph, GRAPH_WIDTH, GRAPH_HEIGH);
+      String image = renderer.render(graph, GRAPH_WIDTH, GRAPH_HEIGH);
       environment.reportWriter.tableRow(left("/"+graph.getRegex()+"/<br/>" + graph.toHtmlString()), left(image));
     }
     environment.reportWriter.tableEnd();

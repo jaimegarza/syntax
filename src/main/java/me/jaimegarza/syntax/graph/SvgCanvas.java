@@ -47,6 +47,8 @@ public class SvgCanvas {
   private static final double TRANSITION_TEXT_OFFSET_X = 0;
   private static final double ARROWHEAD_ANGLE = 10 * Math.PI / 180;
   private static final double ARROWHEAD_LENGTH = 20;
+  private static final double SELF_LOOP_OFFSET = 12;
+  private static final double SELF_LOOP_RADIUS = 12;
   
   public SvgCanvas(int width, int height) {
     this.width = width;
@@ -61,12 +63,14 @@ public class SvgCanvas {
     text("g-node-text", new Point(n.getX() + NODE_TEXT_OFFSET_X, n.getY() + NODE_TEXT_OFFSET_Y), "" + n.getId(), "middle");
   }
   
-  public void transitionStraight(Transition t) {
+  public Connection transitionNodeToNode(Transition t) {
     Point pFrom = new Point(t.getFrom().getX(), t.getFrom().getY());
     Point pTo = new Point(t.getTo().getX(), t.getTo().getY());
     
-    LineData coords = arrow("g-transition", pFrom, pTo, NODE_RADIUS);
+    LineData coords = nodeToNodeArrow("g-transition", pFrom, pTo, NODE_RADIUS);
     double angle = coords.d;
+    
+    System.out.println("From " + t.getFrom().getId() + pFrom + " to " + t.getTo().getId() + pTo + " angle " + angle);
     double textX = (pTo.getX()+pFrom.getX())/2;
     double textY = (pTo.getY()+pFrom.getY())/2;
     String textAnchor;
@@ -85,6 +89,19 @@ public class SvgCanvas {
       textAnchor = "start";
     }
     text("g-transition-text", new Point(textX, textY), t.getSymbol().toHtmlString(), textAnchor);
+    
+    double angle2 = angle + Math.PI;
+    if (angle2 > 2 * Math.PI) {
+      angle2 -= 2 * Math.PI;
+    }
+    return new Connection(coords.p1, angle, coords.p2, angle2);
+  }
+  
+  public void transitionToSelf(Transition t, double angle) {
+    double x = SELF_LOOP_OFFSET * Math.cos(angle) + t.getFrom().getX();
+    double y = SELF_LOOP_OFFSET * Math.sin(angle) + t.getFrom().getY();
+    
+    circle("g-self-loop", x, y, SELF_LOOP_RADIUS);
   }
   
   public String getGraph() {
@@ -103,7 +120,7 @@ public class SvgCanvas {
       String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"middle\" text-anchor=\"%s\">%s</text>\n", className, p.getX() + LEFT_MARGIN, p.getY() + TOP_MARGIN, textAnchor, text);
   }
   
-  private LineData arrow(String className, Point p1, Point p2, double r) {
+  private LineData nodeToNodeArrow(String className, Point p1, Point p2, double r) {
     double angle = Math.atan2(p2.getY()-p1.getY(), p2.getX()-p1.getX());
     
     // first circle
