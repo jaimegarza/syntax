@@ -49,7 +49,10 @@ public class SvgCanvas {
   private static final double ARROWHEAD_LENGTH = 20;
   private static final double SELF_LOOP_OFFSET = 12;
   private static final double SELF_LOOP_RADIUS = 12;
+  private static final double SELF_LOOP_TEXT_OFFSET = 29;
   private static final double SELF_LOOP_ARROW_LENGTH = 8;
+  private static final int EXTRA_WIDTH = 25;
+  private static final int EXTRA_HEIGHT = 25;
   
   public SvgCanvas(int width, int height) {
     this.width = width;
@@ -61,7 +64,7 @@ public class SvgCanvas {
     if (n.isAccept()) {
       circle("g-accept", n.getX(), n.getY(), ACCEPT_RADIUS);
     }
-    text("g-node-text", new Point(n.getX() + NODE_TEXT_OFFSET_X, n.getY() + NODE_TEXT_OFFSET_Y), "" + n.getId(), "middle");
+    text("g-node-text", new Point(n.getX() + NODE_TEXT_OFFSET_X, n.getY() + NODE_TEXT_OFFSET_Y), "" + n.getId(), "middle", "middle");
   }
   
   public Connection transitionNodeToNode(Transition t) {
@@ -89,7 +92,7 @@ public class SvgCanvas {
       textX -= TRANSITION_TEXT_OFFSET_X;
       textAnchor = "start";
     }
-    text("g-transition-text", new Point(textX, textY), t.getSymbol().toHtmlString(), textAnchor);
+    text("g-transition-text", new Point(textX, textY), t.getSymbol().toHtmlString(), textAnchor, "middle");
     
     double angle2 = angle + Math.PI;
     if (angle2 > 2 * Math.PI) {
@@ -99,28 +102,52 @@ public class SvgCanvas {
   }
   
   public void transitionToSelf(Transition t, double angle) {
-    double x = SELF_LOOP_OFFSET * Math.cos(angle) + t.getFrom().getX();
-    double y = SELF_LOOP_OFFSET * Math.sin(angle) + t.getFrom().getY();
+    Point loopCenter = new Point(SELF_LOOP_OFFSET * Math.cos(angle) + t.getFrom().getX(),
+        SELF_LOOP_OFFSET * Math.sin(angle) + t.getFrom().getY());
     
     Circle c_n = new Circle(t.getFrom().getX(), t.getFrom().getY(), NODE_RADIUS);
-    Circle c_l = new Circle(x, y, SELF_LOOP_RADIUS);
+    Circle c_l = new Circle(loopCenter.getX(), loopCenter.getY(), SELF_LOOP_RADIUS);
     Circle c_a = new Circle(t.getFrom().getX(), t.getFrom().getY(), NODE_RADIUS + SELF_LOOP_ARROW_LENGTH);
     Pair<Point> pair_n = c_n.intersect(c_l);
     Point p_n = pair_n.getFirst();
     Pair<Point> pair_a = c_a.intersect(c_l);
     Point p_a = pair_a.getFirst();
     
-    circle("g-self-loop", x, y, SELF_LOOP_RADIUS);
+    circle("g-self-loop", loopCenter.getX(), loopCenter.getY(), SELF_LOOP_RADIUS);
 
     double arrowAngle = Math.atan2(- (p_a.getX() - p_n.getX()), p_a.getY() - p_n.getY());
     Point p_w1 = new Point(Math.cos(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getX(), Math.sin(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getY());
     Point p_w2 = new Point(-Math.cos(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getX(), -Math.sin(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getY());
     
     arrowHead("g-self-loop", p_w1, p_n, p_w2);
-  }
+
+    Point txt = new Point(SELF_LOOP_TEXT_OFFSET * Math.cos(angle) + t.getFrom().getX(),
+        SELF_LOOP_TEXT_OFFSET * Math.sin(angle) + t.getFrom().getY());
+    
+    String textAlignment;
+    String alignmentBaseline;
+    
+    if (angle < 0) {
+      angle += 2 * Math.PI;
+    }
+    if (angle > 0 && angle < Math.PI/2) {
+      textAlignment = "start";
+      alignmentBaseline = "middle";
+    } else if (angle >= Math.PI/2 && angle < Math.PI) {
+      textAlignment = "end";
+      alignmentBaseline = "middle";
+    } else if (angle >= Math.PI && angle < 3*Math.PI/2) {
+      textAlignment = "end";
+      alignmentBaseline = "middle";
+    } else {
+      textAlignment = "start";
+      alignmentBaseline = "middle";
+    }
+    text("g-transition-text", txt, t.getSymbol().toHtmlString(), textAlignment, alignmentBaseline);
+}
   
   public String getGraph() {
-    return "<svg width=\"" + width + "\" height=\"" + height + "\">\n"
+    return "<svg width=\"" + (width + EXTRA_WIDTH) + "\" height=\"" + (height + EXTRA_HEIGHT) + "\">\n"
         + instructions
         + "</svg>\n";
   }
@@ -130,9 +157,9 @@ public class SvgCanvas {
       String.format("  <circle class=\"%s\" cx=\"%.2f\" cy=\"%.2f\" r=\"%f\"/>\n", className, x + LEFT_MARGIN, y + TOP_MARGIN, radius);
   }
 
-  private void text(String className, Point p, String text, String textAnchor) {
+  private void text(String className, Point p, String text, String textAnchor, String alignmentBaseline) {
     instructions +=
-      String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"middle\" text-anchor=\"%s\">%s</text>\n", className, p.getX() + LEFT_MARGIN, p.getY() + TOP_MARGIN, textAnchor, text);
+      String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"%s\" text-anchor=\"%s\">%s</text>\n", className, p.getX() + LEFT_MARGIN, p.getY() + TOP_MARGIN, alignmentBaseline, textAnchor, text);
   }
   
   private LineData nodeToNodeArrow(String className, Point p1, Point p2, double r) {
