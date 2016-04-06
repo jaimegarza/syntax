@@ -29,6 +29,11 @@
 */
 package me.jaimegarza.syntax.graph;
 
+/**
+ * Definition of a circle by center and radius
+ * @author jgarza
+ *
+ */
 public class Circle {
   double x;
   double y;

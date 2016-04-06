@@ -108,6 +108,7 @@ public interface AlgorithmicSupport {
 
   /**
    * Does this algorithm support lookaheads
+   * @return true if it does
    */
   boolean supportsLookahead();
 }

@@ -32,6 +32,11 @@ package me.jaimegarza.syntax.graph;
 import me.jaimegarza.syntax.model.graph.Node;
 import me.jaimegarza.syntax.model.graph.Transition;
 
+/**
+ * Allows drawing of SVG in a simulated canvas. Outputs SVG
+ * @author jgarza
+ *
+ */
 public class SvgCanvas {
   private int width;
   private int height;
@@ -59,6 +64,10 @@ public class SvgCanvas {
     this.height = height;
   }
   
+  /**
+   * Produce the graph for a node
+   * @param n is the node
+   */
   public void node(Node n) {
     circle(n.isStarting() ? "g-starting-node" : "g-node", n.getX(), n.getY(), NODE_RADIUS);
     if (n.isAccept()) {
@@ -67,6 +76,11 @@ public class SvgCanvas {
     text("g-node-text", new Point(n.getX() + NODE_TEXT_OFFSET_X, n.getY() + NODE_TEXT_OFFSET_Y), "" + n.getId(), "middle", "middle");
   }
   
+  /**
+   * Arrow between two nodes
+   * @param t the transition
+   * @return how they connect in a connection object
+   */
   public Connection transitionNodeToNode(Transition t) {
     Point pFrom = new Point(t.getFrom().getX(), t.getFrom().getY());
     Point pTo = new Point(t.getTo().getX(), t.getTo().getY());
@@ -101,6 +115,11 @@ public class SvgCanvas {
     return new Connection(coords.p1, angle, coords.p2, angle2);
   }
   
+  /**
+   * Self loop. Connects with an excentric circle and computes the arrow
+   * @param t is the transition.
+   * @param angle the best angle from the node to the excentric circle
+   */
   public void transitionToSelf(Transition t, double angle) {
     Point loopCenter = new Point(SELF_LOOP_OFFSET * Math.cos(angle) + t.getFrom().getX(),
         SELF_LOOP_OFFSET * Math.sin(angle) + t.getFrom().getY());
@@ -144,22 +163,16 @@ public class SvgCanvas {
       alignmentBaseline = "middle";
     }
     text("g-transition-text", txt, t.getSymbol().toHtmlString(), textAlignment, alignmentBaseline);
-}
+  }
   
+  /**
+   * Return the whole graph as SVG
+   * @return SVG
+   */
   public String getGraph() {
     return "<svg width=\"" + (width + EXTRA_WIDTH) + "\" height=\"" + (height + EXTRA_HEIGHT) + "\">\n"
         + instructions
         + "</svg>\n";
-  }
-  
-  private void circle(String className, double x, double y, double radius) {
-    instructions +=
-      String.format("  <circle class=\"%s\" cx=\"%.2f\" cy=\"%.2f\" r=\"%f\"/>\n", className, x + LEFT_MARGIN, y + TOP_MARGIN, radius);
-  }
-
-  private void text(String className, Point p, String text, String textAnchor, String alignmentBaseline) {
-    instructions +=
-      String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"%s\" text-anchor=\"%s\">%s</text>\n", className, p.getX() + LEFT_MARGIN, p.getY() + TOP_MARGIN, alignmentBaseline, textAnchor, text);
   }
   
   private LineData nodeToNodeArrow(String className, Point p1, Point p2, double r) {
@@ -173,7 +186,7 @@ public class SvgCanvas {
     Point c2_1 = new Point(r * Math.cos(angle) + p2.getX(), r * Math.sin(angle) + p2.getY());
     Point c2_2 = new Point(r * Math.cos(angle+Math.PI) + p2.getX(), r * Math.sin(angle+Math.PI) + p2.getY());
     
-    LineData ld = new LineData(c1_1, c2_1, distance(c1_1, c2_1));
+    LineData ld = new LineData(c1_1, c2_1, c1_1.distance(c2_1));
     ld = computeMin(ld, c1_2, c2_1);
     ld = computeMin(ld, c1_1, c2_2);
     ld = computeMin(ld, c1_2, c2_2);
@@ -191,6 +204,19 @@ public class SvgCanvas {
     return new LineData(c1, c2, angle);
   }
 
+  //----------------------------------------------------------
+  //                     PRIMITIVES
+  //----------------------------------------------------------
+  private void circle(String className, double x, double y, double radius) {
+    instructions +=
+      String.format("  <circle class=\"%s\" cx=\"%.2f\" cy=\"%.2f\" r=\"%f\"/>\n", className, x + LEFT_MARGIN, y + TOP_MARGIN, radius);
+  }
+
+  private void text(String className, Point p, String text, String textAnchor, String alignmentBaseline) {
+    instructions +=
+      String.format("  <text class=\"%s\" x=\"%.2f\" y=\"%.2f\" alignment-baseline=\"%s\" text-anchor=\"%s\">%s</text>\n", className, p.getX() + LEFT_MARGIN, p.getY() + TOP_MARGIN, alignmentBaseline, textAnchor, text);
+  }
+  
   private void arrowHead(String className, Point p2, double angle, Point c2) {
     double alphaAngle1 = angle + Math.PI - ARROWHEAD_ANGLE;
     double alphaAngle2 = angle + Math.PI + ARROWHEAD_ANGLE;
@@ -213,16 +239,12 @@ public class SvgCanvas {
   }
   
   private LineData computeMin(LineData ld, Point p1, Point p2) {
-    double d = distance(p1, p2);
+    double d = p1.distance(p2);
     if (d < ld.d) {
       return new LineData(p1, p2, d);
     } else {
       return ld;
     }
-  }
-  
-  private double distance(Point p1, Point p2) {
-    return Math.sqrt((p2.getX()-p1.getX())*(p2.getX()-p1.getX()) + (p2.getY()-p1.getY())*(p2.getY()-p1.getY()));
   }
   
   private static class LineData {

@@ -81,7 +81,7 @@ public abstract class RegexSymbol {
   public abstract int[] getCodeArray();
   
   /**
-   * Return a string suitable for Html
+   * @return a string suitable for Html
    */
   public abstract String toHtmlString();
 

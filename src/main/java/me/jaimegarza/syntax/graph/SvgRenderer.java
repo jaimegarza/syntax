@@ -39,8 +39,20 @@ import me.jaimegarza.syntax.model.graph.DirectedGraph;
 import me.jaimegarza.syntax.model.graph.Node;
 import me.jaimegarza.syntax.model.graph.Transition;
 
+/**
+ * Routines to draw a Dfa to SVG. Uses SvgCanvas
+ * @author jgarza
+ *
+ */
 public class SvgRenderer {
 
+  /**
+   * Draw a dfa to SVG
+   * @param graph is the graph to draw
+   * @param width the desired width
+   * @param height the desired height
+   * @return the resulting SVG
+   */
   public String render(DirectedGraph<? extends Node> graph, int width, int height) {
     SvgCanvas canvas = new SvgCanvas(width, height);
     
@@ -65,8 +77,16 @@ public class SvgRenderer {
     return canvas.getGraph();
   }
   
+  /**
+   * The angle data structure
+   */
   private Map<Node, List<Double>> angles = new HashMap<>();
   
+  /**
+   * Given a node, return the angle of all touching points to it
+   * @param n the node
+   * @return a list of touch points in the node
+   */
   private List<Double> getNodeAngles(Node n) {
     List<Double> dl = angles.get(n);
     if (dl == null) {
@@ -76,6 +96,11 @@ public class SvgRenderer {
     return dl;
   }
   
+  /**
+   * Add a touchpoint to a node
+   * @param n the node
+   * @param angle the used angle
+   */
   private void registerAngle(Node n, double angle) {
     while (angle > 2 * Math.PI) {
       angle -= 2 * Math.PI;
@@ -87,6 +112,12 @@ public class SvgRenderer {
     dl.add(angle);
   }
   
+  /**
+   * Assume all touch points in a node. Get the angle where
+   * there is less touch points. Suitable to do self joins
+   * @param n the node
+   * @return the best angle for a self join
+   */
   private double computeBestAngle(Node n) {
     List<Double> dl = getNodeAngles(n);
     

@@ -206,6 +206,7 @@ public class NfaUtil {
   /**
    * Create a new dfa out of a nfa
    * @param graph is the graph
+   * @param regex is the string for the regular expression
    * @param c the starting and ending nodes of the nfa
    * @return a new DFA
    */

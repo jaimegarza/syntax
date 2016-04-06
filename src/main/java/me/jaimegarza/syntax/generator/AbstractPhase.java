@@ -70,6 +70,7 @@ public abstract class AbstractPhase {
   /**
    * Format a report entry for left alignment
    * @param o is the object to left align
+   * @return a representation of the left-aligned value
    */
   protected HtmlValue left(Object o) {
     return HtmlWriter.left(o);
@@ -78,6 +79,7 @@ public abstract class AbstractPhase {
   /**
    * Format a report entry for right alignment
    * @param o is the object to right align
+   * @return a representation of the right-aligned value
    */
   protected HtmlValue right(Object o) {
     return HtmlWriter.right(o);
