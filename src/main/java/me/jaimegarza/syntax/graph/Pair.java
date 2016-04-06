@@ -30,94 +30,36 @@
 package me.jaimegarza.syntax.graph;
 
 /**
- * Simple representation of a point in space
+ * Defines a structure to hold a couple of objects of type T. Immutable.
  * @author jgarza
  *
+ * @param <T> is the type of the objects
  */
-public class Point {
-  private double x;
-  private double y;
-  
-  public Point(double x, double y) {
-    this.x = x;
-    this.y = y;
+public class Pair<T> {
+  T first;
+  T second;
+
+  /**
+   * Construct the pair
+   * @param first is the first element
+   * @param second is the second element
+   */
+  public Pair(T first, T second) {
+    this.first = first;
+    this.second = second;
   }
 
   /**
-   * Distance between two points
-   * @param p2 the other point
-   * @return the distance
+   * @return the first
    */
-  public double distance(Point p2) {
-    return Math.sqrt((x - p2.x)*(x - p2.x) + (y - p2.y)*(y - p2.y));
-  }
-  
-  /**
-   * Gets a new point that is the diference between two points
-   * @param p2 the other point
-   * @return (x - p2.x, y-p2.y)
-   */
-  public Point subtract(Point p2) {
-    return new Point(x - p2.x, y - p2.y);
-  }
-  
-  /**
-   * Add two points
-   * @param p2 is the other point
-   * @return (x+p2x, y+p2y)
-   */
-  Point add(Point p2) {
-    return new Point(x + p2.x, y + p2.y);
+  public T getFirst() {
+    return first;
   }
 
   /**
-   * Scale the point
-   * @param s is the scale
-   * @return (x*s, y*s)
+   * @return the second
    */
-  public Point scale(double s) {
-    return new Point(x*s, y*s);
+  public T getSecond() {
+    return second;
   }
-
-  /**
-   * @return the x
-   */
-  public double getX() {
-    return x;
-  }
-
-  /**
-   * @return the y
-   */
-  public double getY() {
-    return y;
-  }
-  
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-
-    try {
-      Point p = (Point) obj;
-      return x == p.x && y == p.y;
-    } catch (NullPointerException unused) {
-      return false;
-    } catch (ClassCastException unused) {
-      return false;
-    }
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 + Double.hashCode(x) + Double.hashCode(y);
-  }
-
-  @Override
-  public String toString() {
-    return "(" + x + "," + y + ")";
-  }
-
 }
-

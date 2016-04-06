@@ -49,6 +49,7 @@ public class SvgCanvas {
   private static final double ARROWHEAD_LENGTH = 20;
   private static final double SELF_LOOP_OFFSET = 12;
   private static final double SELF_LOOP_RADIUS = 12;
+  private static final double SELF_LOOP_ARROW_LENGTH = 8;
   
   public SvgCanvas(int width, int height) {
     this.width = width;
@@ -101,7 +102,21 @@ public class SvgCanvas {
     double x = SELF_LOOP_OFFSET * Math.cos(angle) + t.getFrom().getX();
     double y = SELF_LOOP_OFFSET * Math.sin(angle) + t.getFrom().getY();
     
+    Circle c_n = new Circle(t.getFrom().getX(), t.getFrom().getY(), NODE_RADIUS);
+    Circle c_l = new Circle(x, y, SELF_LOOP_RADIUS);
+    Circle c_a = new Circle(t.getFrom().getX(), t.getFrom().getY(), NODE_RADIUS + SELF_LOOP_ARROW_LENGTH);
+    Pair<Point> pair_n = c_n.intersect(c_l);
+    Point p_n = pair_n.getFirst();
+    Pair<Point> pair_a = c_a.intersect(c_l);
+    Point p_a = pair_a.getFirst();
+    
     circle("g-self-loop", x, y, SELF_LOOP_RADIUS);
+
+    double arrowAngle = Math.atan2(- (p_a.getX() - p_n.getX()), p_a.getY() - p_n.getY());
+    Point p_w1 = new Point(Math.cos(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getX(), Math.sin(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getY());
+    Point p_w2 = new Point(-Math.cos(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getX(), -Math.sin(arrowAngle) * SELF_LOOP_ARROW_LENGTH / 2 + p_a.getY());
+    
+    arrowHead("g-self-loop", p_w1, p_n, p_w2);
   }
   
   public String getGraph() {
@@ -158,12 +173,16 @@ public class SvgCanvas {
         
     Point arrowEdge2 = new Point(ARROWHEAD_LENGTH * Math.cos(alphaAngle2) + p2.getX(),
         ARROWHEAD_LENGTH * Math.sin(alphaAngle2) + p2.getY());
-
+    
+    arrowHead(className, arrowEdge1, c2, arrowEdge2);
+  }
+  
+  private void arrowHead(String className, Point p1, Point p2, Point p3) {
     instructions += 
-        String.format("  <polygon class=\"%s-head\" points=\"%.2f,%.2f %.2f,%.2f %.2f,%.2f\"/>", 
-            className, arrowEdge1.getX() + LEFT_MARGIN, arrowEdge1.getY() + TOP_MARGIN, 
-            c2.getX() + LEFT_MARGIN, c2.getY() + TOP_MARGIN, 
-            arrowEdge2.getX() + LEFT_MARGIN, arrowEdge2.getY() + TOP_MARGIN);
+        String.format("  <polygon class=\"%s-head\" points=\"%.2f,%.2f %.2f,%.2f %.2f,%.2f\"/>\n", 
+            className, p1.getX() + LEFT_MARGIN, p1.getY() + TOP_MARGIN, 
+            p2.getX() + LEFT_MARGIN, p2.getY() + TOP_MARGIN, 
+            p3.getX() + LEFT_MARGIN, p3.getY() + TOP_MARGIN);
   }
   
   private LineData computeMin(LineData ld, Point p1, Point p2) {

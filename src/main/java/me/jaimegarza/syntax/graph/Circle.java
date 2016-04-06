@@ -29,54 +29,52 @@
 */
 package me.jaimegarza.syntax.graph;
 
-/**
- * Simple representation of a point in space
- * @author jgarza
- *
- */
-public class Point {
-  private double x;
-  private double y;
-  
-  public Point(double x, double y) {
+public class Circle {
+  double x;
+  double y;
+  double left;
+  double r;
+
+  /**
+   * Construct a circle with center in x,y and radius r
+   * @param x the x coordinate
+   * @param y the y coordinate
+   * @param r the radius
+   */
+  public Circle(double x, double y, double r) {
     this.x = x;
     this.y = y;
-  }
-
-  /**
-   * Distance between two points
-   * @param p2 the other point
-   * @return the distance
-   */
-  public double distance(Point p2) {
-    return Math.sqrt((x - p2.x)*(x - p2.x) + (y - p2.y)*(y - p2.y));
+    this.r = r;
+    this.left = x - r;
   }
   
   /**
-   * Gets a new point that is the diference between two points
-   * @param p2 the other point
-   * @return (x - p2.x, y-p2.y)
+   * Compute the intersection points of two touching circles
+   * @param c is the other circle
+   * @return two points
    */
-  public Point subtract(Point p2) {
-    return new Point(x - p2.x, y - p2.y);
-  }
-  
-  /**
-   * Add two points
-   * @param p2 is the other point
-   * @return (x+p2x, y+p2y)
-   */
-  Point add(Point p2) {
-    return new Point(x + p2.x, y + p2.y);
-  }
+  public Pair<Point> intersect(Circle c) {
+    double d;
+    double a;
+    double h;
+    double x3;
+    double y3;
+    double x4;
+    double y4;
 
-  /**
-   * Scale the point
-   * @param s is the scale
-   * @return (x*s, y*s)
-   */
-  public Point scale(double s) {
-    return new Point(x*s, y*s);
+    Point P0 = new Point(x, y);
+    Point P1 = new Point(c.x, c.y);
+    
+    d = P0.distance(P1);
+    a = (r*r - c.r*c.r + d*d)/(2*d);
+    h = Math.sqrt(r*r - a*a);
+    Point P2 = P1.subtract(P0).scale(a/d).add(P0);
+    x3 = P2.getX() + h*(P1.getY() - P0.getY())/d;
+    y3 = P2.getY() - h*(P1.getX() - P0.getX())/d;
+    x4 = P2.getX() - h*(P1.getY() - P0.getY())/d;
+    y4 = P2.getY() + h*(P1.getX() - P0.getX())/d;
+
+    return new Pair<Point>(new Point(x3, y3), new Point(x4, y4));
   }
 
   /**
@@ -92,32 +90,11 @@ public class Point {
   public double getY() {
     return y;
   }
-  
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
 
-    try {
-      Point p = (Point) obj;
-      return x == p.x && y == p.y;
-    } catch (NullPointerException unused) {
-      return false;
-    } catch (ClassCastException unused) {
-      return false;
-    }
+  /**
+   * @return the r
+   */
+  public double getR() {
+    return r;
   }
-
-  @Override
-  public int hashCode() {
-    return 31 + Double.hashCode(x) + Double.hashCode(y);
-  }
-
-  @Override
-  public String toString() {
-    return "(" + x + "," + y + ")";
-  }
-
 }
-
