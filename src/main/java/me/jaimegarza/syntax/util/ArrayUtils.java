@@ -29,6 +29,13 @@
 */
 package me.jaimegarza.syntax.util;
 
+/**
+ * It will contain utilities to support expanding arrays and other functions
+ * related to them
+ * 
+ * @author jcgarza
+ *
+ */
 public class ArrayUtils {
   /**
    * Given an array, make sure it is the right size, expanding

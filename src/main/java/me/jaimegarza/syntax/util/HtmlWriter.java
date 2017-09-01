@@ -147,44 +147,87 @@ public class HtmlWriter {
     out.println(" colspan=\"" + currentNumberOfColumns + "\">" + value + "</td></tr>");
   }
   
+  /**
+   * Terminate one table
+   */
   public void tableEnd() {
     out.println("  </table>");
     out.println("<div class=\"close\">&nbsp;</div>");
     out.println();
   }
   
+  /**
+   * Add a heading block
+   * @param text is the text in the block
+   */
   public void heading(String text) {
     out.println("<div class=\"heading\">" + text + "</div>");
   }
 
+  /**
+   * Add a subheading block
+   * @param text is the text in the block
+   */
   public void subHeading(String text) {
     out.println("<div class=\"subheading\">" + text + "</div>");
   }
 
+  /**
+   * Add a title block
+   * @param text is the text in the block
+   */
   public void title(String text) {
     out.println("<div class=\"title\">" + text + "</div>");
   }
 
+  /**
+   * Add a subtitle block
+   * @param text is the text in the block
+   */
   public void subTitle(String text) {
     out.println("<div class=\"subtitle\">" + text + "</div>");
   }
 
+  /**
+   * Add an entry of text. An item is a single div
+   * @param text is the text in the block
+   */
   public void item(String text) {
     out.println("<div class=\"item\">" + text + "</div>");
   }
 
+  /**
+   * Add an entry with a small subtitle to the report
+   * @param text the text of the item
+   * @param subtext the little subtitle
+   */
   public void item(String text, String subtext) {
     out.println("<div class=\"item\">" + text + "<span class=\"subitem\">" + subtext + "</span>"+ "</div>");
   }
   
+  /**
+   * Create an element aligned left, for output in a table
+   * @param o is the object to emit
+   * @return
+   */
   public static HtmlValue left(Object o) {
     return new HtmlValue(o, "left");
   }
 
+  /**
+   * Create an element aligned right, for output in a table
+   * @param o is the object to emit
+   * @return
+   */
   public static HtmlValue right(Object o) {
     return new HtmlValue(o, "right");
   }
 
+  /**
+   * Create a row of data as per the parameters
+   * @param cellType is the type, either th, or td
+   * @param valuesAndClasses are the elements in the row
+   */
   private void tableElement(String cellType, HtmlValue... valuesAndClasses) {
     out.print("    <tr>");
     currentNumberOfColumns = 0;
@@ -200,6 +243,11 @@ public class HtmlWriter {
     out.println("</tr>");
   }
   
+  /**
+   * Convert a file path into its absolute, replacing slashes
+   * @param file is the file path
+   * @return the string representation of the file
+   */
   private String getAbsolutePath(File file) {
     if (file == null){
       return "N/A";
@@ -207,6 +255,11 @@ public class HtmlWriter {
     return file.getAbsolutePath().replaceAll("\\\\", "/");
   }
 
+  /**
+   * Convert a file into its na,e
+   * @param file the file itself
+   * @return the string representing the file name
+   */
   private String getFileName(File file) {
     if (file == null){
       return "N/A";
@@ -214,6 +267,11 @@ public class HtmlWriter {
     return file.getName();
   }
 
+  /**
+   * Utility method to convert tokens into their equivalents for output from the report template
+   * @param line is the line for which the tokens would be replaced
+   * @return the processed line
+   */
   private String templateLine(String line) {
     line = line.replaceAll("\\$\\{source.path\\}", getAbsolutePath(environment.getSourceFile()));
     line = line.replaceAll("\\$\\{source.file\\}", getFileName(environment.getSourceFile()));
