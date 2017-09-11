@@ -587,7 +587,7 @@ public class Environment {
   private File getFile(int index, boolean isRequired, String argumentName) throws CommandLineParseException {
     if (index >= fileNames.size()) {
       if (isRequired) {
-        throw new CommandLineParseException("filename for  " + argumentName + "was not provided");
+        throw new CommandLineParseException("filename for  " + argumentName + " was not provided");
       }
       return null;
     }
