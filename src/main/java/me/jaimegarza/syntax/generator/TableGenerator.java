@@ -721,7 +721,7 @@ public class TableGenerator extends AbstractPhase {
           for (Symbol tkn : runtimeData.getTerminals()) {
             boolean containsToken = environment.algorithm.dotContains(dot, tkn.getId());
             if (containsToken) {
-              environment.reportWriter.tableOneCellRow("REDUCE BY RULE " + dot.getRule().getRulenum() + " with %s" + tkn.toString(), "action");
+              environment.reportWriter.tableOneCellRow("REDUCE BY RULE " + dot.getRule().getRulenum() + " with " + tkn.getName(), "action");
               if (parserLine[tkn.getId()] > 0) {
                 // Conflict
                 if (!resolveShiftReduceConflict(parserLine, tkn, dot.getRule())) {
