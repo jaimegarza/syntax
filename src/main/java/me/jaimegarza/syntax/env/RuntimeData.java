@@ -49,6 +49,9 @@ import me.jaimegarza.syntax.model.parser.Type;
  *
  */
 public class RuntimeData {
+  
+  private static final ThreadLocal<RuntimeData> currentRuntimeData = new ThreadLocal<>();
+  
   /**
    * Starting symbol as computed.  The source of truth at the end of parsing
    */
@@ -137,10 +140,20 @@ public class RuntimeData {
    * How many actions do I have?
    */
   public int ruleActionCount;
+  
   /**
-   * The environment
+   * Initialize the current runtime data
    */
-  private Environment environment;
+  public RuntimeData() {
+    currentRuntimeData.set(this);
+  }
+  
+  /**
+   * Get the global runtime data for this thread
+   */
+  public static RuntimeData getCurrentRuntimeData() {
+    return currentRuntimeData.get();
+  }
   
   /**
    * Check to see if a rule identified by nonTerminalId is empty, i.e. it has no
@@ -473,20 +486,6 @@ public class RuntimeData {
    */
   public void setStackTypeDefined(boolean stackTypeDefined) {
     this.stackTypeDefined = stackTypeDefined;
-  }
-
-  /**
-   * @return the environment
-   */
-  public Environment getEnvironment() {
-    return environment;
-  }
-
-  /**
-   * @param environment the environment to set
-   */
-  public void setEnvironment(Environment environment) {
-    this.environment = environment;
   }
 
   /**

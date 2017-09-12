@@ -29,6 +29,7 @@
 */
 package me.jaimegarza.syntax.graph;
 
+import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.model.graph.Node;
 import me.jaimegarza.syntax.model.graph.Transition;
 
@@ -88,7 +89,9 @@ public class SvgCanvas {
     LineData coords = nodeToNodeArrow("g-transition", pFrom, pTo, NODE_RADIUS);
     double angle = coords.d;
     
-    System.out.println("From " + t.getFrom().getId() + pFrom + " to " + t.getTo().getId() + pTo + " angle " + angle);
+    if (Environment.getCurrentEnvironment().isDebug()) {
+      System.out.println("From " + t.getFrom().getId() + pFrom + " to " + t.getTo().getId() + pTo + " angle " + angle);
+    }
     double textX = (pTo.getX()+pFrom.getX())/2;
     double textY = (pTo.getY()+pFrom.getY())/2;
     String textAnchor;

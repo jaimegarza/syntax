@@ -31,6 +31,7 @@ package me.jaimegarza.syntax.graph;
 
 import java.util.Random;
 
+import me.jaimegarza.syntax.env.Environment;
 import me.jaimegarza.syntax.model.graph.DirectedGraph;
 import me.jaimegarza.syntax.model.graph.Node;
 
@@ -76,8 +77,9 @@ public class KamadaKawai<T extends Node> {
     L = L0/shortestPath.getMaxDist();
     d = shortestPath.getDistances();
     
-    // Temporary for debug
-    System.out.println(shortestPath);
+    if (Environment.getCurrentEnvironment().isVerbose()) {
+      System.out.println(shortestPath);
+    }
     
     double E = E();
     double currentE;

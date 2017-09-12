@@ -136,6 +136,7 @@ public class Environment {
   private Driver driver;
 
 
+  private static final ThreadLocal<Environment> currentEnvironment = new ThreadLocal<>();
   /**
    * Construct an environment with the given arguments
    * @param args command line arguments
@@ -153,9 +154,9 @@ public class Environment {
     super();
     this.relatedTitle = title;
     this.args = args;
-    this.runtimeData.setEnvironment(this);
     init();
     parse();
+    setCurrentEnvironment(this);
   }
 
   /**
@@ -929,14 +930,6 @@ public class Environment {
   }
 
   /**
-   * @param runtimeData the runtimeData to set
-   */
-  public void setRuntimeData(RuntimeData runtimeData) {
-    this.runtimeData = runtimeData;
-    this.runtimeData.setEnvironment(this);
-  }
-  
-  /**
    * Obtain an existing or new formatting print stream for a lexer mode
    * @param lexerMode is the mode to use
    * @return a new, or existing, formatting print stream
@@ -1004,6 +997,22 @@ public class Environment {
              "\n}\n" +
              super.toString() +
              "}";
+  }
+
+  /**
+   * Once the environment is created by Syntax, it will be globally set for the given thread
+   * @param environment is the syntax environment.
+   */
+  public static void setCurrentEnvironment(Environment environment) {
+    currentEnvironment.set(environment);
+  }
+
+  /**
+   * Obtain the current environment for this thread
+   * @return the current global environment for this thread
+   */
+  public static Environment getCurrentEnvironment() {
+    return currentEnvironment.get();
   }
 
 }
