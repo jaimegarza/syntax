@@ -899,7 +899,7 @@ Symbol        :  TOKEN                       = {
       if (currentChar == '\0') {
         break;
       }
-      if (!mustClose && "%\\;,:[]|={< \r\t\n".indexOf(currentChar) >= 0) {
+      if (!mustClose && "%\\;,:[]|={</ \r\t\n".indexOf(currentChar) >= 0) {
         break;
       }
     } while (currentChar != c2);
