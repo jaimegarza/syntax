@@ -261,7 +261,8 @@
           // Look if the state on the stack's top has a transition with one of
           // the recovering elements in StxRecoverTable
           for (i=0; i<RECOVERS; i++) {
-            if((acc = parserAction(state, recoverTable[i])) > 0) {
+            action = parserAction(state, recoverTable[i]);
+            if(action > 0) {
               // valid shift
               return parserShift(recoverTable[i], acc);
             }

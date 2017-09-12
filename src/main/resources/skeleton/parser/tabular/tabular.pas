@@ -295,8 +295,8 @@ END;
 *)
 FUNCTION StxRecover: BOOLEAN;
 VAR
-    i, acc : INTEGER;
-    found  : BOOLEAN;
+    i, action : INTEGER;
+    found     : BOOLEAN;
 BEGIN
     StxRecover := TRUE;
     CASE StxErrorFlag OF
@@ -320,10 +320,10 @@ BEGIN
                 found := FALSE;
                 FOR i:=0 to RECOVERS-1 DO
                     BEGIN
-                    acc := StxAction(StxState, StxRecoverTable[i]);
-                    IF   acc > 0 (* shift valido *)
+                    action := StxAction(StxState, StxRecoverTable[i]);
+                    IF   action > 0 (* Valid Shift *)
                     THEN BEGIN
-                         StxRecover := StxShift(StxRecoverTable[i], acc);
+                         StxRecover := StxShift(StxRecoverTable[i], action);
                          found := TRUE;
                          EXIT;
                          END;

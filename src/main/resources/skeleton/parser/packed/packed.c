@@ -252,7 +252,7 @@ int StxReduce(int sym, int rule)
 */
 int StxRecover(void)
 {
-    int i, acc;
+    int i, action;
 
     switch(StxErrorFlag){
         case 0: /* 1st error */
@@ -269,9 +269,9 @@ int StxRecover(void)
                 /* Look if the state on the stack's top has a transition with one of
                   the recovering elements in StxRecoverTable */
                 for(i=0; i<RECOVERS; i++)
-                    if((acc = StxAction(StxState, StxRecoverTable[i])) > 0)
+                    if((action = StxAction(StxState, StxRecoverTable[i])) > 0)
                         /* valid shift */
-                        return StxShift(StxRecoverTable[i], acc);
+                        return StxShift(StxRecoverTable[i], action);
 #ifdef DEBUG
                 printf("Recuperate removing state %d and go to state %d\n",
                             StxState, sStxStack[pStxStack-1]);
