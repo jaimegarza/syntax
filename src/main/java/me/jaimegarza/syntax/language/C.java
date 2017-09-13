@@ -135,9 +135,9 @@ public class C extends BaseLanguageSupport {
       environment.include.println("#define MATRIX_TABLES");
     }
     if (!runtime.isStackTypeDefined()) {
-      environment.include.println("typedef int tstack, *ptstack");
+      environment.include.println("typedef int tstack, *ptstack;");
       environment.include.printf("#define TSTACK tstack\n#define PTSTACK ptstack\n");
-      environment.include.println("typedef int tstack, *ptstack");
+      environment.include.println("typedef int tstack, *ptstack;");
     }
     environment.include
                       .printf("/* Lexical Recognizer */\n")
@@ -301,9 +301,9 @@ public class C extends BaseLanguageSupport {
   @Override
   public void generateErrorToken(int recoveryToken, ErrorToken id, boolean isLast) {
     if (!isLast) {
-      environment.output.printf("\t%d /* %s */,\n", recoveryToken, id.getName());
+      environment.output.printf("\t%d, // %s : \"%s\",\n", recoveryToken, id.getName(), id.getFullName());
     } else {
-      environment.output.printf("\t%d /* %s */\n};\n\n", recoveryToken, id.getName());
+      environment.output.printf("\t%d // %s : \"%s\"\n};\n\n", recoveryToken, id.getName(), id.getFullName());
     }
   }
 

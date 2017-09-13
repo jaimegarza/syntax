@@ -156,7 +156,7 @@ END;
 (*
     returns the name of a token, given the token number
 *)
-FUNCTION StxGetTokenName(token:INTEGER) : STRING;
+FUNCTION StxGetTokenName(token:LongInt) : STRING;
 VAR
     i : INTEGER;
 BEGIN
@@ -169,6 +169,24 @@ BEGIN
              END;
         END;
     StxGetTokenName := 'UNKNOWN TOKEN';
+END;
+
+(*
+    returns the name of a token, given the token number
+*)
+FUNCTION StxGetTokenFullName(token:LongInt) : STRING;
+VAR
+    i : INTEGER;
+BEGIN
+    FOR i := 0 TO TOKENS-1 DO
+        BEGIN
+        IF   StxTokenDefs[i].token = token
+        THEN BEGIN
+             StxGetTokenFullName := StxTokenDefs[i].fullName;
+             EXIT;
+             END;
+        END;
+    StxGetTokenFullName := 'UNKNOWN TOKEN';
 END;
 
 (*
@@ -237,12 +255,32 @@ END;
 *)
 FUNCTION StxErrorMessage: STRING;
 VAR
-    msgIndex : INTEGER;
+    msgIndex   : INTEGER;
+    s, message : STRING;
+    i, j, st   : INTEGER;
 BEGIN
     msgIndex := StxParsingError[StxState];
     IF   msgIndex >= 0
-    THEN StxErrorMessage := StxErrorTable[msgIndex]
-    ELSE StxErrorMessage := 'Syntax error';
+    THEN s := StxErrorTable[msgIndex]
+    ELSE s := 'Syntax error';
+
+    i := pStxStack;
+    WHILE i > 0 DO
+    BEGIN
+      st := sStxStack[i];
+      FOR j := 0 TO RECOVERS DO
+      BEGIN
+        IF   StxAction(st, StxRecoverTable[j]) > 0
+        THEN BEGIN
+             message := StxGetTokenFullName(StxRecoverTable[j]);
+             message := StringReplace(message, '$m', s, [rfReplaceAll]);
+             EXIT (message);
+        END;
+      END;
+      i := i-1;
+    END;
+    
+    StxErrorMessage := s;
 END;
 
 (*

@@ -313,9 +313,9 @@ public class Pascal extends BaseLanguageSupport {
         environment.output.printf("\nConst\n  RECOVERS = %d;\n"
                                   + "{ Contains tokens in compact mode, and column in matrix }", numberOfErrorTokens - 1);
         if (numberOfErrorTokens != 0) {
-          environment.output.printf("\n  StxRecoverTable : array [0..RECOVERS] of INTEGER = (\n");
+          environment.output.printf("\n  StxRecoverTable : array [0..RECOVERS] of LongInt = (\n");
         } else {
-          environment.output.printf("\n  StxRecoverTable : array [0..0] of INTEGER = (0);\n\n");
+          environment.output.printf("\n  StxRecoverTable : array [0..0] of LongInt = (0);\n\n");
         }
   }
 
@@ -360,9 +360,9 @@ public class Pascal extends BaseLanguageSupport {
   @Override
   public void generateErrorToken(int recoveryToken, ErrorToken id, boolean isLast) {
     if (!isLast) {
-      environment.output.printf("\t%d, (* %s *)\n", recoveryToken, id.getName());
+      environment.output.printf("\t%d, (* %s : \"%s\" *)\n", recoveryToken, id.getName(), id.getFullName());
     } else {
-      environment.output.printf("\t%d (* %s *) );\n\n", recoveryToken, id.getName());
+      environment.output.printf("\t%d (* %s : \"%s\" *) );\n\n", recoveryToken, id.getName(), id.getFullName());
     }
   }
 
@@ -699,7 +699,7 @@ public class Pascal extends BaseLanguageSupport {
   @Override
   public void printErrorTableHeader() {
     indent(environment.output, environment.getIndent()-1);
-    environment.output.printf("{Error Messages}\n");
+    environment.output.printf("\n{Error Messages}\n");
     indent(environment.output, environment.getIndent()-1);
     environment.output.printf("StxErrorTable : array [0..%d] of String = (\n", runtime.getErrorMessages().size() - 1);
   }

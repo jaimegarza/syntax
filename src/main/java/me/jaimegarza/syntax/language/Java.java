@@ -269,9 +269,9 @@ public class Java extends BaseLanguageSupport {
   public void generateErrorToken(int recoveryToken, ErrorToken id, boolean isLast) {
     indent(environment.output, environment.getIndent());
     if (!isLast) {
-      environment.output.printf("%d, // %s\n", recoveryToken, id.getName());
+      environment.output.printf("%d, // %s : \"%s\"\n", recoveryToken, id.getName(), id.getFullName());
     } else {
-      environment.output.printf("%d // %s\n", recoveryToken, id.getName());
+      environment.output.printf("%d // %s : \"%s\"\n", recoveryToken, id.getName(), id.getFullName());
       indent(environment.output, environment.getIndent() - 1);
       environment.output.printf("};\n\n");
     }

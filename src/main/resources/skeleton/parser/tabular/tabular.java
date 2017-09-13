@@ -229,11 +229,27 @@
    */
   private String getErrorMessage() {
     int msgIndex = parsingError[state];
+    String s;
     if (msgIndex >= 0) {
-      return errorTable[msgIndex];
+      s = errorTable[msgIndex];
     } else {
-      return "Syntax error on state " + state + " with token " + getTokenName(lexicalToken);
+      s = "Syntax error on state " + state + " with token " + getTokenName(lexicalToken);
     }
+
+    int i = stackTop;
+    while (i > 0) {
+      int st = stateStack[i];
+      for (int j=0; j<RECOVERS; j++) {
+        if(recoverTable[j] > 0 && parserAction(st, recoverTable[j]) > 0) {
+          String message = getTokenFullName(recoverTable[j]);
+          message = message.replaceAll("\\$m", s);
+          return message;
+        }
+      }
+      i--;
+    }
+    
+    return s;
   }
 
   /**
@@ -243,7 +259,7 @@
    * @return 1 if OK
    */
   private int parserRecover() {
-    int i, acc;
+    int i, action;
 
     switch(errorFlag) {
       case 0: // 1st error
@@ -264,7 +280,7 @@
             action = parserAction(state, recoverTable[i]);
             if(action > 0) {
               // valid shift
-              return parserShift(recoverTable[i], acc);
+              return parserShift(recoverTable[i], action);
             }
           }
           if (isVerbose()) {
@@ -364,6 +380,23 @@
       if (tokenDefs[i].token == token) {
         return tokenDefs[i].name;
         }
+    }
+    if (token < 256) {
+      return "\'" + (char) token + "\'";
+    } else {
+      return "UNKNOWN TOKEN";
+    }
+  }
+
+  /**
+   * @param token is the number of the token
+   * @return the full name of a token, given the token number
+   */
+  public String getTokenFullName(int token) {
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].token == token) {
+        return tokenDefs[i].fullName;
+      }
     }
     if (token < 256) {
       return "\'" + (char) token + "\'";

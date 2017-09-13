@@ -146,6 +146,32 @@ int StxMatchesRegex(int vertex) {
 }
 
 /*
+ * returns the name of a token, given the token number
+ */
+char * StxGetTokenName(int token) {
+    int i;
+    for (i = 0; i < TOKENS; i++) {
+        if (StxTokenDefs[i].token == token) {
+            return StxTokenDefs[i].name;
+        }
+    }
+    return "UNKNOWN TOKEN";
+}
+
+/*
+ * returns the long name of a token, given the token number
+ */
+char * StxGetTokenFullName(int token) {
+    int i;
+    for (i = 0; i < TOKENS; i++) {
+        if (StxTokenDefs[i].token == token) {
+            return StxTokenDefs[i].fullName;
+        }
+    }
+    return "UNKNOWN TOKEN";
+}
+
+/*
   This routine maps a state and a token to a new state on the action table  
 */
 int StxAction(int state, int symbol)
@@ -185,13 +211,52 @@ void StxPrintStack()
 }
 #endif
 
+char errormsgbuffer[1024];
+char * StxReplaceErrorMessage(char *s, char *statemsg) {
+  char *buff = errormsgbuffer;
+  while (*s) {
+    if (*s == '$') {
+      s++;
+      if (*s == 'm') {
+        s++;
+        while (*statemsg) {
+          *buff++ = *statemsg++;
+        }
+      } else {
+        *buff++ = '$';
+        *buff++ = *s++;
+      }
+    } else {
+      *buff++ = *s++;
+    }
+  }
+  *buff = '\0';
+  return errormsgbuffer;
+}
+
 char * StxErrorMessage() {
     int msgIndex = StxParsingError[StxState];
+    char *s;
     if (msgIndex >= 0) {
-        return StxErrorTable[msgIndex];
+      s = StxErrorTable[msgIndex];
     } else {
-        return "Syntax error";
+      s = "Syntax error";
     }
+    
+    int i = pStxStack;
+    while (i > 0) {
+      int st = sStxStack[i];
+      for (int j=0; j<RECOVERS; j++) {
+        if(StxAction(st, StxRecoverTable[j]) > 0) {
+          char * message = StxGetTokenFullName(StxRecoverTable[j]);
+          message = StxReplaceErrorMessage(message, s);
+          return message;
+        }
+      }
+      i--;
+    }
+    
+    return s;
 }
 
 /*
@@ -239,7 +304,7 @@ int StxReduce(int sym, int rule)
 */
 int StxRecover(void)
 {
-    int i, acc;
+    int i, action;
 
     switch(StxErrorFlag){
         case 0: /* 1st error */
@@ -256,9 +321,9 @@ int StxRecover(void)
                 /* Look if the state on the stack's top has a transition with one of
                   the recovering elements in StxRecoverTable */
                 for(i=0; i<RECOVERS; i++)
-                    if((acc = StxAction(StxState, StxRecoverTable[i])) > 0)
+                    if((action = StxAction(StxState, StxRecoverTable[i])) > 0)
                         /* valid shift */
-                        return StxShift(StxRecoverTable[i], acc);
+                        return StxShift(StxRecoverTable[i], action);
 #ifdef DEBUG
                 printf("Recuperate removing state %d and go to state %d\n",
                             StxState, sStxStack[pStxStack-1]);
@@ -277,6 +342,7 @@ int StxRecover(void)
             StxSym = StxLexer();
             return 1; 
     }
+    return 0;
 }
 
 /*
@@ -364,19 +430,6 @@ int * StxValidTokens(int * count) {
 
 TSTACK StxGetResult() {
     return StxStack[pStxStack];
-}
-
-/*
- * returns the name of a token, given the token number
- */
-char * StxGetTokenName(int token) {
-    int i;
-    for (i = 0; i < TOKENS; i++) {
-        if (StxTokenDefs[i].token == token) {
-            return StxTokenDefs[i].name;
-        }
-    }
-    return "UNKNOWN TOKEN";
 }
 
 /*

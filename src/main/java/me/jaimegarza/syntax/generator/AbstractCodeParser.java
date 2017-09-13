@@ -1241,7 +1241,7 @@ public abstract class AbstractCodeParser extends AbstractPhase implements Lexer,
           right(id.getCount()), right(id.getPrecedence()), left(id.getAssociativity().displayName()),
           left(id.getType() != null ? id.getType().getName() : ""));
       if (id instanceof ErrorToken) {
-        int recoveryToken = environment.isPacked() ? id.getToken() : terminals;
+        int recoveryToken = id.getToken();
         ++recoveries;
         environment.language.generateErrorToken(recoveryToken, (ErrorToken) id, recoveries >= numberOfErrorTokens);
       }

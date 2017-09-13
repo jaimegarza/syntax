@@ -223,11 +223,27 @@
    */
   private String getErrorMessage() {
     int msgIndex = parsingError[state];
+    String s;
     if (msgIndex >= 0) {
-      return errorTable[msgIndex];
+      s = errorTable[msgIndex];
     } else {
-      return "Syntax error on state " + state + " with token " + getTokenName(lexicalToken);
+      s = "Syntax error on state " + state + " with token " + getTokenName(lexicalToken);
     }
+
+    int i = stackTop;
+    while (i > 0) {
+      int st = stateStack[i];
+      for (int j=0; j<RECOVERS; j++) {
+        if(parserAction(st, recoverTable[j]) > 0) {
+          String message = getTokenFullName(recoverTable[j]);
+          message = message.replaceAll("\\$m", s);
+          return message;
+        }
+      }
+      i--;
+    }
+    
+    return s;
   }
 
   /**
@@ -236,7 +252,7 @@
    * the error
    */
   private int parserRecover() {
-    int i, acc;
+    int i, action;
 
     switch(errorFlag) {
       case 0: // 1st error
@@ -254,7 +270,7 @@
           // Look if the state on the stack's top has a transition with one of
           // the recovering elements in StxRecoverTable
           for (i=0; i<RECOVERS; i++) {
-            if((acc = parserAction(state, recoverTable[i])) > 0) {
+            if((action = parserAction(state, recoverTable[i])) > 0) {
               // valid shift
               return parserShift(recoverTable[i], acc);
             }
@@ -377,6 +393,23 @@
       if (tokenDefs[i].token == token) {
         return tokenDefs[i].name;
         }
+    }
+    if (token < 256) {
+      return "\'" + (char) token + "\'";
+    } else {
+      return "UNKNOWN TOKEN";
+    }
+  }
+
+  /**
+   * @param token is the number of the token
+   * @return the full name of a token, given the token number
+   */
+  public String getTokenFullName(int token) {
+    for (int i = 0; i < tokenDefs.length; i++) {
+      if (tokenDefs[i].token == token) {
+        return tokenDefs[i].fullName;
+      }
     }
     if (token < 256) {
       return "\'" + (char) token + "\'";
