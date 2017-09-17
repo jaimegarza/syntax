@@ -219,10 +219,10 @@ public class Java extends BaseLanguageSupport {
   public void generateRecoveryTableHeader(int numberOfErrorTokens) {
         environment.output.printf("\n");
         indent(environment.output, environment.getIndent() - 1);
-        environment.output.printf("private static final int RECOVERS=%d;\n\n", numberOfErrorTokens);
+        environment.output.printf("private static final int RECOVERS = %d;\n\n", numberOfErrorTokens);
         indent(environment.output, environment.getIndent() - 1);
 
-        environment.output.printf("// Contains tokens in compact mode, and column in matrix\n");
+        environment.output.printf("// Contains token ids\n");
         indent(environment.output, environment.getIndent() - 1);
         if (numberOfErrorTokens != 0) {
           environment.output.printf("int recoverTable[] = {\n");
@@ -280,7 +280,7 @@ public class Java extends BaseLanguageSupport {
   @Override
   public void generateTokensHeader(int terminals) {
     indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("private static int TOKENS=%d;\n", terminals);
+    environment.output.printf("private static int TOKENS=%d;\n\n", terminals);
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("private static int tokens[] = {\n");
   }

@@ -277,8 +277,6 @@ public class Environment {
         "Produce a resource bundle for the error messages", "");
     add("k", "skeleton", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
         "Uses the external skeleton provided", "");
-    add("d", "driver", HAS_ARG, NO_OPTIONAL_VALUE, NOT_REQUIRED,
-        "What parser driver is to be used (parser|scanner, default is parser)", "parser");
   }
 
   /**
@@ -548,7 +546,7 @@ public class Environment {
   private void setIndent() throws CommandLineParseException {
     int value = 0;
     try {
-      value = Integer.parseInt(get("i", "2"));
+      value = Integer.parseInt(get("i", String.valueOf(language.getDefaultIndent())));
     } catch (NumberFormatException e) {
       throw new CommandLineParseException("Option -i|--indent is not valid :" + value);
     }

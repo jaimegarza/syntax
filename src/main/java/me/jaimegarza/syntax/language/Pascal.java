@@ -311,7 +311,7 @@ public class Pascal extends BaseLanguageSupport {
   @Override
   public void generateRecoveryTableHeader(int numberOfErrorTokens) {
         environment.output.printf("\nConst\n  RECOVERS = %d;\n"
-                                  + "{ Contains tokens in compact mode, and column in matrix }", numberOfErrorTokens - 1);
+                                  + "{ Contains token ids }", numberOfErrorTokens - 1);
         if (numberOfErrorTokens != 0) {
           environment.output.printf("\n  StxRecoverTable : array [0..RECOVERS] of LongInt = (\n");
         } else {

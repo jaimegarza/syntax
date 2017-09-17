@@ -34,13 +34,13 @@
   }
 
   /**
-   * @return the verbose flag
-   * 
+   * Obtain the verbose flag
+   * @return true if verbose
    */
   public boolean isVerbose() {
     return this.verbose;
   }
-  
+
   /*
    * ==========================================================
    *                  Regular Expressions
@@ -131,7 +131,7 @@
    * This routine maps a state and a token to a new state on the action table
    * @param state is the current state
    * @param symbol is the given symbol to find (if not found, defa will be used
-   * @return the next state
+   * @return the parsing action
    */
   private int parserAction(int state, int symbol) {
     int index = getTokenIndex(symbol);
@@ -142,7 +142,7 @@
    * This routine maps a origin state to a destination state
    * using the symbol position
    * @param state is the current state
-   * @param non terminal that causes the transition
+   * @param symbol non terminal that causes the transition
    * @return the next state
    */
   private int parserGoto(int state, int symbol) {
@@ -225,7 +225,8 @@
   }
 
   /**
-   * @return the error message for a state
+   * Get the error message for a state
+   * @return the error message
    */
   private String getErrorMessage() {
     int msgIndex = parsingError[state];
@@ -240,7 +241,7 @@
     while (i > 0) {
       int st = stateStack[i];
       for (int j=0; j<RECOVERS; j++) {
-        if(recoverTable[j] > 0 && parserAction(st, recoverTable[j]) > 0) {
+        if (recoverTable[j] > 0 && parserAction(st, recoverTable[j]) > 0) {
           String message = getTokenFullName(recoverTable[j]);
           message = message.replaceAll("\\$m", s);
           return message;
@@ -311,7 +312,7 @@
 
   /**
    * Main parser routine, uses Shift, Reduce and Recover
-   * @return 1 if OK
+   * @return 1 if parsed
    */
   public int parse() {
     int action;
@@ -379,7 +380,7 @@
     for (int i = 0; i < tokenDefs.length; i++) {
       if (tokenDefs[i].token == token) {
         return tokenDefs[i].name;
-        }
+      }
     }
     if (token < 256) {
       return "\'" + (char) token + "\'";
@@ -451,7 +452,7 @@
 
   /*
    *
-   * End of packed skeleton for java
+   * End of tabular skeleton for java
    *
    */
 

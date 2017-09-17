@@ -55,6 +55,11 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   public boolean getDefaultIncludeFlag() {
     return false;
   }
+  
+  @Override
+  public int getDefaultIndent() {
+    return 2;
+  }
 
   @Override
   public void emitLine(int lineNumber) {
@@ -67,6 +72,13 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
   @Override
   public int getNumberOfSpacesPerIndent() {
     return 2;
+  }
+  
+  /**
+   * %lexer needs to be indented as per given language. This will be overriden in each language as needed
+   */
+  protected int getLexerCodeOffsetIndent() {
+    return 0;
   }
 
   @Override
@@ -364,7 +376,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
           nBracks++;
           break;
   
-        case '}': /* level -- in C */
+        case '}': /* level -- in C, Java, Javascript */
           if (--nBracks <= 0 && startedWithBracket) {
             end = true;
           }
@@ -390,7 +402,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
         case '\n':
           output.print(lexer.getCurrentCharacter());
           lexer.getNextCharacter();
-          indent(output, environment.getIndent() - (this instanceof C?1:0) + additionalIndent);
+          indent(output, environment.getIndent() + getLexerCodeOffsetIndent() + additionalIndent);
           continue;
   
         case 0:
@@ -410,7 +422,7 @@ public abstract class BaseLanguageSupport implements LanguageSupport {
         startingString = false;
       }
       lexer.getNextCharacter();
-    }
+    } 
     output.println();
     return true;
   }

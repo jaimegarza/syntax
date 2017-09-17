@@ -72,6 +72,11 @@ public class C extends BaseLanguageSupport {
   }
   
   @Override
+  protected int getLexerCodeOffsetIndent() {
+    return -1;
+  }
+
+  @Override
   public void emitLine(int lineNumber) {
     emitLine(lineNumber, environment.getSourceFile().toString());
   }
@@ -259,7 +264,7 @@ public class C extends BaseLanguageSupport {
   public void generateRecoveryTableHeader(int numberOfErrorTokens) {
     environment.include.printf("\n#define RECOVERS %d\n", numberOfErrorTokens);
     environment.output.printf("\n"
-                              + "/* Contains tokens in compact mode, and column in matrix */");
+                              + "/* Contains token ids */");
     if (numberOfErrorTokens != 0) {
       environment.output.printf("\nint StxRecoverTable[RECOVERS] = {\n");
     } else {

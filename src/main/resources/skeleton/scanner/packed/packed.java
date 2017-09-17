@@ -21,10 +21,13 @@
   int            state;
   StackElement   lexicalValue;
   int            lexicalToken;
+  int            errorCount;
+  int            errorFlag;
   boolean        verbose = false;
 
   /**
    * Change the verbose flag
+   * @param verbose if verbose is desired
    */
   public void setVerbose(boolean verbose) {
     this.verbose = verbose;
@@ -32,6 +35,7 @@
 
   /**
    * Obtain the verbose flag
+   * @return true if verbose
    */
   public boolean isVerbose() {
     return this.verbose;
@@ -126,15 +130,16 @@
   /**
    * This routine maps a state and a token to a new state on the action table
    * @param state is the current state
-   * @param sym is the given symbol to find (if not found, defa will be used
+   * @param symbol is the given symbol to find (if not found, defa will be used
+   * @return the parsing action
    */
-  private int parserAction(int state, int sym) {
+  private int parserAction(int state, int symbol) {
     int position = parsingTable[state].position;
     int i;
 
     // Look in actions if there is a transaction with the token
     for(i=0; i < parsingTable[state].elements; i++) {
-      if(actionTable[position+i].symbol == sym) {
+      if(actionTable[position+i].symbol == symbol) {
         return actionTable[position+i].state;
       }
     }
@@ -146,7 +151,8 @@
    * This routine maps a origin state to a destination state
    * using the symbol position
    * @param state is the current state
-   *@param position is the position in the goto table
+   * @param position is the position in the goto table
+   * @return the next state
    */
   private int parserGoto(int state, int position) {
     // Search in gotos if there is a state transition
@@ -193,6 +199,7 @@
    * Does a shift operation.  Puts a new state on the top of the stack
    * @param sym is the symbol causing the shift
    * @param state is the current state
+   * @return 1 if OK
    */
   private int parserShift(int sym, int state) {
     if(stackTop >= STACK_DEPTH-1) {
@@ -213,8 +220,9 @@
    * Recognizes a rule an removes all its elements from the stack
    * @param sym is the symbol causing the shift
    * @param rule is the number of rule being used
+   * @return 1 if OK
    */
-  int parserReduce(int sym, int rule) {
+  private int parserReduce(int sym, int rule) {
     if (isVerbose()) {
       System.out.println("Reduce on rule " + rule + " with symbol " + sym);
     }
@@ -233,6 +241,7 @@
 
   /**
    * Get the error message for a state
+   * @return the error message
    */
   private String getErrorMessage() {
     int msgIndex = parsingTable[state].msg;
@@ -247,7 +256,7 @@
     while (i > 0) {
       int st = stateStack[i];
       for (int j=0; j<RECOVERS; j++) {
-        if(parserAction(st, recoverTable[j]) > 0) {
+        if (recoverTable[j] > 0 && parserAction(st, recoverTable[j]) > 0) {
           String message = getTokenFullName(recoverTable[j]);
           message = message.replaceAll("\\$m", s);
           return message;
@@ -257,6 +266,63 @@
     }
     
     return s;
+  }
+
+  /**
+   * Recover from a syntax error removing stack states/symbols, and removing
+   * input tokens.  The array StxRecover contains the tokens that bound
+   * the error
+   * @return 1 if OK
+   */
+  private int parserRecover() {
+    int i, action;
+
+    switch(errorFlag) {
+      case 0: // 1st error
+        if(parserError(state, lexicalToken, stackTop, getErrorMessage()) == 0) {
+          return 0;
+        }
+        errorCount++;
+        // continues and goes into 1 and 2.  No break on purpose
+
+      case 1:
+      case 2: // three attempts are made before dropping the current token
+        errorFlag = 3; // Remove token
+
+        while(stackTop > 0) {
+          // Look if the state on the stack's top has a transition with one of
+          // the recovering elements in StxRecoverTable
+          for (i=0; i<RECOVERS; i++) {
+            action = parserAction(state, recoverTable[i]);
+            if(action > 0) {
+              // valid shift
+              return parserShift(recoverTable[i], action);
+            }
+          }
+          if (isVerbose()) {
+            System.out.println("Recuperate removing state " + state + " and going to state " +
+                            stack[stackTop-1]);
+          }
+          state = stateStack[--stackTop];
+        }
+        stackTop = 0;
+        return 0;
+
+      case 3: // I need to drop the current token
+        if (isVerbose()) {
+          System.out.println("Recuperate removing symbol " + lexicalToken);
+        }
+        if(lexicalToken == 0) { // end of file
+          return 0;
+        }
+        lexicalToken = parserElement(false);
+        return 1;
+    }
+    // should never reach
+    System.err.println("ASSERTION FAILED ON PARSER");
+    Exception e = new Exception();
+    e.printStackTrace(System.err);
+    return 0;
   }
 
   /**
@@ -329,7 +395,7 @@
   }
 
   /**
-   * @returns the current lexical value
+   * @return the current lexical value
    */
   public StackElement getResult() {
     return stack[stackTop];
@@ -337,7 +403,7 @@
 
   /**
    * @param token is the number of the token
-   * @returns the name of a token, given the token number
+   * @return the name of a token, given the token number
    */
   public String getTokenName(int token) {
     for (int i = 0; i < tokenDefs.length; i++) {
@@ -371,7 +437,7 @@
 
   /**
    * @param token is the number of the token
-   * @returns the name of a token, given the token number
+   * @return the name of a token, given the token number
    */
   public int getTokenIndex(int token) {
     for (int i = 0; i < tokenDefs.length; i++) {

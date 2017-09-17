@@ -80,6 +80,11 @@ public interface LanguageSupport {
   boolean getDefaultIncludeFlag();
   
   /**
+   * the deault indentation is language dependent
+   */
+  int getDefaultIndent();
+  
+  /**
    * emit #line in C
    * @param line is the line number
    */

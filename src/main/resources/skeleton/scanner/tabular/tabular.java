@@ -27,6 +27,7 @@
 
   /**
    * Change the verbose flag
+   * @param verbose if verbose is desired
    */
   public void setVerbose(boolean verbose) {
     this.verbose = verbose;
@@ -34,6 +35,7 @@
 
   /**
    * Obtain the verbose flag
+   * @return true if verbose
    */
   public boolean isVerbose() {
     return this.verbose;
@@ -129,6 +131,7 @@
    * This routine maps a state and a token to a new state on the action table
    * @param state is the current state
    * @param symbol is the given symbol to find (if not found, defa will be used
+   * @return the parsing action
    */
   private int parserAction(int state, int symbol) {
     int index = getTokenIndex(symbol);
@@ -139,7 +142,8 @@
    * This routine maps a origin state to a destination state
    * using the symbol position
    * @param state is the current state
-   *@param non terminal that causes the transition
+   * @param symbol non terminal that causes the transition
+   * @return the next state
    */
   private int parserGoto(int state, int symbol) {
     int index = symbol;
@@ -180,6 +184,7 @@
    * Does a shift operation.  Puts a new state on the top of the stack
    * @param sym is the symbol causing the shift
    * @param state is the current state
+   * @return 1 if OK
    */
   private int parserShift(int sym, int state) {
     if(stackTop >= STACK_DEPTH-1) {
@@ -200,8 +205,9 @@
    * Recognizes a rule an removes all its elements from the stack
    * @param sym is the symbol causing the shift
    * @param rule is the number of rule being used
+   * @return 1 if OK
    */
-  int parserReduce(int sym, int rule) {
+  private int parserReduce(int sym, int rule) {
     if (isVerbose()) {
       System.out.println("Reduce on rule " + rule + " with symbol " + sym);
     }
@@ -220,6 +226,7 @@
 
   /**
    * Get the error message for a state
+   * @return the error message
    */
   private String getErrorMessage() {
     int msgIndex = parsingError[state];
@@ -234,7 +241,7 @@
     while (i > 0) {
       int st = stateStack[i];
       for (int j=0; j<RECOVERS; j++) {
-        if(parserAction(st, recoverTable[j]) > 0) {
+        if (recoverTable[j] > 0 && parserAction(st, recoverTable[j]) > 0) {
           String message = getTokenFullName(recoverTable[j]);
           message = message.replaceAll("\\$m", s);
           return message;
@@ -250,6 +257,7 @@
    * Recover from a syntax error removing stack states/symbols, and removing
    * input tokens.  The array StxRecover contains the tokens that bound
    * the error
+   * @return 1 if OK
    */
   private int parserRecover() {
     int i, action;
@@ -270,9 +278,10 @@
           // Look if the state on the stack's top has a transition with one of
           // the recovering elements in StxRecoverTable
           for (i=0; i<RECOVERS; i++) {
-            if((action = parserAction(state, recoverTable[i])) > 0) {
+            action = parserAction(state, recoverTable[i]);
+            if(action > 0) {
               // valid shift
-              return parserShift(recoverTable[i], acc);
+              return parserShift(recoverTable[i], action);
             }
           }
           if (isVerbose()) {
@@ -378,7 +387,7 @@
   }
 
   /**
-   * @returns the current lextical value
+   * @return the current lexical value
    */
   public StackElement getResult() {
     return stack[stackTop];
@@ -386,13 +395,13 @@
 
   /**
    * @param token is the number of the token
-   * @returns the name of a token, given the token number
+   * @return the name of a token, given the token number
    */
   public String getTokenName(int token) {
     for (int i = 0; i < tokenDefs.length; i++) {
       if (tokenDefs[i].token == token) {
         return tokenDefs[i].name;
-        }
+      }
     }
     if (token < 256) {
       return "\'" + (char) token + "\'";
@@ -420,7 +429,7 @@
 
   /**
    * @param token is the number of the token
-   * @returns the name of a token, given the token number
+   * @return the name of a token, given the token number
    */
   public int getTokenIndex(int token) {
     for (int i = 0; i < tokenDefs.length; i++) {
@@ -464,7 +473,7 @@
 
   /*
    *
-   * End of packed skeleton for java
+   * End of tabular skeleton for java
    *
    */
 

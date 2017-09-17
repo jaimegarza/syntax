@@ -44,7 +44,8 @@ package me.jaimegarza.syntax.language;
 public enum Language {
   C(C.class),
   java(Java.class), 
-  pascal(Pascal.class);
+  pascal(Pascal.class),
+  javascript(Javascript.class);
 
   Class<? extends LanguageSupport> clazz;
   LanguageSupport support = null;
