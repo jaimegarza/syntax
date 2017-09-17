@@ -80,6 +80,11 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
         tmpGrammarFile = createTmpFile(basename + ".html", "grammar file");
         tmpIncludeFile = createTmpFile(basename + ".inc", "include file");
         break;
+      case javascript:
+        tmpLanguageFile = createTmpFile(basename + ".js", "output implementation file");
+        tmpGrammarFile = createTmpFile(basename + ".html", "grammar file");
+        tmpIncludeFile = createTmpFile(basename + "intf.js", "include file");
+        break;
     }
   }
 
