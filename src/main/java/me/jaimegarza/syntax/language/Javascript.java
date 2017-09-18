@@ -353,7 +353,7 @@ public class Javascript extends BaseLanguageSupport {
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("var SYMBS = %d;\n\n", runtime.getTerminals().size() + runtime.getNonTerminals().size() - 1);
     indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("var ACCEPT= Number.MAX_SAFE_INTEGER;\n\n");
+    environment.output.printf("var ACCEPT= 2147483647;\n\n");
     if (environment.isPacked() == false) {
       indent(environment.output, environment.getIndent()-1);
       environment.output.printf("// Parsing Table\n");
@@ -561,7 +561,7 @@ public class Javascript extends BaseLanguageSupport {
       }
     }
     indent(environment.output, environment.getIndent() - 1);
-    environment.output.printf("var  NON_TERMINALS = %d;\n\n", runtime.getNonTerminals().size());
+    environment.output.printf("var NON_TERMINALS = %d;\n\n", runtime.getNonTerminals().size());
     indent(environment.output, environment.getIndent() - 1);
     environment.output.printf("var nonTerminals = [\n");
     int i = 1;

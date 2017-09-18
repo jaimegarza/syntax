@@ -1,3 +1,9 @@
+  /*
+   *
+   * Begin of Skeleton
+   *
+   */
+
     /* ****************************************************************
        Javascript Skeleton Parser for packed tables
 

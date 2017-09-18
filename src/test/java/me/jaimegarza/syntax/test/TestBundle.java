@@ -62,6 +62,17 @@ public class TestBundle {
   }
 
   /**
+   * Make sure the java resource bundle works
+   */
+  @Test
+  public void testJavascriptBundle() {
+    Locale locale = new Locale("javascript");
+    ResourceBundle bundle = ResourceBundle.getBundle(Fragments.class.getCanonicalName(), locale);
+    String s = bundle.getString("hello");
+    Assert.assertEquals(s, "Jsello Jsorld");
+  }
+
+  /**
    * Make sure the pascal resource bundle works
    */
   @Test

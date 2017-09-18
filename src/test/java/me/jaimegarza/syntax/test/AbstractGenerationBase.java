@@ -94,5 +94,4 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
     // removeTmpFile(tmpIncludeFile);
   }
 
-
 }

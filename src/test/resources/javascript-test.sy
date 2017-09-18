@@ -1,0 +1,123 @@
+%{
+if (!console) { // i.e. nashorn
+    var console = { log: print };
+}
+
+var calc = (function() {
+%}
+
+%class {
+    this.number = 0;
+    
+    this.toString = function() {
+        return "number=" + this.number;
+    }
+}
+
+%lexer = {
+    while ($c <= ' ' && $c > '\0') {
+        $+;
+    }
+}
+
+%left             TOK_AND      256:"AND"       = if ($c == '&') {$+; return TOK_AND.charCodeAt(0);};
+%left             TOK_OR       257:"OR"        = if ($c == '|') {$+; return TOK_OR.charCodeAt(0);}; 
+%right            TOK_NOT      258:"NOT"       = if ($c == '!') {$+; return TOK_NOT.charCodeAt(0);};
+%left             TOK_LE       259:"'<='" /<=/ = return TOK_LE.charCodeAt(0);
+     ,            TOK_LT       260:"'<'"  /</  = return TOK_LT.charCodeAt(0);
+     ,            TOK_GE       261:"'>='" />=/ = return TOK_GE.charCodeAt(0);
+     ,            TOK_GT       262:"'>'"  />/  = return TOK_GT.charCodeAt(0);
+     ,            TOK_NE       263:"'<>'" /<>/ = return TOK_NE.charCodeAt(0);
+     ,            TOK_EQ       264:"'='"  /=/  = return TOK_EQ.charCodeAt(0);
+
+%left             '+' : "plus"                 = if ($c == '+') {$+; return '+'.charCodeAt(0);};
+                , '-' : '"minus"'              = if ($c == '-') {$+; return '-'.charCodeAt(0);};
+%left             '*'                          = if ($c == '*') {$+; return '*'.charCodeAt(0);};
+                , '/'                          = if ($c == '/') {$+; return '/'.charCodeAt(0);};
+
+%right            TOK_UMINUS:"unary minus"  
+
+%token            '('                          = if ($c == '(') {$+; return '('.charCodeAt(0);};
+                , ')'                          = if ($c == ')') {$+; return ')'.charCodeAt(0);};
+
+%token <number> TOK_NUMBER : "number" /[0-9]*/ = {
+    $v.number = parseInt($r);
+    return TOK_NUMBER;
+}
+
+%type    <number> Expression
+
+%name Expression : "expression";
+
+%start Expression
+
+%lexer = {
+}
+
+%group OPS : "operator" TOK_AND, TOK_OR, TOK_LT, TOK_LE, TOK_GT, TOK_GE, TOK_NE, TOK_EQ, '+', '-', '*', '/';
+
+%%
+Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 : 0;
+             |  Expression TOK_OR Expression  = $$ = ($1 != 0) || ($3 != 0) ? 1 : 0;
+             |  TOK_NOT Expression            = $$ = ($2 != 0) ? 0 : 1;
+             |  Expression TOK_LE Expression  = $$ = $1 <= $3 ? 1 : 0;
+             |  Expression TOK_LT Expression  = $$ = $1 < $3 ? 1 : 0;
+             |  Expression TOK_GE Expression  = $$ = $1 >= $3 ? 1 : 0;
+             |  Expression TOK_GT Expression  = $$ = $1 > $3 ? 1 : 0;
+             |  Expression TOK_NE Expression  = $$ = $1 != $3 ? 1 : 0;
+             |  Expression TOK_EQ Expression  = $$ = $1 == $3 ? 1 : 0;
+             |  Expression '+' Expression     = $$ = $1 + $3;
+             |  Expression '-' Expression     = $$ = $1 - $3;
+             |  Expression '*' Expression     = $$ = $1 * $3;
+             |  Expression '/' Expression     = $$ = $1 / $3;
+             |  '-' Expression %prec TOK_UMINUS = $$ = -$2;
+             |  '(' Expression ')'            = $$ = $2;
+             |  TOK_NUMBER
+             ;
+%%
+
+// END OF GRAMMAR
+
+    var charNum = 0;
+    var expression = "(1 + 3) *4 / 5 + 20";
+
+    function getNextChar(initialize) {
+        if (initialize) {
+            charNum = 0;
+        }
+        if (charNum < expression.length) {
+            return expression.charAt(charNum++);
+        }
+        return '\0';
+    }
+
+    function ungetChar(c) {
+        charNum --;
+        if (charNum < 0 || expression.charAt(charNum) != c) {
+            throw new Error("Error putting a character back");
+        }
+    }
+
+    function parserError(state, token, top, message) {
+        console.log("An error occurred in position " + charNum + " with token " + getTokenName(token));
+        console.log(message);
+        return ERROR_RE_ATTEMPT;
+    }
+
+    return {
+      setVerbose: setVerbose,
+      getTokenName: getTokenName,
+      getTokenFullName: getTokenFullName,
+      getTokenIndex: getTokenIndex,
+      scanner: parserElement,
+      parse: parse,
+      dumpTokens: dumpTokens,
+      getResult: getResult
+    }
+ 
+})();
+
+var calculate = function () {
+    calc.parse();
+    return 'The result is ' + calc.getResult().number;
+}

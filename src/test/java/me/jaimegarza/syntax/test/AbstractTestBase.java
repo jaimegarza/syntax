@@ -67,11 +67,9 @@ public abstract class AbstractTestBase {
     return result;
   }
 
-  protected void checkRegularExpressions(String fileName, String[] regExpArray) {
+  protected void checkRegularExpressions(Reader reader, String fileName, String[] regExpArray) {
     RegularExpression[] regularExpressions = constructRegularExpressions(regExpArray);
-    File file = new File(fileName);
     try {
-      Reader reader = new FileReader(file);
       BufferedReader bufferedReader = new BufferedReader(reader);
       String line = bufferedReader.readLine();
       while (line != null) {
@@ -80,11 +78,18 @@ public abstract class AbstractTestBase {
       }
       bufferedReader.close();
       failWithUncheckedExpressions(regularExpressions);
-    } catch (FileNotFoundException e) {
-      Assert.fail("File " + fileName + " cannot be opened since it cannot be found", e);
-
     } catch (IOException e) {
       Assert.fail("File " + fileName + "cannot be read", e);
+    }
+  }
+
+  protected void checkRegularExpressions(String fileName, String[] regExpArray) {
+    File file = new File(fileName);
+    try {
+      Reader reader = new FileReader(file);
+      checkRegularExpressions(reader, fileName, regExpArray);
+    } catch (FileNotFoundException e) {
+      Assert.fail("File " + fileName + " cannot be opened since it cannot be found", e);
     }
   }
 

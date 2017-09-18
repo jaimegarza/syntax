@@ -53,7 +53,7 @@ public class Fragments_javascript extends ListResourceBundle {
    * The fragments
    */
   Object[] contents [] = {
-      {Fragments.HELLO,"Jello Jorld"}, // keep, for unit testing
+      {Fragments.HELLO,"Jsello Jsorld"}, // keep, for unit testing
       {Fragments.STXSTACK, "stack[stackTop{0}]"},
       {Fragments.CURRENT_CHAR, "currentChar"},
       {Fragments.LEXICAL_VALUE, "lexicalValue"},
