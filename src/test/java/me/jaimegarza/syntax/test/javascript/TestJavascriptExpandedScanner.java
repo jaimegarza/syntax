@@ -35,60 +35,92 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 
+import javax.script.Invocable;
 import javax.script.ScriptException;
 
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import junit.framework.Assert;
 import me.jaimegarza.syntax.exception.AnalysisException;
 import me.jaimegarza.syntax.exception.OutputException;
 import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
-public class TestJavascriptPackedParser extends AbstractGenerationBase {
+public class TestJavascriptExpandedScanner extends AbstractGenerationBase {
+
+  private static final int EOS = 0;
+  private static final int TOK_AND = 256;
+  private static final int TOK_OR = 257;
+  private static final int TOK_NOT = 258;
+  private static final int TOK_LE = 259;
+  private static final int TOK_LT = 260;
+  private static final int TOK_GE = 261;
+  private static final int TOK_GT = 262;
+  private static final int TOK_NE = 263;
+  private static final int TOK_EQ = 264;
+  private static final int TOK_NUMBER = 32769;
 
   // @formatter:off
+  private static final int[] OPERATORS = new int[] { 
+      EOS,
+      ')', 
+      '*', 
+      '+', 
+      '-', 
+      '/', 
+      TOK_AND, 
+      TOK_OR, 
+      TOK_LE, 
+      TOK_LT,
+      TOK_GE, 
+      TOK_GT, 
+      TOK_NE, 
+      TOK_EQ
+  };
+  
+  private static final int[] OPERANDS = new int[] { 
+      '(', 
+      '-', 
+      TOK_NOT, 
+      TOK_NUMBER
+  };
+
   static final String packedArgs[] = {
       // "-v",
-      "--algorithm", "slr",
-      "--language", "javascript",
+      "--algorithm", "slr", 
+      "--language", "javascript", 
+      "--packing", "tabular",
+      "--driver", "scanner", 
       "classpath:javascript-test.sy",
       "${file.language}"
   };
 
-  private static final String languagePackedChecks[] = {
-      "var TOKENS = 18",
-      "var FINAL = 34",
+  private static final String languagePackedChecks[] = { 
+      "var TOKENS = 18", 
+      "var FINAL = 34", 
       "var SYMBS = 19",
-      "var ACTIONS = 57",
-      "var NON_TERMINALS = 2",
+      "var NON_TERMINALS = 2", 
       "Javascript Skeleton"
   };
 
-  private static final String grammarPackedChecks[] = {
-      "Algorithm.*SLR",
-      "Language.*javascript",
-      "Packed\\?.*.*true",
-      "Tokens.*18",
-      "Non Terminals.*2",
-      "Types.*1",
-      "Rules.*17",
-      "Errors.*3",
-      "Actions.*57",
-      "Gotos.*16",
-      "Recoveries.*0",
+  private static final String grammarPackedChecks[] = { 
+      "Algorithm.*SLR", 
+      "Language.*javascript", 
+      "Packed\\?.*.*false",
+      "Tokens.*18", 
+      "Non Terminals.*2", 
+      "Types.*1", 
+      "Rules.*17", 
+      "Errors.*3", 
+      "Recoveries.*0", 
       "States.*34",
   };
-
-  private static final String outputPackedChecks[] = {
-      "The result is 23.2"
-  };
   // @formatter:on
-  
+
   protected static final int MAX_COMPILE_ERRORS = 10;
 
   @BeforeTest
@@ -110,6 +142,20 @@ public class TestJavascriptPackedParser extends AbstractGenerationBase {
     checkRegularExpressions(tmpGrammarFile, grammarPackedChecks);
   }
 
+  private void parseOneSymbol(Invocable script, Object token, int value, int status, int valid[])
+      throws NoSuchMethodException, ScriptException {
+    Assert.assertEquals(status, script.invokeFunction("parse", token, value));
+    String available = (String) script.invokeFunction("getValidTokens");
+
+    String validTokens[] = available.split(",");
+
+    Assert.assertEquals("Incorrect number of tokens", valid.length, validTokens.length);
+    for (int i = 0; i < validTokens.length; i++) {
+      int t = Integer.valueOf(validTokens[i]);
+      Assert.assertEquals("Tokens are not equal", t, valid[i]);
+    }
+  }
+
   @Test
   public void test02Runtime() throws ParsingException, AnalysisException, OutputException, FileNotFoundException,
       ScriptException, NoSuchMethodException {
@@ -118,9 +164,22 @@ public class TestJavascriptPackedParser extends AbstractGenerationBase {
     File source = new File(tmpLanguageFile);
     Reader reader = new FileReader(source);
     BufferedReader bufferedReader = new BufferedReader(reader);
-    String output = executeScript(bufferedReader);
-    reader = new StringReader(output);
-    checkRegularExpressions(reader, "javascript-output", outputPackedChecks);
-  }
+    Invocable script = getInvocableScript(bufferedReader);
+    script.invokeFunction("init");
+    
+    parseOneSymbol(script, "(", 0, 2, OPERANDS);
+    parseOneSymbol(script, TOK_NUMBER, 1, 2, OPERATORS);
+    parseOneSymbol(script, "+", 0, 2, OPERANDS);
+    parseOneSymbol(script, TOK_NUMBER, 3, 2, OPERATORS);
+    parseOneSymbol(script, ")", 0, 2, OPERATORS);
+    parseOneSymbol(script, "*", 0, 2, OPERANDS);
+    parseOneSymbol(script, TOK_NUMBER, 4, 2, OPERATORS);
+    parseOneSymbol(script, "/", 0, 2, OPERANDS);
+    parseOneSymbol(script, TOK_NUMBER, 5, 2, OPERATORS);
+    parseOneSymbol(script, "+", 0, 2, OPERANDS);
+    parseOneSymbol(script, TOK_NUMBER, 20, 2, OPERATORS);
 
+    Assert.assertEquals(1, script.invokeFunction("parse", 0, 0));
+    Assert.assertEquals(23.2, script.invokeFunction("getResult"));
+  }
 }

@@ -49,12 +49,13 @@ import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
-public class TestJavascriptPackedParser extends AbstractGenerationBase {
+public class TestJavascriptExpandedParser extends AbstractGenerationBase {
 
   // @formatter:off
   static final String packedArgs[] = {
       // "-v",
       "--algorithm", "slr",
+      "--packing", "tabular",
       "--language", "javascript",
       "classpath:javascript-test.sy",
       "${file.language}"
@@ -64,7 +65,6 @@ public class TestJavascriptPackedParser extends AbstractGenerationBase {
       "var TOKENS = 18",
       "var FINAL = 34",
       "var SYMBS = 19",
-      "var ACTIONS = 57",
       "var NON_TERMINALS = 2",
       "Javascript Skeleton"
   };
@@ -72,14 +72,12 @@ public class TestJavascriptPackedParser extends AbstractGenerationBase {
   private static final String grammarPackedChecks[] = {
       "Algorithm.*SLR",
       "Language.*javascript",
-      "Packed\\?.*.*true",
+      "Packed\\?.*.*false",
       "Tokens.*18",
       "Non Terminals.*2",
       "Types.*1",
       "Rules.*17",
       "Errors.*3",
-      "Actions.*57",
-      "Gotos.*16",
       "Recoveries.*0",
       "States.*34",
   };

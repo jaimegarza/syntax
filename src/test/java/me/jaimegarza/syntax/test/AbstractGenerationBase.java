@@ -31,6 +31,12 @@ package me.jaimegarza.syntax.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import me.jaimegarza.syntax.Syntax;
 import me.jaimegarza.syntax.env.Environment;
@@ -46,7 +52,7 @@ import org.apache.commons.jci.readers.FileResourceReader;
 import org.apache.commons.jci.stores.FileResourceStore;
 
 public abstract class AbstractGenerationBase extends AbstractTestBase {
-  
+
   protected void generateLanguageFile(String[] args) throws ParsingException, AnalysisException, OutputException {
     Environment environment = new Environment("Syntax", setupFileArguments(args));
     Syntax syntax = new Syntax(environment);
@@ -60,6 +66,40 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
     sources[0] = source.getName();
     CompilationResult result = compiler.compile(sources, new FileResourceReader(sourceDir), new FileResourceStore(sourceDir));
     return result;
+  }
+
+
+  /**
+   * For packed servers, execute the single parser routine that calculates
+   * the total, in the javascript produced by syntax.
+   * 
+   * @param reader is the script of the reader
+   * @return the string with the result
+   * @throws ScriptException on any scripting error
+   * @throws NoSuchMethodException if the calculate routine cannot be found.
+   */
+  protected String executeScript(Reader reader) throws ScriptException, NoSuchMethodException {
+    Invocable script = getInvocableScript(reader);
+    
+    Object objectResult = script.invokeFunction("calculate");
+    String result = (String) objectResult;
+    System.out.println("script result=" + result);
+    return result;
+  }
+
+  /**
+   * Return a javascript invocable
+   * @param reader is the source of the script
+   * @return the script. invoke methods on it
+   * @throws ScriptException on any script error
+   */
+  protected Invocable getInvocableScript(Reader reader) throws ScriptException {
+    ScriptEngineManager manager = new ScriptEngineManager();
+    ScriptEngine engine = manager.getEngineByName("nashorn");
+    
+    engine.eval(reader);
+    Invocable invocable = (Invocable) engine;
+   return invocable;
   }
 
   public void setUp(Language language, String basename) throws IOException {
@@ -93,5 +133,4 @@ public abstract class AbstractGenerationBase extends AbstractTestBase {
     // removeTmpFile(tmpGrammarFile);
     // removeTmpFile(tmpIncludeFile);
   }
-
 }

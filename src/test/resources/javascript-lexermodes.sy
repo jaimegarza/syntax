@@ -1,0 +1,112 @@
+%{
+if (!console) { // i.e. nashorn
+    var console = { log: print };
+}
+
+var calc = (function() {
+%}
+
+%struct {
+    this.s = "";
+
+    this.toString = function() {
+        return this.s;
+    }
+}
+
+%token aa:"an a symbol" = if ($c == 'a') {$v.s = "" + $c; $+; return aa;};
+%token bb:"a b symbol" [B] = if ($c == 'b') {$v.s = "" + $c; $+; return bb;};
+%token cc:"a c symbol" [C] {
+    if ($c == 'c') {
+        $v.s = "" + $c; 
+        $+; 
+        return cc;
+    };
+}
+
+%lexer [B] = if ($c == 'a') {$v.s = "" + $c; $+; $l = DEFAULT_LEXER_MODE; return aa;};
+%lexer [C] = if ($c == 'a') {$v.s = "" + $c; $+; $l = DEFAULT_LEXER_MODE; return aa;};
+
+%lexer {
+    if ($c == 'b') {
+        $v.s = "" + $c; 
+        $l = B_LEXER_MODE;
+        $+;
+        return bb;
+    }
+  
+    if ($c == 'c') {
+        $v.s = "" + $c; 
+        $l = C_LEXER_MODE;
+        $+;
+        return cc;
+    }
+}
+
+%type <s> A;
+%type <s> B;
+
+%start A
+
+%%
+
+A : A B  = $$ = $A + $B;
+  | B    = $$ = $B;
+  ;
+
+B : aa
+  | bb
+  | cc
+  ;
+
+%%
+
+    var charNum = 0;
+    var expression = "bacaab";
+    function getNextChar(initialize) {
+        if (initialize) {
+            charNum = 0;
+        }
+        if (charNum < expression.length) {
+            return expression.charAt(charNum++);
+        }
+        return '\0';
+    }
+
+    function ungetChar(c) {
+        charNum --;
+        if (charNum < 0 || expression.charAt(charNum) != c) {
+            throw new Error("Error putting a character back");
+        }
+    }
+
+    function parserError(state, token, top, message) {
+        console.log("An error occurred in position " + charNum + " with token " + getTokenName(token));
+        console.log(message);
+        return ERROR_RE_ATTEMPT;
+    }
+
+    function getOutput() {
+        return getResult().s;
+    }
+
+    return {
+      setVerbose: setVerbose,
+      getTokenName: getTokenName,
+      getTokenFullName: getTokenFullName,
+      getTokenIndex: getTokenIndex,
+      scanner: parserElement,
+      parse: parse,
+      dumpTokens: dumpTokens,
+      getResult: getResult,
+      getOutput: getOutput
+    }
+ 
+})();
+
+var calculate = function() {
+    if (calc.parse() == 0) {
+        return "ERROR";
+    }
+    return calc.getOutput();
+}

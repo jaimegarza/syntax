@@ -36,9 +36,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 
 import javax.script.ScriptException;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -49,51 +52,24 @@ import me.jaimegarza.syntax.exception.ParsingException;
 import me.jaimegarza.syntax.language.Language;
 import me.jaimegarza.syntax.test.AbstractGenerationBase;
 
-public class TestJavascriptPackedParser extends AbstractGenerationBase {
+public class TestJavascriptLexerModes extends AbstractGenerationBase {
 
-  // @formatter:off
-  static final String packedArgs[] = {
-      // "-v",
-      "--algorithm", "slr",
-      "--language", "javascript",
-      "classpath:javascript-test.sy",
-      "${file.language}"
-  };
+  static final String args[] = {
+    "--algorithm",
+    "l",
+    "--language",
+    "javascript",
+    "--packing",
+    "tabular",
+    "--debug",
+    "classpath:javascript-lexermodes.sy",
+    "${file.language}" 
+};
 
-  private static final String languagePackedChecks[] = {
-      "var TOKENS = 18",
-      "var FINAL = 34",
-      "var SYMBS = 19",
-      "var ACTIONS = 57",
-      "var NON_TERMINALS = 2",
-      "Javascript Skeleton"
-  };
-
-  private static final String grammarPackedChecks[] = {
-      "Algorithm.*SLR",
-      "Language.*javascript",
-      "Packed\\?.*.*true",
-      "Tokens.*18",
-      "Non Terminals.*2",
-      "Types.*1",
-      "Rules.*17",
-      "Errors.*3",
-      "Actions.*57",
-      "Gotos.*16",
-      "Recoveries.*0",
-      "States.*34",
-  };
-
-  private static final String outputPackedChecks[] = {
-      "The result is 23.2"
-  };
-  // @formatter:on
-  
-  protected static final int MAX_COMPILE_ERRORS = 10;
 
   @BeforeTest
   public void setUp() throws IOException {
-    super.setUp(Language.javascript, "JsTestParser");
+    super.setUp(Language.javascript, "JsLexerMode");
   }
 
   @Override
@@ -103,24 +79,17 @@ public class TestJavascriptPackedParser extends AbstractGenerationBase {
   }
 
   @Test
-  public void test01Generate() throws ParsingException, AnalysisException, OutputException {
-    generateLanguageFile(packedArgs);
-
-    checkRegularExpressions(tmpLanguageFile, languagePackedChecks);
-    checkRegularExpressions(tmpGrammarFile, grammarPackedChecks);
-  }
-
-  @Test
-  public void test02Runtime() throws ParsingException, AnalysisException, OutputException, FileNotFoundException,
-      ScriptException, NoSuchMethodException {
-    generateLanguageFile(packedArgs);
-
+  public void testJavaLexerModes() throws ParsingException, 
+       AnalysisException, OutputException, MalformedURLException, 
+       ClassNotFoundException, InstantiationException, IllegalAccessException, 
+       NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException, FileNotFoundException, ScriptException {
+    generateLanguageFile(args);
+    
     File source = new File(tmpLanguageFile);
     Reader reader = new FileReader(source);
     BufferedReader bufferedReader = new BufferedReader(reader);
     String output = executeScript(bufferedReader);
     reader = new StringReader(output);
-    checkRegularExpressions(reader, "javascript-output", outputPackedChecks);
+    Assert.assertEquals(output, "bacaab", "string does not match");
   }
-
 }
