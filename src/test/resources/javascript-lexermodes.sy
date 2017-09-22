@@ -91,15 +91,15 @@ B : aa
     }
 
     return {
-      setVerbose: setVerbose,
-      getTokenName: getTokenName,
-      getTokenFullName: getTokenFullName,
-      getTokenIndex: getTokenIndex,
-      scanner: parserElement,
-      parse: parse,
-      dumpTokens: dumpTokens,
-      getResult: getResult,
-      getOutput: getOutput
+        setVerbose: setVerbose,
+        getTokenName: getTokenName,
+        getTokenFullName: getTokenFullName,
+        getTokenIndex: getTokenIndex,
+        scanner: parserElement,
+        parse: parse,
+        dumpTokens: dumpTokens,
+        getResult: getResult,
+        getOutput: getOutput
     }
  
 })();

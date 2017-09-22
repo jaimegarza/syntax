@@ -105,29 +105,29 @@ Expression   :  Expression TOK_AND Expression = $$ = ($1 != 0) && ($3 != 0) ? 1 
     }
 
     return {
-      setVerbose: setVerbose,
-      getTokenName: getTokenName,
-      getTokenFullName: getTokenFullName,
-      getTokenIndex: getTokenIndex,
-      scanner: parserElement,
-      parse: parse,
-      scanner: function (token, value) {
-          var lexicalValue = new StackElement();
-          lexicalValue.number = value;
-          var numericToken;
-  
-          if (typeof token == 'number') {
-              numericToken = token;
-          }
-          else {
-              numericToken = token.charCodeAt(0);
-          }
-          return parse(numericToken, lexicalValue);
-      },
-      dumpTokens: dumpTokens,
-      init: init,
-      getValidTokens: getValidTokens,
-      getResult: getResult
+        setVerbose: setVerbose,
+        getTokenName: getTokenName,
+        getTokenFullName: getTokenFullName,
+        getTokenIndex: getTokenIndex,
+        scanner: parserElement,
+        parse: parse,
+        scanner: function (token, value) {
+            var lexicalValue = new StackElement();
+            lexicalValue.number = value;
+            var numericToken;
+        
+            if (typeof token == 'number') {
+                numericToken = token;
+            }
+            else {
+                numericToken = token.charCodeAt(0);
+            }
+            return parse(numericToken, lexicalValue);
+        },
+        dumpTokens: dumpTokens,
+        init: init,
+        getValidTokens: getValidTokens,
+        getResult: getResult
     }
  
 })();
