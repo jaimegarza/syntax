@@ -1,4 +1,4 @@
-Syntax 4.0
+Syntax 4.2
 =======================================================================
 For further documentation, please refer to <a href="https://jaimegarza.github.io/syntax">https://jaimegarza.github.io/syntax</a>
 ## Introduction
