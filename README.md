@@ -1,6 +1,7 @@
 Syntax 4.0
 =======================================================================
-#### Introduction
+For further documentation, please refer to <a href="https://jaimegarza.github.io/syntax">https://jaimegarza.github.io/syntax</a>
+## Introduction
 ---
 
 A computer program or application is written in a computer language like C, C++, Swift, Java, Pascal, Javascript, Scala and others. Languages are either compiled or interpreted. In a compiled program a translation is done from the source files written in the language into a binary form that can be understood by an execution engine, either as machine code, or instructions for a JVM or CLI. Other languages do not compile, but rather interpret as they find the code, like in the case of javascript, and no intermediate representation is needed.
@@ -30,7 +31,7 @@ I thought that having a yacc like syntax would help the introduction and teachin
   * **Javascript, for Node.js and Nashorn on JVM**
   * Future: Other JVM languages
 1. Translated to Java from its 1985 apple basic, and 2006 C codebase. The grammar definition is in Syntax format. Syntax is used to generate Syntax itself!
-1. Support for <a href="{{ site.baseurl }}/syntax/lexic-driven-parsers">lexic-driven parsers</a>. Unlike standard parsers, lexic driven parsers allow you to move in the parse graph by keeping state. The lexer calls the parser, and when done with transitions, control is returned to the lexer who can wait for the next token.
+1. Support for lexic-driven parsers. Unlike standard parsers, lexic driven parsers allow you to move in the parse graph by keeping state. The lexer calls the parser, and when done with transitions, control is returned to the lexer who can wait for the next token.
 1. Ability to compile with **LALR** (yacc) or **SLR**, more compact and simple, albeit a little more restrictive
 1. Eject the output table in a **compressed mode** (yacc) or a **matrix**, for readability/teachability. Also, produce a rich **HTML report**.
 1. Unlike yacc and bison, the output is **properly formated and readable!**
@@ -40,8 +41,10 @@ I am planning to add in future releases of the 4.0 codebase:
 * LR algorithm (lower priority)
 * Honalee algorithm (low priority)
 * Support the concept of %external for sectional inclusions, encapsulation and reuse.
-* Additional languages like Rust, GO, Swift, and others.LEXICAL-DRIVEN PARSERS
-=======================================================================
+* Additional languages like Rust, GO, Swift, and others.
+
+## Lexical Driven Parsers
+
 Compiler driven parsers are the standard.  They get created, invoked 
 with an input stream, which is then read one character at a time, 
 checking for grammar compliance and generating code and other
