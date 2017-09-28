@@ -25,11 +25,11 @@ I thought that having a yacc like syntax would help the introduction and teachin
 1. The introduction of **lexical definitions** as part of the grammar (**regex** and **non-regex**). You can either code your parser with embedded code that scans the text, or use the provided built-in lexer generator using regex.
 1. **Error messages** per %error definition. Unlike yacc, error messages can be provided in the language definition file and obtained as needed.
 1. Output for:
-  * **Java**
-  * **C**
-  * **Free Pascal/Delphi Pascal**
-  * **Javascript, for Node.js and Nashorn on JVM**
-  * Future: Other JVM languages
+    * **Java**
+    * **C**
+    * **Free Pascal/Delphi Pascal**
+    * **Javascript, for Node.js and Nashorn on JVM**
+    * Future: Other JVM languages
 1. Translated to Java from its 1985 apple basic, and 2006 C codebase. The grammar definition is in Syntax format. Syntax is used to generate Syntax itself!
 1. Support for lexic-driven parsers. Unlike standard parsers, lexic driven parsers allow you to move in the parse graph by keeping state. The lexer calls the parser, and when done with transitions, control is returned to the lexer who can wait for the next token.
 1. Ability to compile with **LALR** (yacc) or **SLR**, more compact and simple, albeit a little more restrictive
