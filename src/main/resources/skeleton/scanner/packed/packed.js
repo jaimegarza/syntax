@@ -311,61 +311,6 @@
     }
 
     /**
-     * Recover from a syntax error removing stack states/symbols, and removing
-     * input tokens.  The array StxRecover contains the tokens that bound
-     * the error
-     * @return 1 if OK
-     */
-    function parserRecover() {
-        var i, action;
-
-        switch(errorFlag) {
-            case 0: // 1st error
-                if(parserError(state, lexicalToken, stackTop, getErrorMessage()) == 0) {
-                    return 0;
-                }
-                errorCount++;
-                // continues and goes into 1 and 2.  No break on purpose
-
-            case 1:
-            case 2: // three attempts are made before dropping the current token
-                errorFlag = 3; // Remove token
-
-                while(stackTop > 0) {
-                    // Look if the state on the stack's top has a transition with one of
-                    // the recovering elements in StxRecoverTable
-                    for (i=0; i<RECOVERS; i++) {
-                        action = parserAction(state, recoverTable[i]);
-                        if(action > 0) {
-                            // valid shift
-                            return parserShift(recoverTable[i], action);
-                        }
-                    }
-                    if (isVerbose()) {
-                        console.log("Recuperate removing state " + state + " and going to state " +
-                            stack[stackTop-1]);
-                    }
-                    state = stateStack[--stackTop];
-                }
-                stackTop = 0;
-                return 0;
-
-            case 3: // I need to drop the current token
-                if (isVerbose()) {
-                    console.log("Recuperate removing symbol " + lexicalToken);
-                }
-                if(lexicalToken == 0) { // end of file
-                    return 0;
-                }
-                lexicalToken = parserElement(false);
-                return 1;
-        }
-        // should never reach
-        console.log("ASSERTION FAILED ON PARSER");
-        return 0;
-    }
-
-    /**
      * initialize the parser.  Caller (or constructor) must call it
      */
     function init() {
@@ -415,6 +360,7 @@
                     return INTERNAL_ERROR;
                 }
             } else if(action == 0) {
+                parserError(state, lexicalToken, stackTop, getErrorMessage());
                 return PARSING_ERROR;
             }
         }
@@ -441,16 +387,9 @@
     }
 
     /**
-     * Perform a round of tokenization and dump the results
+     * Perform a round of tokenization and dump the results. void
      */
     function dumpTokens() {
-        lexicalToken = parserElement(true);
-        lexicalValue = null;
-        while (lexicalToken != 0) {
-            console.log("Token: " + getTokenName(lexicalToken) + "(" + lexicalToken + "):" + (lexicalValue == null? "null": lexicalValue));
-            lexicalValue = null;
-            lexicalToken = parserElement(false);
-        }
     }
 
     function findReservedWord(word) {

@@ -327,75 +327,6 @@ BEGIN
 END;
 
 (*
-    Recover from a syntax error removing stack states/symbols, and removing
-    input tokens.  The array StxRecover contains the tokens that bound
-    the error 
-*)
-FUNCTION StxRecover: BOOLEAN;
-VAR
-    i, acc : INTEGER;
-    found  : BOOLEAN;
-BEGIN
-    StxRecover := TRUE;
-    CASE StxErrorFlag OF
-        0, 1, 2: (* three attempts before dropping the symbol *)
-            BEGIN
-            IF   StxErrorFlag = 0
-            THEN BEGIN
-                 IF   StxError(StxState, StxSym, pStxStack, StxErrorMessage()) = ERROR_FAIL 
-                 THEN BEGIN
-                      StxRecover := FALSE;
-                      EXIT;
-                      END;
-                 END;
-
-            StxErrorFlag := 3; (* remove the symbol *)
-
-            WHILE pStxStack >= 0 DO
-                BEGIN
-                (* Look if the state on the stack's top has a transition with one of
-                  the recovering elements in StxRecoverTable *)
-                found := FALSE;
-                FOR i:=0 to RECOVERS-1 DO
-                    BEGIN
-                    acc := StxAction(StxState, StxRecoverTable[i]);
-                    IF   acc > 0 (* shift valido *)
-                    THEN BEGIN
-                         StxRecover := StxShift(StxRecoverTable[i], acc);
-                         found := TRUE;
-                         EXIT;
-                         END;
-                    END;
-                IF   NOT found
-                THEN BEGIN
-{$IFDEF DEBUG}
-                     writeln('Recover removing state ', StxState,
-                             ' and go to state ', sStxStack[pStxStack-1]);
-{$ENDIF}
-                     pStxStack := pStxStack - 1;
-                     StxState := sStxStack[pStxStack];
-                     END; (*IF*)
-                END; (*WHILE*)
-                pStxStack := 0;
-                StxRecover := FALSE;
-            END; (*CASE 0, 1 y 2*)
-
-        3: (* I need to drop the current token *)
-            BEGIN
-{$IFDEF DEBUG}
-            writeln('Recover removing symbol ', StxSym);
-{$ENDIF}
-            IF   StxSym = 0 (* End of input string *)
-            THEN StxRecover := FALSE
-            ELSE BEGIN
-                 StxSym := StxLexer;
-                 StxRecover := TRUE;
-                 END;
-            END; (* CASE *)
-    END; (* CASE *)
-END; (* StxRecover *)
-
-(*
   Initialize the scanner
 *)
 PROCEDURE StxInit;
@@ -452,6 +383,7 @@ BEGIN
                   END;
               END
         ELSE BEGIN (* error *)
+             StxError(StxState, StxSym, pStxStack, StxErrorMessage());
              StxParse := PARSING_ERROR;
              EXIT;
              END;

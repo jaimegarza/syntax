@@ -311,54 +311,6 @@ int StxReduce(int sym, int rule)
 }
 
 /*
-  Recover from a syntax error removing stack states/symbols, and removing
-  input tokens.  The array StxRecover contains the tokens that bound
-  the error 
-*/
-int StxRecover(void)
-{
-    int i, acc;
-
-    switch(StxErrorFlag){
-        case 0: /* 1st error */
-            if(!StxError(StxState, StxSym, pStxStack, StxErrorMessage()))
-                return 0;
-            StxErrors++;
-            /* goes into 1 and 2 */
-
-        case 1:
-        case 2: /* three attempts are made before dropping the current token */
-            StxErrorFlag = 3; /* Remove token */
-
-            while(pStxStack >= 0){
-                /* Look if the state on the stack's top has a transition with one of
-                  the recovering elements in StxRecoverTable */
-                for(i=0; i<RECOVERS; i++)
-                    if((acc = StxAction(StxState, StxRecoverTable[i])) > 0)
-                        /* valid shift */
-                        return StxShift(StxRecoverTable[i], acc);
-#ifdef DEBUG
-                printf("Recuperate removing state %d and go to state %d\n",
-                            StxState, sStxStack[pStxStack-1]);
-#endif
-                StxState = sStxStack[--pStxStack];
-            }
-            pStxStack = 0;
-            return 0;
-
-        case 3: /* I need to drop the current token */
-#ifdef DEBUG
-            printf("Recuperate removing symbol %d\n", StxSym);
-#endif
-            if(StxSym == 0) /* End of input string */
-                return 0;
-            StxSym = StxLexer();
-            return 1; 
-    }
-    return 0;
-}
-
-/*
   Initialize the scanner
 */
 void StxInit() {
@@ -403,6 +355,7 @@ int StxParse(int symbol, TSTACK value)
                 return INTERNAL_ERROR;
             }
         } else if(action == 0) {
+            StxError(StxState, StxSym, pStxStack, StxErrorMessage());
             return PARSING_ERROR;
         }
     }
